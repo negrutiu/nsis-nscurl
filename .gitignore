@@ -1,0 +1,15 @@
+
+/nsis
+/Test/*.exe
+/Test/_*
+
+Debug-*
+Release-*
+ipch
+.vs
+
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.aps

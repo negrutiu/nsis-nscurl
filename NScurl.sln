@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.902
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NScurl", "NScurl.vcxproj", "{FE51110F-82BE-423E-800C-F5951C998D22}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug-x86-ansi|Win32 = Debug-x86-ansi|Win32
+		Debug-x86-unicode|Win32 = Debug-x86-unicode|Win32
+		Release-x86-ansi|Win32 = Release-x86-ansi|Win32
+		Release-x86-unicode|Win32 = Release-x86-unicode|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Debug-x86-ansi|Win32.ActiveCfg = Debug-x86-ansi|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Debug-x86-ansi|Win32.Build.0 = Debug-x86-ansi|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Debug-x86-unicode|Win32.ActiveCfg = Debug-x86-unicode|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Debug-x86-unicode|Win32.Build.0 = Debug-x86-unicode|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Release-x86-ansi|Win32.ActiveCfg = Release-x86-ansi|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Release-x86-ansi|Win32.Build.0 = Release-x86-ansi|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Release-x86-unicode|Win32.ActiveCfg = Release-x86-unicode|Win32
+		{FE51110F-82BE-423E-800C-F5951C998D22}.Release-x86-unicode|Win32.Build.0 = Release-x86-unicode|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {746BE2B8-771E-4DD2-8313-D8115917D903}
+	EndGlobalSection
+EndGlobal

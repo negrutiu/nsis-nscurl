@@ -1,0 +1,121 @@
+
+# -------------------------------
+# Mandatory definitions
+# -------------------------------
+#   ARCH=X86|x64
+#   CHAR=ANSI|Unicode
+#   OUTDIR=<output_directory>
+# -------------------------------
+# Optional definitions
+# -------------------------------
+#   CUSTOM_CFLAGS
+#   CUSTOM_LDFLAGS
+#   CUSTOM_RCFLAGS
+
+
+PROJECT  = NScurl
+BIN      = $(PROJECT).dll
+OBJ      = pluginapi.o main.o utils.o resource.res
+INC      = -I.
+LIB      = -lkernel32 -lmsvcrt -luser32 -lole32 -luuid -lversion
+SAL      = -D__in= -D__out= -D__inout= -D__in_opt= -D__out_opt= \
+           -D_In_= -D_Out_= -D_Inout_= -D_In_opt_= -D_Out_opt_=
+
+_OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
+_BIN     = $(patsubst %,$(OUTDIR)/%,$(BIN))
+
+DEF      = $(OUTDIR)/lib$(PROJECT).def
+STATIC   = $(OUTDIR)/lib$(PROJECT).a
+
+#
+# https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
+# http://linux.die.net/man/1/gcc
+# http://linux.die.net/man/1/ld
+#
+
+# ARCH
+ifeq ($(ARCH), X64)
+	CFLAGS  += -DNDEBUG
+	LDFLAGS += -Wl,--high-entropy-va -Wl,-e'DllMain'
+	RCFLAGS += -F pe-x86-64
+else
+	CFLAGS  += -march=pentium2 -DNDEBUG
+	LDFLAGS += -Wl,-e'_DllMain'
+	RCFLAGS += -F pe-i386
+endif
+
+# CHAR
+ifeq ($(CHAR), ANSI)
+	CFLAGS  += -DMBCS -D_MBCS
+	LDFLAGS +=
+else
+	CFLAGS  += -municode -DUNICODE -D_UNICODE
+	LDFLAGS += -municode
+endif
+
+
+CFLAGS  += \
+	-mdll \
+	-nostdlib \
+	-s \
+	-Os \
+	-fPIE \
+	-ffunction-sections \
+	-fdata-sections \
+	-fno-unwind-tables \
+	-fno-asynchronous-unwind-tables \
+	$(INC) \
+	$(SAL) \
+	$(CUSTOM_CFLAGS)
+
+LDFLAGS += \
+	-mdll \
+	-nostdlib \
+	-s \
+	-Os \
+	-fPIE \
+	-ffunction-sections \
+	-fdata-sections \
+	-fno-unwind-tables \
+	-fno-asynchronous-unwind-tables \
+	-Wl,--gc-sections \
+	-Wl,--no-seh \
+	-Wl,--nxcompat \
+	-Wl,--dynamicbase \
+	-Wl,--enable-auto-image-base \
+	-Wl,--enable-stdcall-fixup \
+	-Wl,--output-def,$(DEF) \
+	-Wl,--out-implib,$(STATIC) \
+	$(LIB) \
+	$(CUSTOM_LDFLAGS)
+
+RCFLAGS += \
+	$(CUSTOM_RCFLAGS)
+
+
+.PHONY: clean all-before all all-after
+
+clean:
+	@echo.
+	if exist $(OUTDIR) rd /S /Q $(OUTDIR)
+
+all: all-before $(_BIN) all-after
+
+all-before:
+	if not exist $(OUTDIR) mkdir $(OUTDIR)
+
+# Link
+$(_BIN): $(_OBJ)
+	@echo.
+	gcc $(_OBJ) -o $(_BIN) $(LDFLAGS)
+
+# Compile .c
+$(OUTDIR)/%.o: %.c
+	gcc $(CFLAGS) -o $@ -c $<
+
+$(OUTDIR)/%.o: nsis/pluginapi.c
+	gcc $(CFLAGS) -o $@ -c $<
+
+# Compile .rc
+$(OUTDIR)/%.res: %.rc
+	windres -o $@ -i $< -O coff --input-format=rc $(RCFLAGS)
