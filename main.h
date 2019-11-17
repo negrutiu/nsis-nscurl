@@ -21,6 +21,13 @@
 // NSIS API
 #include "pluginapiex.h"
 
+// CURL
+#define CURL_STATICLIB
+#ifdef _DEBUG
+	#define DEBUGBUILD
+#endif
+#include <curl/curl.h>
 
 // Globals
 extern HINSTANCE			g_hInst;				/// main.c
+extern CHAR					g_szUserAgent[128];		/// main.c

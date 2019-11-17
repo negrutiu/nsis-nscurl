@@ -134,17 +134,24 @@ SectionEnd
 
 Section Test
 	SectionIn 1
+	
+	; NScurl::Echo
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
-	Push 0x4
-	Push 0x3
 	Push 0x2
-	Push 0x1
-	Push ddd
-	Push ccc
+	Push 1
 	Push bbb
-	Push aaa
-	CallInstDLL "${NSCURL}" Test
+	Push "aaa"
+	CallInstDLL "${NSCURL}" Echo
+	Pop $0
+	DetailPrint 'NScurl::Echo(...) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::DownloadCacert
+	!insertmacro STACK_VERIFY_START
+	CallInstDLL "${NSCURL}" DownloadCacert
+	Pop $0
+	DetailPrint "NScurl::DownloadCacert() = $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
