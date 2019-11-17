@@ -49,9 +49,24 @@ typedef struct {
 } MEMORY_STATS;
 extern MEMORY_STATS g_MemStats;
 
-#define MyAlloc(_size)		GlobalLock(GlobalAlloc(GMEM_FIXED, _size)); g_MemStats.AllocBytes += (_size); g_MemStats.AllocCalls++
-#define MyAllocStr(_len)	(LPTSTR)MyAlloc( ((_len) + 1) * sizeof(TCHAR))
-#define MyFree(_ptr)		if ( _ptr ) { g_MemStats.FreeBytes += GlobalSize((HGLOBAL)(_ptr)); g_MemStats.FreeCalls++; GlobalFree((HGLOBAL)(_ptr)); (_ptr) = NULL; }
+static LPVOID MyAlloc( _In_ ULONG iSize ) {
+	LPVOID p = GlobalLock( GlobalAlloc( GMEM_FIXED, iSize ) );
+	g_MemStats.AllocBytes += iSize;
+	g_MemStats.AllocCalls++;
+	return p;
+}
+
+static LPTSTR MyAllocStr( _In_ ULONG iLen ) {
+	return (LPTSTR)MyAlloc( (iLen + 1) * sizeof( TCHAR ) );
+}
+
+#define MyFree(_ptr) { \
+	if ( _ptr ) { \
+		g_MemStats.FreeBytes += GlobalSize((HGLOBAL)(_ptr)); \
+		g_MemStats.FreeCalls++; \
+		GlobalFree((HGLOBAL)(_ptr)); \
+		(_ptr) = NULL; \
+	}}
 
 #define MyDataDup(_dst, _src, _size) { \
 	(_dst) = MyAlloc( _size ); \
