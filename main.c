@@ -84,7 +84,7 @@ ULONG ExtractCacertPem()
 		TCHAR szPem[MAX_PATH];
 		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariable2( INST2_PLUGINSDIR ) );
 		if (!FileExists( szPem ))
-			e = ExtractResourceFile( (HMODULE)g_hInst, L"cacert.pem", MAKEINTRESOURCE( 1 ), 1033, szPem );
+			e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
 	}
 
 	return e;
