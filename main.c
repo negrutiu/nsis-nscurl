@@ -24,9 +24,13 @@ void NSISCALL setuservariable2(const int varnum, LPCTSTR var) {
 BOOL PluginInit( _In_ HINSTANCE hInst )
 {
 	if (!g_hInst) {
+
 		TRACE( _T( "PluginInit\n" ) );
 		g_hInst = hInst;
+
+		// Utils
 		UtilsInitialize();
+
 		// TODO: Initialize engine
 		return TRUE;
 	}
@@ -38,9 +42,13 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 BOOL PluginUninit()
 {
 	if ( g_hInst ) {
+
 		TRACE( _T( "PluginUninit\n" ) );
+
 		// TODO: Uninitialize engine
+
 		UtilsDestroy();
+
 		g_hInst = NULL;
 		return TRUE;
 	}
@@ -59,6 +67,27 @@ UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 		case NSPIM_GUIUNLOAD:	TRACE( _T( "%hs( NSPIM_GUIUNLOAD )\n" ), __FUNCTION__ ); break;
 	}
 	return 0;
+}
+
+
+//++ ExtractCacertPem
+//?  Extracts $PLUGINSDIR\cacert.pem from plugin's resource block
+//?  If the file already exists the does nothing
+ULONG ExtractCacertPem()
+{
+	ULONG e = ERROR_SUCCESS;
+
+	assert( g_hInst != NULL );
+	assert( g_variables != NULL );
+
+	{
+		TCHAR szPem[MAX_PATH];
+		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariable2( INST2_PLUGINSDIR ) );
+		if (!FileExists( szPem ))
+			e = ExtractResourceFile( (HMODULE)g_hInst, L"cacert.pem", MAKEINTRESOURCE( 1 ), 1033, szPem );
+	}
+
+	return e;
 }
 
 
