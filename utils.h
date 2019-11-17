@@ -95,7 +95,13 @@ static LPTSTR MyAllocStr( _In_ ULONG iLen ) {
 	((h) != NULL) && ((h) != INVALID_HANDLE_VALUE)
 
 //+ FileExists
-BOOL FileExists( _In_ LPCTSTR pszFile );
+BOOL FileExistsW( _In_ LPCWSTR pszFile );
+BOOL FileExistsA( _In_ LPCSTR pszFile );
+#ifdef _UNICODE
+#define FileExists		FileExistsW
+#else
+#define FileExists		FileExistsA
+#endif
 
 //+ MyTimeDiff
 // Returns milliseconds

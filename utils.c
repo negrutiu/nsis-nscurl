@@ -4,7 +4,6 @@
 #include "main.h"
 #include "utils.h"
 
-
 MEMORY_STATS g_MemStats = { 0 };
 
 
@@ -81,12 +80,27 @@ VOID AllocErrorStr( _In_ DWORD dwErrCode, _Out_ TCHAR **ppszErrText )
 }
 
 
-//++ FileExists
-BOOL FileExists( _In_ LPCTSTR pszFile )
+//++ FileExistsA
+BOOL FileExistsA( _In_ LPCSTR pszFile )
 {
 	if (pszFile && *pszFile) {
-		WIN32_FIND_DATA fd;
-		HANDLE hFind = FindFirstFile( pszFile, &fd );
+		WIN32_FIND_DATAA fd;
+		HANDLE hFind = FindFirstFileA( pszFile, &fd );
+		if (hFind != INVALID_HANDLE_VALUE) {
+			FindClose( hFind );
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
+//++ FileExistsW
+BOOL FileExistsW( _In_ LPCWSTR pszFile )
+{
+	if (pszFile && *pszFile) {
+		WIN32_FIND_DATAW fd;
+		HANDLE hFind = FindFirstFileW( pszFile, &fd );
 		if (hFind != INVALID_HANDLE_VALUE) {
 			FindClose( hFind );
 			return TRUE;
