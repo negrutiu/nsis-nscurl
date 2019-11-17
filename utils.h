@@ -79,6 +79,9 @@ extern MEMORY_STATS g_MemStats;
 #define VALID_HANDLE(h) \
 	((h) != NULL) && ((h) != INVALID_HANDLE_VALUE)
 
+//+ FileExists
+BOOL FileExists( _In_ LPCTSTR pszFile );
+
 //+ MyTimeDiff
 // Returns milliseconds
 ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime );

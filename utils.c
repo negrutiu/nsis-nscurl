@@ -81,6 +81,21 @@ VOID AllocErrorStr( _In_ DWORD dwErrCode, _Out_ TCHAR **ppszErrText )
 }
 
 
+//++ FileExists
+BOOL FileExists( _In_ LPCTSTR pszFile )
+{
+	if (pszFile && *pszFile) {
+		WIN32_FIND_DATA fd;
+		HANDLE hFind = FindFirstFile( pszFile, &fd );
+		if (hFind != INVALID_HANDLE_VALUE) {
+			FindClose( hFind );
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+
 //++ MyTimeDiff
 ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime )
 {
