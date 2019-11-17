@@ -6,18 +6,7 @@
 
 HINSTANCE g_hInst = NULL;
 
-// NSIS plugin API
-extra_parameters *g_ep = NULL;
-HWND g_hwndparent = NULL;
 
-LPTSTR NSISCALL getuservariable2(const int varnum) {
-	return (varnum <= __INST2_LAST) ? g_variables + (varnum * g_stringsize) : NULL;
-}
-
-void NSISCALL setuservariable2(const int varnum, LPCTSTR var) {
-	if (var && (varnum <= __INST2_LAST))
-		lstrcpy( g_variables + (varnum * g_stringsize), var );
-}
 
 
 //++ PluginInit
@@ -82,7 +71,7 @@ ULONG ExtractCacertPem()
 
 	{
 		TCHAR szPem[MAX_PATH];
-		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariable2( INST2_PLUGINSDIR ) );
+		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
 		if (!FileExists( szPem ))
 			e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
 	}
