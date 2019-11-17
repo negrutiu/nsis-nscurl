@@ -79,32 +79,35 @@ ULONG ExtractCacertPem()
 }
 
 
-//++ Test
+//++ [exported] Echo (test)
 EXTERN_C __declspec(dllexport)
-void __cdecl Test(
-	HWND   parent,
-	int    string_size,
-	TCHAR   *variables,
-	stack_t **stacktop,
-	extra_parameters *extra
-	)
+void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
-	LPTSTR psz;
+	LPTSTR psz, psz2;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
-	assert( psz );
+	psz2 = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz && psz2 );
 
+	psz[0] = 0;
 	for (;;) {
-		if (popstring( psz ) != 0)
+		if (popstring( psz2 ) != NOERROR)
 			break;
-		if (lstrcmpi( psz, _T( "/END" ) ) == 0)
+
+		if (*psz)
+			_tcscat( psz, _T( " " ) );
+		_tcscat( psz, psz2 );
+
+		if (lstrcmpi( psz2, _T( "/END" ) ) == 0)
 			break;
 	}
+	pushstringEx( psz );
 
 	MyFree( psz );
+	MyFree( psz2 );
 }
 
 
