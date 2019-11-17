@@ -90,6 +90,9 @@ ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime );
 // Returns Win32 error
 DWORD ReadVersionInfoString( __in_opt LPCTSTR szFile, __in LPCTSTR szStringName, __out LPTSTR szStringValue, __in UINT iStringValueLen );
 
+//+ ExtractResourceFile
+ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath );
+
 //+ BinaryToString
 // Returns number of TCHAR-s written, not including the NULL terminator
 ULONG BinaryToString( __in LPVOID pData, __in ULONG iDataSize, __out LPTSTR pszStr, __in ULONG iStrLen );

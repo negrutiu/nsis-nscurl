@@ -186,6 +186,45 @@ DWORD ReadVersionInfoString(
 }
 
 
+//+ ExtractResourceFile
+ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath )
+{
+	ULONG e = ERROR_SUCCESS;
+	HRSRC hRes = NULL;
+
+	if (!pszResType || !pszResName || !pszOutPath || !*pszOutPath)
+		return ERROR_INVALID_PARAMETER;
+	
+	hRes = FindResourceEx( hMod, pszResType, pszResName, iResLang );
+	if (hRes) {
+		ULONG iResSize = SizeofResource( hMod, hRes );
+		HGLOBAL hMem = LoadResource( hMod, hRes );
+		if (hMem) {
+			LPVOID pRes = LockResource( hMem );
+			if (pRes) {
+				HANDLE h = CreateFile( pszOutPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+				if (h != INVALID_HANDLE_VALUE) {
+					ULONG iWritten;
+					if (WriteFile( h, pRes, iResSize, &iWritten, NULL )) {
+						// OK
+					} else {
+						e = GetLastError();
+					}
+					CloseHandle( h );
+				}
+			} else {
+				e = ERROR_INVALID_DATA;
+			}
+		} else {
+			e = GetLastError();
+		}
+	} else {
+		e = GetLastError();
+	}
+
+	return e;
+}
+
 //++ BinaryToString
 ULONG BinaryToString(
 	__in LPVOID pData, __in ULONG iDataSize,
