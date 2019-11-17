@@ -10,6 +10,15 @@ HINSTANCE g_hInst = NULL;
 extra_parameters *g_ep = NULL;
 HWND g_hwndparent = NULL;
 
+LPTSTR NSISCALL getuservariable2(const int varnum) {
+	return (varnum <= __INST2_LAST) ? g_variables + (varnum * g_stringsize) : NULL;
+}
+
+void NSISCALL setuservariable2(const int varnum, LPCTSTR var) {
+	if (var && (varnum <= __INST2_LAST))
+		lstrcpy( g_variables + (varnum * g_stringsize), var );
+}
+
 
 //++ PluginInit
 BOOL PluginInit( _In_ HINSTANCE hInst )

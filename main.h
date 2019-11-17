@@ -37,6 +37,16 @@
 	if (g_ep && g_ep->exec_flags && (g_ep->exec_flags->plugin_api_version != NSISPIAPIVER_CURR))  \
 		return;
 
+// Additional variables, not exported by NSIS API
+static const int INST2_TEMP			= 25;
+static const int INST2_PLUGINSDIR	= 26;
+static const int INST2_EXEPATH		= 27;
+static const int INST2_EXEFILE		= 28;
+static const int INST2_HWNDPARENT	= 29;
+static const int __INST2_LAST		= 29;
+LPTSTR NSISCALL getuservariable2(const int varnum);
+void   NSISCALL setuservariable2(const int varnum, LPCTSTR var);
+
 extern extra_parameters *g_ep;		/// main.c
 extern HWND g_hwndparent;			/// main.c
 #define safepushstring(psz)			pushstring( (psz) ? (psz) : _T("") )
