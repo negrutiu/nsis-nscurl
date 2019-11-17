@@ -109,7 +109,7 @@ ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime );
 
 //+ ReadVersionInfoString
 // Returns Win32 error
-DWORD ReadVersionInfoString( __in_opt LPCTSTR szFile, __in LPCTSTR szStringName, __out LPTSTR szStringValue, __in UINT iStringValueLen );
+ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen );
 
 //+ ExtractResourceFile
 ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath );

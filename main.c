@@ -4,9 +4,8 @@
 #include "main.h"
 #include "utils.h"
 
+
 HINSTANCE g_hInst = NULL;
-
-
 
 
 //++ PluginInit
@@ -34,7 +33,7 @@ BOOL PluginUninit()
 
 		TRACE( _T( "PluginUninit\n" ) );
 
-		// TODO: Uninitialize engine
+		// TODO: Stop engine
 
 		UtilsDestroy();
 

@@ -122,20 +122,15 @@ ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime )
 
 
 //++ ReadVersionInfoString
-DWORD ReadVersionInfoString(
-	__in_opt LPCTSTR szFile,
-	__in LPCTSTR szStringName,
-	__out LPTSTR szStringValue,
-	__in UINT iStringValueLen
-	)
+ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_  UINT iStringValueLen )
 {
-	DWORD err = ERROR_SUCCESS;
+	ULONG e = ERROR_SUCCESS;
 
 	// Validate parameters
 	if (szStringName && *szStringName && szStringValue && (iStringValueLen > 0)) {
 
+		ULONG iVerInfoSize;
 		TCHAR szExeFile[MAX_PATH];
-		DWORD dwVerInfoSize;
 		szStringValue[0] = 0;
 
 		if (szFile && *szFile) {
@@ -144,13 +139,13 @@ DWORD ReadVersionInfoString(
 			GetModuleFileName( NULL, szExeFile, ARRAYSIZE( szExeFile ) );	/// Current executable
 		}
 
-		dwVerInfoSize = GetFileVersionInfoSize( szExeFile, NULL );
-		if (dwVerInfoSize > 0) {
-			HANDLE hMem = GlobalAlloc( GMEM_MOVEABLE, dwVerInfoSize );
+		iVerInfoSize = GetFileVersionInfoSize( szExeFile, NULL );
+		if (iVerInfoSize > 0) {
+			HANDLE hMem = GlobalAlloc( GMEM_MOVEABLE, iVerInfoSize );
 			if (hMem) {
 				LPBYTE pMem = GlobalLock( hMem );
 				if (pMem) {
-					if (GetFileVersionInfo( szExeFile, 0, dwVerInfoSize, pMem )) {
+					if (GetFileVersionInfo( szExeFile, 0, iVerInfoSize, pMem )) {
 						typedef struct _LANGANDCODEPAGE { WORD wLanguage; WORD wCodePage; } LANGANDCODEPAGE;
 						LANGANDCODEPAGE *pCodePage;
 						UINT iCodePageSize = sizeof( *pCodePage );
@@ -168,39 +163,39 @@ DWORD ReadVersionInfoString(
 									if (iValueLen > iStringValueLen) {
 										/// The output buffer is not large enough
 										/// We'll return the truncated string, and ERROR_BUFFER_OVERFLOW error code
-										err = ERROR_BUFFER_OVERFLOW;
+										e = ERROR_BUFFER_OVERFLOW;
 									}
 								} else {
-									err = ERROR_NOT_FOUND;
+									e = ERROR_NOT_FOUND;
 								}
 							} else {
-								err = ERROR_NOT_FOUND;
+								e = ERROR_NOT_FOUND;
 							}
 						} else {
-							err = ERROR_NOT_FOUND;
+							e = ERROR_NOT_FOUND;
 						}
 					} else {
-						err = GetLastError();
+						e = GetLastError();
 					}
 					GlobalUnlock( hMem );
 				} else {
-					err = GetLastError();
+					e = GetLastError();
 				}
 				GlobalFree( hMem );
 			} else {
-				err = GetLastError();
+				e = GetLastError();
 			}
 		} else {
-			err = GetLastError();
+			e = GetLastError();
 		}
 	} else {
-		err = ERROR_INVALID_PARAMETER;
+		e = ERROR_INVALID_PARAMETER;
 	}
-	return err;
+	return e;
 }
 
 
-//+ ExtractResourceFile
+//++ ExtractResourceFile
 ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath )
 {
 	ULONG e = ERROR_SUCCESS;
