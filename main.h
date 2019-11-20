@@ -30,4 +30,3 @@
 
 // Globals
 extern HINSTANCE			g_hInst;				/// main.c
-extern CHAR					g_szUserAgent[128];		/// main.c

@@ -2,12 +2,12 @@
 //? Marius Negrutiu (marius.negrutiu@protonmail.com) :: 2014/01/19
 
 #include "main.h"
+#include "curl.h"
 #include "utils.h"
 #include "crypto.h"
 
 
 HINSTANCE g_hInst = NULL;
-CHAR g_szUserAgent[128] = "";
 
 
 //++ PluginInit
@@ -18,24 +18,9 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 		TRACE( _T( "PluginInit\n" ) );
 		g_hInst = hInst;
 
-		// Utils
 		UtilsInitialize();
+		CurlInitialize();
 
-		// Defaults
-		{
-			TCHAR szPath[MAX_PATH] = _T( "" ), szBuf[MAX_PATH] = _T( "" );
-
-			// User agent
-			GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) );
-			ReadVersionInfoString( szPath, _T( "FileVersion" ), szBuf, ARRAYSIZE( szBuf ) );
-		#if _UNICODE
-			_snprintf( g_szUserAgent, ARRAYSIZE( g_szUserAgent ), "nscurl/%ws", szBuf );
-		#else
-			_snprintf( g_szUserAgent, ARRAYSIZE( g_szUserAgent ), "nscurl/%s", szBuf );
-		#endif
-		}
-
-		// TODO: Initialize engine
 		return TRUE;
 	}
 	return FALSE;
@@ -49,8 +34,7 @@ BOOL PluginUninit()
 
 		TRACE( _T( "PluginUninit\n" ) );
 
-		// TODO: Stop engine
-
+		CurlDestroy();
 		UtilsDestroy();
 
 		g_hInst = NULL;
@@ -87,27 +71,6 @@ size_t write_to_file_curl_callback( char *ptr, size_t size, size_t nmemb, void *
 }
 
 
-//++ ExtractCacertPem
-//?  Extracts $PLUGINSDIR\cacert.pem from plugin's resource block
-//?  If the file already exists the does nothing
-ULONG ExtractCacertPem()
-{
-	ULONG e = ERROR_SUCCESS;
-
-	assert( g_hInst != NULL );
-	assert( g_variables != NULL );
-
-	{
-		TCHAR szPem[MAX_PATH];
-		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
-		if (!FileExists( szPem ))
-			e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
-	}
-
-	return e;
-}
-
-
 //++ UpdateCacertPem
 //?  Download the latest cacert.pem from its website
 //!  Should be called before downloading other files
@@ -137,7 +100,7 @@ CURLcode UpdateCacertPem()
 		CURL *curl = curl_easy_init();
 		if (curl) {
 
-			curl_easy_setopt( curl, CURLOPT_USERAGENT, g_szUserAgent );
+			curl_easy_setopt( curl, CURLOPT_USERAGENT, g.szUserAgent );
 
 			curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );			/// Follow redirects
 			curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 2 );
@@ -325,9 +288,6 @@ void __cdecl DownloadCacert( HWND parent, int string_size, TCHAR *variables, sta
 {
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
-
-	// Extract $PLUGINSDIR\cacert.pem, if not already exists...
-	ExtractCacertPem();
 
 	// Download latest cacert.pem
 	pushint( UpdateCacertPem() );

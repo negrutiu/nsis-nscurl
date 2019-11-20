@@ -30,6 +30,9 @@
     <ClCompile Include="crypto.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="curl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="NScurl.Readme.txt" />
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="crypto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="curl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
