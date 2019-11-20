@@ -114,6 +114,10 @@ ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName,
 //+ ExtractResourceFile
 ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath );
 
+//+ BinaryToHex
+// Returns number of TCHAR-s written, not including the NULL terminator
+ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen );
+
 //+ BinaryToString
 // Returns number of TCHAR-s written, not including the NULL terminator
 ULONG BinaryToString( __in LPVOID pData, __in ULONG iDataSize, __out LPTSTR pszStr, __in ULONG iStrLen );

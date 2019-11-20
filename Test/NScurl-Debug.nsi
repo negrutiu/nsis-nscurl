@@ -119,7 +119,7 @@ Function .onInit
 FunctionEnd
 
 
-Section "Cleanup test files"
+Section /o "Cleanup test files"
 	SectionIn 1	2 ; All
 	FindFirst $0 $1 "$EXEDIR\_*.*"
 loop:
@@ -132,7 +132,37 @@ done:
 SectionEnd
 
 
-Section Test
+Section Hashes
+	SectionIn 1
+
+	; NScurl::md5
+	!insertmacro STACK_VERIFY_START
+	Push "@$EXEPATH"
+	CallInstDLL "${NSCURL}" md5
+	Pop $0
+	DetailPrint 'NScurl::md5( @$EXEPATH ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::sha1
+	!insertmacro STACK_VERIFY_START
+	Push "@$EXEPATH"
+	CallInstDLL "${NSCURL}" sha1
+	Pop $0
+	DetailPrint 'NScurl::sha1( @$EXEPATH ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::sha256
+	!insertmacro STACK_VERIFY_START
+	Push "@$EXEPATH"
+	CallInstDLL "${NSCURL}" sha256
+	Pop $0
+	DetailPrint 'NScurl::sha256( @$EXEPATH ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section /o Test
 	SectionIn 1
 	
 	; NScurl::Echo

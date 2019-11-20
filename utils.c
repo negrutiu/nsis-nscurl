@@ -234,6 +234,38 @@ ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCT
 	return e;
 }
 
+
+//++ Dec2Hex
+TCHAR Dec2Hex( _In_ UCHAR dec )
+{
+	if (dec < 10) {
+		return dec + _T( '0' );
+	} else if (dec < 16) {
+		return dec - 10 + _T( 'a' );
+	}
+	return _T( '.' );
+}
+
+
+//++ BinaryToHex
+ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen )
+{
+	ULONG i, j, n;
+
+	if (pszStr && iStrLen)
+		pszStr[0] = 0;
+
+	n = __min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
+	for (i = 0, j = 0; i < n; i++, j = i << 1) {
+		pszStr[j] = Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
+		pszStr[j + 1] = Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
+	}
+
+	pszStr[j] = _T( '\0' );
+	return j;										/// Characters written, not including \0
+}
+
+
 //++ BinaryToString
 ULONG BinaryToString(
 	__in LPVOID pData, __in ULONG iDataSize,

@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="crypto.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="nsis\pluginapi.c" />
     <ClCompile Include="utils.c" />
@@ -158,6 +159,7 @@
     <Text Include="NScurl.Readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="crypto.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="nsis\api.h" />
     <ClInclude Include="nsis\nsis_tchar.h" />

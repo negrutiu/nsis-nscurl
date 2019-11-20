@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "utils.h"
+#include "crypto.h"
 
 
 HINSTANCE g_hInst = NULL;
@@ -202,6 +203,87 @@ CURLcode UpdateCacertPem()
 		lstrcpynA( szError, "OK", ARRAYSIZE( szError ) );
 
 	return e;
+}
+
+
+//++ [exported] md5 <file>
+EXTERN_C __declspec(dllexport)
+void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz );
+	psz[0] = 0;
+
+	if (popstring( psz ) == NOERROR) {
+		UCHAR hash[16];
+		if (FileHash( psz + 1, hash, NULL, NULL ) == ERROR_SUCCESS) {
+			BinaryToHex( hash, sizeof( hash ), psz, sizeof(hash) / 3 /*string_size*/ );
+		} else {
+			psz[0] = 0;
+		}
+	}
+
+	pushstringEx( psz );
+	MyFree( psz );
+}
+
+
+//++ [exported] sha1 <file>
+EXTERN_C __declspec(dllexport)
+void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz );
+	psz[0] = 0;
+
+	if (popstring( psz ) == NOERROR) {
+		UCHAR hash[20];
+		if (FileHash( psz + 1, NULL, hash, NULL ) == ERROR_SUCCESS) {
+			BinaryToHex( hash, sizeof( hash ), psz, string_size );
+		} else {
+			psz[0] = 0;
+		}
+	}
+
+	pushstringEx( psz );
+	MyFree( psz );
+}
+
+
+//++ [exported] sha256 <file>
+EXTERN_C __declspec(dllexport)
+void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz );
+	psz[0] = 0;
+
+	if (popstring( psz ) == NOERROR) {
+		UCHAR hash[32];
+		if (FileHash( psz + 1, NULL, NULL, hash ) == ERROR_SUCCESS) {
+			BinaryToHex( hash, sizeof( hash ), psz, string_size );
+		} else {
+			psz[0] = 0;
+		}
+	}
+
+	pushstringEx( psz );
+	MyFree( psz );
 }
 
 
