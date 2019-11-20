@@ -104,3 +104,20 @@ ULONG BinaryToString( __in LPVOID pData, __in ULONG iDataSize, __out LPTSTR pszS
 //+ MyStrToInt64
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );
+
+//++ UTF-8 String List
+typedef struct _UTF8LIST {
+	LPCSTR String;
+	struct _UTF8LIST *Next;
+} U8LIST;
+
+void InitializeU8List( _Inout_ U8LIST *pList );
+void AddU8ListPtr( _Inout_ U8LIST *pList, _In_ LPCSTR pStr );		/// Add directly
+void AddU8ListA( _Inout_ U8LIST *pList, _In_ LPCSTR pStr );			/// Add clone
+void AddU8ListW( _Inout_ U8LIST *pList, _In_ LPCWSTR pStr );		/// Add clone
+void DestroyU8List( _Inout_ U8LIST *pList );
+#ifdef _UNICODE
+	#define AddUtf8List		AddU8ListW
+#else
+	#define AddUtf8List		AddU8ListA
+#endif

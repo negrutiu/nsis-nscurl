@@ -316,3 +316,68 @@ BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 	}
 	return bRet;
 }
+
+
+//+ InitializeU8List
+void InitializeU8List( _Inout_ U8LIST *pList )
+{
+	if (pList)
+		pList->String = NULL, pList->Next = NULL;
+}
+
+//+ AddU8ListPtr
+void AddU8ListPtr( _Inout_ U8LIST *pList, _In_ LPCSTR pStr )
+{
+	if (pList && pStr) {
+		U8LIST *p;
+		/// Find last element
+		for (p = pList; p->Next; p = p->Next);
+		/// The list head also hosts the first element
+		if (p != pList || p->String) {
+			p->Next = (U8LIST*)MyAlloc( sizeof( *p ) );
+			if (p->Next)
+				p->Next->String = NULL, p->Next->Next = NULL;
+			p = p->Next;
+		}
+		if (p) {
+			p->String = pStr;
+		}
+	}
+}
+
+//+ AddU8ListA
+void AddU8ListA( _Inout_ U8LIST *pList, _In_ LPCSTR pStr )
+{
+	if (pList && pStr) {
+		LPSTR psz = _strdup( pStr );
+		if (psz)
+			AddU8ListPtr( pList, psz );
+	}
+}
+
+//+ AddU8ListW
+void AddU8ListW( _Inout_ U8LIST *pList, _In_ LPCWSTR pStr )
+{
+	if (pList && pStr) {
+		int l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
+		if (l > 0) {
+			LPSTR psz = (LPSTR)malloc( l );
+			if (psz && (l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
+				AddU8ListPtr( pList, psz );
+		}
+	}
+}
+
+//+ DestroyU8List
+void DestroyU8List( _Inout_ U8LIST *pList )
+{
+	while (pList->Next) {
+		U8LIST *p = pList->Next;
+		pList->Next = pList->Next->Next;
+		if (p->String)
+			free( (void*)p->String ), p->String = NULL;
+		MyFree( p );
+	}
+	if (pList->String)
+		free( (void*)pList->String ), pList->String = NULL;
+}
