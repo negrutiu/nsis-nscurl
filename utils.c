@@ -51,32 +51,31 @@ VOID TraceImpl( __in LPCTSTR pszFormat, ... )
 #endif
 
 
-//++ AllocErrorStr
-VOID AllocErrorStr( _In_ DWORD dwErrCode, _Out_ TCHAR **ppszErrText )
+//++ E32
+LPCTSTR E32( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen )
 {
-	if ( ppszErrText ) {
+	if (pszError) {
 
 		DWORD iLen, iFlags = 0;
-		TCHAR szError[512];
 		HMODULE hModule = NULL;
 
-	/*	if ( dwErrCode >= INTERNET_ERROR_BASE && dwErrCode <= INTERNET_ERROR_LAST ) {
+	/*	if ( err >= INTERNET_ERROR_BASE && dwErrCode <= INTERNET_ERROR_LAST ) {
 			hModule = GetModuleHandle( _T( "wininet.dll" ) );
 			iFlags = FORMAT_MESSAGE_FROM_HMODULE;
 		} else */ {
 			iFlags = FORMAT_MESSAGE_FROM_SYSTEM;
 		}
 
-		szError[0] = 0;
-		iLen = FormatMessage( FORMAT_MESSAGE_IGNORE_INSERTS | iFlags, hModule, dwErrCode, 0, szError, ARRAYSIZE( szError ), NULL );
+		pszError[0] = 0;
+		iLen = FormatMessage( FORMAT_MESSAGE_IGNORE_INSERTS | iFlags, hModule, err, 0, pszError, iErrorLen, NULL );
 		if ( iLen > 0 ) {
 			//x StrTrim( szError, _T( ". \r\n" ) );
-			for (iLen--; (iLen > 0) && (szError[iLen] == _T('.') || szError[iLen] == _T(' ') || szError[iLen] == _T('\r') || szError[iLen] == _T('\n')); iLen--)
-				szError[iLen] = _T('\0');
+			for (iLen--; (iLen > 0) && (pszError[iLen] == _T('.') || pszError[iLen] == _T(' ') || pszError[iLen] == _T('\r') || pszError[iLen] == _T('\n')); iLen--)
+				pszError[iLen] = _T('\0');
 			iLen++;
-			MyStrDup( *ppszErrText, szError );
 		}
 	}
+	return pszError;
 }
 
 

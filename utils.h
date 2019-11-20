@@ -39,7 +39,7 @@ VOID UtilsDestroy();
 #endif
 
 //+ Error
-VOID AllocErrorStr( _In_ DWORD dwErrCode, _Out_ TCHAR **ppszErrText );		/// Call MyFree(ppszErrText) when no longer needed
+LPCTSTR E32( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen );
 
 //+ Memory
 /// We'll use global memory, to be compatible with NSIS API
@@ -56,10 +56,6 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 	return p;
 }
 
-static LPTSTR MyAllocStr( _In_ ULONG iLen ) {
-	return (LPTSTR)MyAlloc( (iLen + 1) * sizeof( TCHAR ) );
-}
-
 #define MyFree(_ptr) { \
 	if ( _ptr ) { \
 		g_MemStats.FreeBytes += GlobalSize((HGLOBAL)(_ptr)); \
@@ -67,23 +63,6 @@ static LPTSTR MyAllocStr( _In_ ULONG iLen ) {
 		GlobalFree((HGLOBAL)(_ptr)); \
 		(_ptr) = NULL; \
 	}}
-
-#define MyDataDup(_dst, _src, _size) { \
-	(_dst) = MyAlloc( _size ); \
-	if (_dst) { \
-		LPBYTE pDst = (LPBYTE)(_dst); \
-		LPBYTE pSrc = (LPBYTE)(_src); \
-		ULONG i; \
-		for ( i = 0; i < (_size); i++, pDst++, pSrc++ ) \
-			*pDst = *pSrc; \
-	} \
-}
-
-#define MyStrDup(_dst, _src) { \
-	(_dst) = MyAllocStr( lstrlen( _src )); \
-	if (_dst) \
-		lstrcpy( (LPTSTR)(_dst), (LPTSTR)(_src) ); \
-}
 
 #define MyZeroMemory(_ptr, _cnt) { \
 	LPBYTE p; \
