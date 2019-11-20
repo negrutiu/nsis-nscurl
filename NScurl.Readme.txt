@@ -384,3 +384,23 @@ Example:
 	DetailPrint "Transferring $R1+$R2/$R0 files at $R3 using $R4 worker threads"
 _________________________________________________________________________________________________
 
+NScurl::md5    <file>
+NScurl::sha1   <file>
+NScurl::sha256 <file>
+
+Remarks:
+	Compute file hash
+
+Parameters:
+	<file>					| Full path
+
+Return:
+	[Stack] The hash as hex-encoded string, or an empty string for errors
+	e.g. md5:  "00112233445566778899aabbccddeeff" (32 characters, 16 bytes, 128 bits)
+	e.g. sha1: "00112233445566778899aabbccddeeff00112233" (40 characters, 20 bytes, 160 bits)
+	e.g. sha2: "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff" (64 characters, 32 bytes, 256 bits)
+
+Examples:
+	NScurl::md5 $EXEPATH
+	Pop $0
+_________________________________________________________________________________________________
