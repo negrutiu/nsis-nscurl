@@ -25,7 +25,7 @@ VOID UtilsDestroy()
 
 //++ TraceImpl
 #if defined (TRACE_ENABLED)
-VOID TraceImpl( __in LPCTSTR pszFormat, ... )
+VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 {
 	DWORD err = ERROR_SUCCESS;
 	if ( pszFormat && *pszFormat ) {
@@ -140,7 +140,7 @@ BOOL FileExistsW( _In_ LPCWSTR pszFile )
 
 
 //++ MyTimeDiff
-ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime )
+ULONG MyTimeDiff( _In_ PFILETIME pEndTime, _In_ PFILETIME pStartTime )
 {
 	if (pStartTime && pEndTime) {
 		ULONGLONG iDiff = (((PULARGE_INTEGER)pEndTime)->QuadPart - ((PULARGE_INTEGER)pStartTime)->QuadPart) / 10000;
@@ -151,7 +151,7 @@ ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime )
 
 
 //++ ReadVersionInfoString
-ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_  UINT iStringValueLen )
+ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen )
 {
 	ULONG e = ERROR_SUCCESS;
 
@@ -296,10 +296,7 @@ ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr,
 
 
 //++ BinaryToString
-ULONG BinaryToString(
-	__in LPVOID pData, __in ULONG iDataSize,
-	__out LPTSTR pszStr, __in ULONG iStrLen
-	)
+ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen )
 {
 	ULONG iLen = 0;
 	if (pszStr && iStrLen) {

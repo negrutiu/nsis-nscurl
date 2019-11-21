@@ -9,14 +9,14 @@ VOID UtilsDestroy();
 
 
 //+ TRACE
-//#if DBG || _DEBUG
+#if DBG || _DEBUG
 	#define TRACE_ENABLED
-//#endif
+#endif
 
 #if defined (TRACE_ENABLED)
 	#define TRACE TraceImpl
 	#define TRACE2(...)			/// More verbose tracing
-	VOID TraceImpl( __in LPCTSTR pszFormat, ... );
+	VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... );
 #else
 	#define TRACE(...)
 	#define TRACE2(...)
@@ -65,10 +65,6 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 	}}
 
 
-#define MyZeroMemory(_ptr, _cnt) { \
-	LPBYTE p; \
-	for ( p = (LPBYTE)(_ptr) + (_cnt) - 1; p >= (LPBYTE)(_ptr); p-- ) *p = 0; \
-}
 LPSTR MyStrDupA( _In_ LPCSTR pStr );
 LPSTR MyStrDupW( _In_ LPCWSTR pStr );
 
@@ -79,15 +75,10 @@ LPSTR MyStrDupW( _In_ LPCWSTR pStr );
 //+ FileExists
 BOOL FileExistsW( _In_ LPCWSTR pszFile );
 BOOL FileExistsA( _In_ LPCSTR pszFile );
-#ifdef _UNICODE
-#define FileExists		FileExistsW
-#else
-#define FileExists		FileExistsA
-#endif
 
 //+ MyTimeDiff
 // Returns milliseconds
-ULONG MyTimeDiff( __in PFILETIME pEndTime, __in PFILETIME pStartTime );
+ULONG MyTimeDiff( _In_ PFILETIME pEndTime, _In_ PFILETIME pStartTime );
 
 //+ ReadVersionInfoString
 // Returns Win32 error
@@ -102,7 +93,7 @@ ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr,
 
 //+ BinaryToString
 // Returns number of TCHAR-s written, not including the NULL terminator
-ULONG BinaryToString( __in LPVOID pData, __in ULONG iDataSize, __out LPTSTR pszStr, __in ULONG iStrLen );
+ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen );
 
 //+ MyStrToInt64
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
@@ -122,7 +113,11 @@ void StrListDestroy( _Inout_ STRLIST *pList );
 
 //+ Unicode
 #ifdef _UNICODE
+	#define FileExists		FileExistsW
 	#define StrListAdd		StrListAddW
+	#define MyStrDup		MyStrDupW
 #else
+	#define FileExists		FileExistsA
 	#define StrListAdd		StrListAddA
+	#define MyStrDup		MyStrDupA
 #endif
