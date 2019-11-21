@@ -70,10 +70,10 @@ LPSTR MyStrDupA( _In_ LPCSTR pStr )
 LPSTR MyStrDupW( _In_ LPCWSTR pStr )
 {
 	if (pStr) {
-		int l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
+		int l = WideCharToMultiByte( CP_UTF8, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
 		if (l > 0) {
 			LPSTR psz = (LPSTR)MyAlloc( l );
-			if (psz && (l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
+			if (psz && (l = WideCharToMultiByte( CP_UTF8, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
 				return psz;
 		}
 	}
