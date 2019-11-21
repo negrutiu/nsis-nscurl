@@ -38,8 +38,8 @@ VOID UtilsDestroy();
 	#define verify(expr) ((VOID)(expr))
 #endif
 
-//+ Error
-LPCTSTR E32( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen );
+//+ Win32Err
+LPCTSTR Win32Err( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen );
 
 //+ Memory
 /// We'll use global memory, to be compatible with NSIS API
@@ -64,10 +64,13 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 		(_ptr) = NULL; \
 	}}
 
+
 #define MyZeroMemory(_ptr, _cnt) { \
 	LPBYTE p; \
 	for ( p = (LPBYTE)(_ptr) + (_cnt) - 1; p >= (LPBYTE)(_ptr); p-- ) *p = 0; \
 }
+LPSTR MyStrDupA( _In_ LPCSTR pStr );
+LPSTR MyStrDupW( _In_ LPCWSTR pStr );
 
 //+ VALID_HANDLE
 #define VALID_HANDLE(h) \
@@ -105,19 +108,21 @@ ULONG BinaryToString( __in LPVOID pData, __in ULONG iDataSize, __out LPTSTR pszS
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );
 
-//++ UTF-8 String List
-typedef struct _UTF8LIST {
-	LPCSTR String;
-	struct _UTF8LIST *Next;
-} U8LIST;
+//+ String List
+typedef struct _STRLIST {
+	LPCSTR String;													/// UTF8
+	struct _STRLIST *Next;
+} STRLIST;
 
-void InitializeU8List( _Inout_ U8LIST *pList );
-void AddU8ListPtr( _Inout_ U8LIST *pList, _In_ LPCSTR pStr );		/// Add directly
-void AddU8ListA( _Inout_ U8LIST *pList, _In_ LPCSTR pStr );			/// Add clone
-void AddU8ListW( _Inout_ U8LIST *pList, _In_ LPCWSTR pStr );		/// Add clone
-void DestroyU8List( _Inout_ U8LIST *pList );
+void StrListInitialize( _Inout_ STRLIST *pList );
+void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr );		/// Add a copy of the string
+void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr );		/// Add a copy of the string
+void StrListDestroy( _Inout_ STRLIST *pList );
+
+
+//+ Unicode
 #ifdef _UNICODE
-	#define AddUtf8List		AddU8ListW
+	#define StrListAdd		StrListAddW
 #else
-	#define AddUtf8List		AddU8ListA
+	#define StrListAdd		StrListAddA
 #endif

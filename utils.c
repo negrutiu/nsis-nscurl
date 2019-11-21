@@ -51,8 +51,38 @@ VOID TraceImpl( __in LPCTSTR pszFormat, ... )
 #endif
 
 
-//++ E32
-LPCTSTR E32( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen )
+//++ MyStrDupA
+LPSTR MyStrDupA( _In_ LPCSTR pStr )
+{
+	if (pStr) {
+		ULONG l = lstrlenA( pStr );
+		LPSTR psz = (LPSTR)MyAlloc( l + 1 );
+		if (psz) {
+			CopyMemory( psz, pStr, l + 1 );
+			return psz;
+		}
+	}
+	return NULL;
+}
+
+
+//++ MyStrDupW
+LPSTR MyStrDupW( _In_ LPCWSTR pStr )
+{
+	if (pStr) {
+		int l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
+		if (l > 0) {
+			LPSTR psz = (LPSTR)MyAlloc( l );
+			if (psz && (l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
+				return psz;
+		}
+	}
+	return NULL;
+}
+
+
+//++ Win32Err
+LPCTSTR Win32Err( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen )
 {
 	if (pszError) {
 
@@ -318,23 +348,23 @@ BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 }
 
 
-//+ InitializeU8List
-void InitializeU8List( _Inout_ U8LIST *pList )
+//++ StrListInitialize
+void StrListInitialize( _Inout_ STRLIST *pList )
 {
 	if (pList)
 		pList->String = NULL, pList->Next = NULL;
 }
 
-//+ AddU8ListPtr
-void AddU8ListPtr( _Inout_ U8LIST *pList, _In_ LPCSTR pStr )
+//++ StrListAddPtr
+void StrListAddPtr( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
 {
 	if (pList && pStr) {
-		U8LIST *p;
+		STRLIST *p;
 		/// Find last element
 		for (p = pList; p->Next; p = p->Next);
 		/// The list head also hosts the first element
 		if (p != pList || p->String) {
-			p->Next = (U8LIST*)MyAlloc( sizeof( *p ) );
+			p->Next = (STRLIST*)MyAlloc( sizeof( *p ) );
 			if (p->Next)
 				p->Next->String = NULL, p->Next->Next = NULL;
 			p = p->Next;
@@ -345,39 +375,34 @@ void AddU8ListPtr( _Inout_ U8LIST *pList, _In_ LPCSTR pStr )
 	}
 }
 
-//+ AddU8ListA
-void AddU8ListA( _Inout_ U8LIST *pList, _In_ LPCSTR pStr )
+//++ StrListAddA
+void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
 {
-	if (pList && pStr) {
-		LPSTR psz = _strdup( pStr );
+	if (pList) {
+		LPSTR psz = MyStrDupA( pStr );
 		if (psz)
-			AddU8ListPtr( pList, psz );
+			StrListAddPtr( pList, psz );
 	}
 }
 
-//+ AddU8ListW
-void AddU8ListW( _Inout_ U8LIST *pList, _In_ LPCWSTR pStr )
+//++ StrListAddW
+void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr )
 {
-	if (pList && pStr) {
-		int l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
-		if (l > 0) {
-			LPSTR psz = (LPSTR)malloc( l );
-			if (psz && (l = WideCharToMultiByte( CP_ACP, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
-				AddU8ListPtr( pList, psz );
-		}
+	if (pList) {
+		LPSTR psz = MyStrDupW( pStr );
+		if (psz)
+			StrListAddPtr( pList, psz );
 	}
 }
 
-//+ DestroyU8List
-void DestroyU8List( _Inout_ U8LIST *pList )
+//++ StrListDestroy
+void StrListDestroy( _Inout_ STRLIST *pList )
 {
 	while (pList->Next) {
-		U8LIST *p = pList->Next;
-		pList->Next = pList->Next->Next;
-		if (p->String)
-			free( (void*)p->String ), p->String = NULL;
-		MyFree( p );
+		STRLIST *pElem2 = pList->Next;
+		pList->Next = pElem2->Next;
+		MyFree( pElem2->String );
+		MyFree( pElem2 );
 	}
-	if (pList->String)
-		free( (void*)pList->String ), pList->String = NULL;
+	MyFree( pList->String );
 }
