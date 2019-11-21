@@ -84,9 +84,9 @@ Return:
 	[Stack] "OK" for successful transfers, or an error string (HTTP or Win32) otherwise
 _________________________________________________________________________________________________
 
-NScurl::Request		[/METHOD GET|POST|HEAD|PUT|...]
-					/URL url
+NScurl::Request		/URL url
 					/TO file|MEMORY
+					[/METHOD GET|POST|HEAD|PUT|...]
 					[/HEADERS hdr]
 					[/DATA data | /DATAFILE file]
 					[/TIMEOUT msec]
@@ -103,9 +103,9 @@ Remarks:
 	This command will not display any GUI.
 	
 Parameters:
-	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
 	/URL url					| HTTP or HTTPS...
 	/TO file|MEMORY				| Remote content destination. Can be either a local file or a memory buffer
+	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
 	/HEADERS hdr				| Additional HTTP request headers, delimited by CRLF (\r\n)
 	/DATA data					| Additional data to be sent as part of the HTTP request
 	/DATAFILE file				| Additional data to be sent as part of the HTTP request (read from the specified file)
@@ -114,7 +114,7 @@ Parameters:
 	/PROXYUSER user				| Optional username for authenticated proxies
 	/PROXYPASS pass				| Optional password for authenticated proxies
 	/REFERER url				| Optional referer URL, passed to InternetOpenRequest
-	/AGENT agent				| Optional user agent
+	/USERAGENT agent			| Optional user agent
 	/INSECURE					| Don't validate server certificate. Accept anything (default: false)
 	/CACERT cacert.pem_path		| Specify a custom cacert.pem file (default: $PLUGINSDIR\cacert.pem)
 	/END						| Must conclude the parameter list, otherwise the NSIS stack will be emptied...
