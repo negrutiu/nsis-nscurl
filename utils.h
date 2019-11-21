@@ -65,8 +65,10 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 	}}
 
 
-LPSTR MyStrDupA( _In_ LPCSTR pStr );
-LPSTR MyStrDupW( _In_ LPCWSTR pStr );
+LPSTR  MyStrDupAA( _In_ LPCSTR pStr );
+LPSTR  MyStrDupAW( _In_ LPCWSTR pStr );
+LPWSTR MyStrDupWA( _In_ LPCSTR pStr );
+LPWSTR MyStrDupWW( _In_ LPCWSTR pStr );
 
 //+ VALID_HANDLE
 #define VALID_HANDLE(h) \
@@ -115,9 +117,11 @@ void StrListDestroy( _Inout_ STRLIST *pList );
 #ifdef _UNICODE
 	#define FileExists		FileExistsW
 	#define StrListAdd		StrListAddW
-	#define MyStrDup		MyStrDupW
+	#define MyStrDup		MyStrDupWW		/// LPTSTR -> LPTSTR
+	#define MyStrDupA		MyStrDupAW		/// LPTSTR -> LPSTR
 #else
 	#define FileExists		FileExistsA
 	#define StrListAdd		StrListAddA
-	#define MyStrDup		MyStrDupA
+	#define MyStrDup		MyStrDupAA		/// LPTSTR -> LPTSTR
+	#define MyStrDupA		MyStrDupAA		/// LPTSTR -> LPSTR
 #endif

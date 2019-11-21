@@ -51,8 +51,8 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 #endif
 
 
-//++ MyStrDupA
-LPSTR MyStrDupA( _In_ LPCSTR pStr )
+//++ MyStrDupAA
+LPSTR MyStrDupAA( _In_ LPCSTR pStr )
 {
 	if (pStr) {
 		ULONG l = lstrlenA( pStr );
@@ -66,8 +66,8 @@ LPSTR MyStrDupA( _In_ LPCSTR pStr )
 }
 
 
-//++ MyStrDupW
-LPSTR MyStrDupW( _In_ LPCWSTR pStr )
+//++ MyStrDupAW
+LPSTR MyStrDupAW( _In_ LPCWSTR pStr )
 {
 	if (pStr) {
 		int l = WideCharToMultiByte( CP_UTF8, 0, pStr, -1, NULL, 0, NULL, 0 );		/// Returns length including \0
@@ -75,6 +75,36 @@ LPSTR MyStrDupW( _In_ LPCWSTR pStr )
 			LPSTR psz = (LPSTR)MyAlloc( l );
 			if (psz && (l = WideCharToMultiByte( CP_UTF8, 0, pStr, -1, psz, l, NULL, 0 )) > 0)
 				return psz;
+		}
+	}
+	return NULL;
+}
+
+
+//++ MyStrDupWA
+LPWSTR MyStrDupWA( _In_ LPCSTR pStr )
+{
+	if (pStr) {
+		int l = MultiByteToWideChar( CP_UTF8, 0, pStr, -1, NULL, 0 );		/// Returns length including \0
+		if (l > 0) {
+			LPWSTR psz = (LPWSTR)MyAlloc( l * sizeof(WCHAR) );
+			if (psz && (l = MultiByteToWideChar( CP_UTF8, 0, pStr, -1, psz, l )) > 0)
+				return psz;
+		}
+	}
+	return NULL;
+}
+
+
+//++ MyStrDupWW
+LPWSTR MyStrDupWW( _In_ LPCWSTR pStr )
+{
+	if (pStr) {
+		ULONG l = (lstrlenW( pStr ) + 1) * sizeof(WCHAR);
+		LPWSTR psz = (LPWSTR)MyAlloc( l );
+		if (psz) {
+			CopyMemory( psz, pStr, l );
+			return psz;
 		}
 	}
 	return NULL;
@@ -376,7 +406,7 @@ void StrListAddPtr( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
 void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
 {
 	if (pList) {
-		LPSTR psz = MyStrDupA( pStr );
+		LPSTR psz = MyStrDupAA( pStr );
 		if (psz)
 			StrListAddPtr( pList, psz );
 	}
@@ -386,7 +416,7 @@ void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
 void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr )
 {
 	if (pList) {
-		LPSTR psz = MyStrDupW( pStr );
+		LPSTR psz = MyStrDupAW( pStr );
 		if (psz)
 			StrListAddPtr( pList, psz );
 	}
