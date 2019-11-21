@@ -137,26 +137,26 @@ Section Hashes
 
 	; NScurl::md5
 	!insertmacro STACK_VERIFY_START
-	Push "@$EXEPATH"
+	Push "$EXEPATH"
 	CallInstDLL "${NSCURL}" md5
 	Pop $0
-	DetailPrint 'NScurl::md5( @$EXEPATH ) = "$0"'
+	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha1
 	!insertmacro STACK_VERIFY_START
-	Push "@$EXEPATH"
+	Push "$EXEPATH"
 	CallInstDLL "${NSCURL}" sha1
 	Pop $0
-	DetailPrint 'NScurl::sha1( @$EXEPATH ) = "$0"'
+	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha256
 	!insertmacro STACK_VERIFY_START
-	Push "@$EXEPATH"
+	Push "$EXEPATH"
 	CallInstDLL "${NSCURL}" sha256
 	Pop $0
-	DetailPrint 'NScurl::sha256( @$EXEPATH ) = "$0"'
+	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 SectionEnd

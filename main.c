@@ -184,8 +184,8 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[16];
-		if (FileHash( psz + 1, hash, NULL, NULL ) == ERROR_SUCCESS) {
-			BinaryToHex( hash, sizeof( hash ), psz, sizeof(hash) / 3 /*string_size*/ );
+		if (FileHash( psz, hash, NULL, NULL ) == ERROR_SUCCESS) {
+			BinaryToHex( hash, sizeof( hash ), psz, string_size );
 		} else {
 			psz[0] = 0;
 		}
@@ -211,7 +211,7 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[20];
-		if (FileHash( psz + 1, NULL, hash, NULL ) == ERROR_SUCCESS) {
+		if (FileHash( psz, NULL, hash, NULL ) == ERROR_SUCCESS) {
 			BinaryToHex( hash, sizeof( hash ), psz, string_size );
 		} else {
 			psz[0] = 0;
@@ -238,7 +238,7 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[32];
-		if (FileHash( psz + 1, NULL, NULL, hash ) == ERROR_SUCCESS) {
+		if (FileHash( psz, NULL, NULL, hash ) == ERROR_SUCCESS) {
 			BinaryToHex( hash, sizeof( hash ), psz, string_size );
 		} else {
 			psz[0] = 0;
