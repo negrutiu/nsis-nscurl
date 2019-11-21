@@ -29,14 +29,14 @@ ULONG CurlInitialize()
 	g.hSema = CreateSemaphore( NULL, nThreads, nThreads, NULL );
 
 	{
-		// User agent
-		TCHAR szBuf[MAX_PATH] = _T( "" );
+		// Default user agent
+		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
 		GetModuleFileName( g_hInst, szBuf, ARRAYSIZE( szBuf ) );
-		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szBuf, ARRAYSIZE( szBuf ) );
+		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
 	#if _UNICODE
-		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%ws", szBuf );
+		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%ws", szVer );
 	#else
-		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%s", szBuf );
+		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%s", szVer );
 	#endif
 	}
 
