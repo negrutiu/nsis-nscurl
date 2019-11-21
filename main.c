@@ -173,6 +173,54 @@ void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
+//++ Request
+EXTERN_C __declspec(dllexport)
+void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz = NULL;
+	CURL_REQUEST Req;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "NSxfer!Request" ) );
+
+	/// Lock the plugin in memory
+	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
+
+	/// Working buffer
+	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
+	assert( psz );
+
+	/// Parameters
+	CurlRequestInit( Req );
+	for (;;)
+	{
+		if (popstring( psz ) != 0)
+			break;
+		if (lstrcmpi( psz, _T( "/END" ) ) == 0)
+			break;
+
+		if (!CurlParseRequestParam( psz, string_size, &Req )) {
+			TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
+		}
+	}
+
+	// Add to the queue
+//x	QueueLock( &g_Queue );
+//x	QueueAdd( &g_Queue, &Req, &pReq );
+//x	pushint( pReq ? pReq->iId : 0 );	/// Return the request's ID
+//x	QueueUnlock( &g_Queue );
+
+	CurlExtractCacert();
+	CurlTransfer( &Req );
+	pushint( 666 );		// TODO
+
+	CurlRequestDestroy( Req );
+	MyFree( psz );
+}
+
+
 //++ DllMain
 EXTERN_C
 BOOL WINAPI DllMain( HMODULE hInst, UINT iReason, LPVOID lpReserved )

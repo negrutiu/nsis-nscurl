@@ -119,7 +119,7 @@ Function .onInit
 FunctionEnd
 
 
-Section /o "Cleanup test files"
+Section "Cleanup test files"
 	SectionIn 1	2 ; All
 	FindFirst $0 $1 "$EXEDIR\_*.*"
 loop:
@@ -132,7 +132,7 @@ done:
 SectionEnd
 
 
-Section Hashes
+Section /o Hashes
 	SectionIn 1
 
 	; NScurl::md5
@@ -186,8 +186,7 @@ Section /o Test
 SectionEnd
 
 
-/*
-Section /o "HTTP GET (Page mode)"
+Section "GET SysinternalsSuite.zip"
 	SectionIn 1	; All
 
 	DetailPrint '-----------------------------------------------'
@@ -197,23 +196,25 @@ Section /o "HTTP GET (Page mode)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'http://live.sysinternals.com/Files/SysinternalsSuite.zip'
 	!define /redef FILE '$EXEDIR\_SysinternalsSuite.zip'
-	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
 	Push "/END"
+	Push "https://test.com"
+	Push "/REFERER"
+	Push "nscurl/1.2.3"
+	Push "/USERAGENT"
 	Push 30000
-	Push "/TIMEOUTRECONNECT"
-	Push 15000
-	Push "/TIMEOUTCONNECT"
+	Push "/TIMEOUT"
 	Push "${FILE}"
-	Push "/LOCAL"
+	Push "/TO"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Transfer
+	CallInstDLL "${NSCURL}" Request
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
-
+/*
 Section /o "HTTP GET (Popup mode)"
 	SectionIn 1	; All
 
