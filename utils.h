@@ -112,6 +112,15 @@ void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr );		/// Add a copy of
 void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr );		/// Add a copy of the string
 void StrListDestroy( _Inout_ STRLIST *pList );
 
+//+ Virtual Memory
+typedef struct {
+	PCCH   pMem;		/// Memory buffer
+	SIZE_T iSize;		/// Memory size
+	SIZE_T iReserved, iCommitted;
+} VMEMO;
+ULONG  VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize );			/// Return Win32 error
+SIZE_T VirtualMemoryWrite( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
+void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 
 //+ Unicode
 #ifdef _UNICODE

@@ -433,3 +433,58 @@ void StrListDestroy( _Inout_ STRLIST *pList )
 	}
 	MyFree( pList->String );
 }
+
+
+//++ VirtualMemoryInitialize
+ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
+{
+	if (pMem) {
+		ZeroMemory( pMem, sizeof( *pMem ) );
+		pMem->pMem = (PCCH)VirtualAlloc( NULL, iMaxSize, MEM_RESERVE, PAGE_READWRITE );
+		if (pMem->pMem) {
+			MEMORY_BASIC_INFORMATION mbi = {0};
+			pMem->iReserved = (VirtualQuery( pMem->pMem, &mbi, sizeof( mbi ) ) > 0) ? mbi.RegionSize : iMaxSize;
+		} else {
+			return GetLastError();
+		}
+	}
+	return ERROR_SUCCESS;
+}
+
+//++ VirtualMemoryWrite
+SIZE_T VirtualMemoryWrite( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T size )
+{
+	ULONG e = ERROR_SUCCESS;
+	if (pMem && pMem->pMem && buf && size) {
+
+		/// Commit more virtual memory as needed
+		if (pMem->iSize + size > pMem->iCommitted) {
+			SYSTEM_INFO si;
+			GetSystemInfo( &si );
+			SIZE_T n = ((size + si.dwPageSize) / si.dwPageSize) * si.dwPageSize;
+			pMem->iCommitted = __min( pMem->iCommitted + n, pMem->iReserved );
+			e = VirtualAlloc( (LPVOID)pMem->pMem, pMem->iCommitted, MEM_COMMIT, PAGE_READWRITE ) ? ERROR_SUCCESS : GetLastError();
+		}
+
+		/// Write
+		if (e == ERROR_SUCCESS) {
+			SIZE_T n = __min( size, pMem->iReserved - pMem->iSize );
+			if (n > 0) {
+				CopyMemory( (LPVOID)(pMem->pMem + pMem->iSize), buf, n );
+				pMem->iSize += n;
+			}
+			return n;
+		}
+	}
+	return 0;
+}
+
+//++ VirtualMemoryDestroy
+void VirtualMemoryDestroy( _Inout_ VMEMO *pMem )
+{
+	if (pMem) {
+		if (pMem->pMem)
+			VirtualFree( (LPVOID)pMem->pMem, 0, MEM_RELEASE );
+		ZeroMemory( pMem, sizeof( *pMem ) );
+	}
+}
