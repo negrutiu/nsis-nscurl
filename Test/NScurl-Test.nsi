@@ -157,7 +157,7 @@ Section "httpbin.org/GET"
 	!define /redef LINK 'http://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END

@@ -87,7 +87,7 @@ ________________________________________________________________________________
 NScurl::Request		/URL url
 					/TO file|MEMORY
 					[/METHOD GET|POST|HEAD|PUT|...]
-					[/HEADERS hdr]
+					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data | /DATAFILE file]
 					[/TIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
@@ -106,7 +106,7 @@ Parameters:
 	/URL url					| HTTP or HTTPS...
 	/TO file|MEMORY				| Remote content destination. Can be either a local file or a memory buffer
 	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
-	/HEADERS hdr				| Additional HTTP request headers, delimited by CRLF (\r\n)
+	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF (\r\n). Multiple /HEADER parameters are accepted
 	/DATA data					| Additional data to be sent as part of the HTTP request
 	/DATAFILE file				| Additional data to be sent as part of the HTTP request (read from the specified file)
 	/TIMEOUT msec				| Transfer timeout (default: infinite)

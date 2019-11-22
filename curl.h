@@ -11,7 +11,7 @@ typedef struct {
 	LPCSTR  pszURL;
 	LPCTSTR pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR  pszMethod;				/// can be NULL
-	LPCSTR  pszHeaders;				/// can be NULL
+	struct curl_slist *pInHeaders;	/// can be NULL
 	LPVOID  pData;					/// can be NULL
 	ULONG   iDataSize;				/// can be 0
 	LPCSTR  pszProxy;				/// can be NULL
@@ -33,7 +33,7 @@ typedef struct {
 		BOOL		bHttpStatus;
 		HANDLE		hFile;
 		VMEMO		OutHeaders;
-		VMEMO		OutData;		/// Used downloading to RAM
+		VMEMO		OutData;		/// Used when downloading to RAM
 	} Runtime;
 } CURL_REQUEST, *PCURL_REQUEST;
 
@@ -44,7 +44,7 @@ typedef struct {
 	MyFree( Req.pszURL ); \
 	MyFree( Req.pszPath ); \
 	MyFree( Req.pszMethod ); \
-	MyFree( Req.pszHeaders ); \
+	curl_slist_free_all( Req.pInHeaders ); \
 	MyFree( Req.pData ); \
 	MyFree( Req.pszProxy ); \
 	MyFree( Req.pszProxyUser ); \

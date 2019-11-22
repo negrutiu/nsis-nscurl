@@ -112,10 +112,30 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			MyFree( pParam->pszMethod );
 			pParam->pszMethod = MyStrDupA( pszParam );
 		}
-	} else if (lstrcmpi( pszParam, _T( "/HEADERS" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszHeaders );
-			pParam->pszHeaders = MyStrDupA( pszParam );
+			// The string may contain multiple headers delimited by \r\n
+			LPTSTR psz1, psz2;
+			TCHAR ch;
+			LPSTR pszA;
+			UNREFERENCED_PARAMETER( pszA );
+			for (psz1 = pszParam; *psz1; ) {
+				for (; (*psz1 == _T('\r')) || (*psz1 == _T('\n')); psz1++);			/// Skip \r\n
+				for (psz2 = psz1; (*psz2 != _T('\0')) && (*psz2 != _T('\r')) && (*psz2 != _T('\n')); psz2++);		/// Find next \r\n\0
+				if (psz2 > psz1) {
+					ch = *psz2, *psz2 = _T( '\0' );
+				#ifdef _UNICODE
+					if ((pszA = MyStrDupAW( psz1 )) != NULL) {
+						pParam->pInHeaders = curl_slist_append( pParam->pInHeaders, pszA );
+						MyFree( pszA );
+					}
+				#else
+					pParam->pInHeaders = curl_slist_append( pParam->pInHeaders, psz1 );
+				#endif
+					*psz2 = ch;
+					psz1 = psz2;
+				}
+			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -331,7 +351,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		/// GET
 		curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
 
-		// TODO: HEADERS
+		/// Request Headers
+		if (pReq->pInHeaders)
+			curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pInHeaders );
+
 		// TODO: DATA
 		// TODO: POST FORM
 		// TODO: PROXY
