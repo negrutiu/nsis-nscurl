@@ -327,8 +327,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 		}
 
+		// TODO: METHOD
 		/// GET
 		curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
+
+		// TODO: HEADERS
+		// TODO: DATA
+		// TODO: POST FORM
+		// TODO: PROXY
 
 		/// Resume
 		curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
