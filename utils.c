@@ -111,31 +111,30 @@ LPWSTR MyStrDupWW( _In_ LPCWSTR pStr )
 }
 
 
-//++ Win32Err
-LPCTSTR Win32Err( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen )
+//++ MyErrorStr
+LPCTSTR MyErrorStr( _In_ ULONG err )
 {
-	if (pszError) {
+	TCHAR szError[512];
+	DWORD iLen, iFlags = 0;
+	HMODULE hModule = NULL;
 
-		DWORD iLen, iFlags = 0;
-		HMODULE hModule = NULL;
-
-	/*	if ( err >= INTERNET_ERROR_BASE && dwErrCode <= INTERNET_ERROR_LAST ) {
-			hModule = GetModuleHandle( _T( "wininet.dll" ) );
-			iFlags = FORMAT_MESSAGE_FROM_HMODULE;
-		} else */ {
-			iFlags = FORMAT_MESSAGE_FROM_SYSTEM;
-		}
-
-		pszError[0] = 0;
-		iLen = FormatMessage( FORMAT_MESSAGE_IGNORE_INSERTS | iFlags, hModule, err, 0, pszError, iErrorLen, NULL );
-		if ( iLen > 0 ) {
-			//x StrTrim( szError, _T( ". \r\n" ) );
-			for (iLen--; (iLen > 0) && (pszError[iLen] == _T('.') || pszError[iLen] == _T(' ') || pszError[iLen] == _T('\r') || pszError[iLen] == _T('\n')); iLen--)
-				pszError[iLen] = _T('\0');
-			iLen++;
-		}
+/*	if ( err >= INTERNET_ERROR_BASE && dwErrCode <= INTERNET_ERROR_LAST ) {
+		hModule = GetModuleHandle( _T( "wininet.dll" ) );
+		iFlags = FORMAT_MESSAGE_FROM_HMODULE;
+	} else */ {
+		iFlags = FORMAT_MESSAGE_FROM_SYSTEM;
 	}
-	return pszError;
+
+	szError[0] = 0;
+	iLen = FormatMessage( FORMAT_MESSAGE_IGNORE_INSERTS | iFlags, hModule, err, 0, szError, ARRAYSIZE(szError), NULL );
+	if ( iLen > 0 ) {
+		//x StrTrim( szError, _T( ". \r\n" ) );
+		for (iLen--; (iLen > 0) && (szError[iLen] == _T('.') || szError[iLen] == _T(' ') || szError[iLen] == _T('\r') || szError[iLen] == _T('\n')); iLen--)
+			szError[iLen] = _T('\0');
+		iLen++;
+	}
+
+	return MyStrDup( szError );
 }
 
 

@@ -214,7 +214,9 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 
 	CurlExtractCacert();
 	CurlTransfer( &Req );
-	pushint( 666 );		// TODO
+
+	CurlRequestFormatError( &Req, psz, string_size );
+	pushstringEx( psz );		// TODO
 
 	CurlRequestDestroy( Req );
 	MyFree( psz );

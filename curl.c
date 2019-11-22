@@ -256,8 +256,12 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 	if (VALID_HANDLE( pReq->Runtime.hFile )) {
 		// Write to output file
 		ULONG iWritten = 0;
-		if (WriteFile( pReq->Runtime.hFile, ptr, (ULONG)(size * nmemb), &iWritten, NULL ))
+		if (WriteFile( pReq->Runtime.hFile, ptr, (ULONG)(size * nmemb), &iWritten, NULL )) {
 			return iWritten;
+		} else {
+			pReq->Runtime.iWin32Error = GetLastError();
+			pReq->Runtime.pszWin32Error = MyErrorStr( pReq->Runtime.iWin32Error );
+		}
 	} else {
 		// Initialize output virtual memory (once)
 		if (!pReq->Runtime.OutData.pMem) {
@@ -286,17 +290,24 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 	// Create destination file
 	if (pReq->pszPath && *pReq->pszPath) {
+		ULONG e = ERROR_SUCCESS;
 		pReq->Runtime.hFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 		if (VALID_HANDLE( pReq->Runtime.hFile )) {
 			LARGE_INTEGER l;
 			if (GetFileSizeEx( pReq->Runtime.hFile, &l )) {
 				iResumeFrom = l.QuadPart;
 				if (SetFilePointer( pReq->Runtime.hFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
-					ULONG e = GetLastError();	// TODO: Store
+					e = GetLastError();
 				}
 			} else {
-				ULONG e = GetLastError();	// TODO: Store
+				e = GetLastError();
 			}
+		} else {
+			e = GetLastError();
+		}
+		if (e != ERROR_SUCCESS && pReq->Runtime.iWin32Error == ERROR_SUCCESS) {
+			pReq->Runtime.iWin32Error = e;
+			pReq->Runtime.pszWin32Error = MyErrorStr( e );
 		}
 	}
 
@@ -384,5 +395,26 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		if (VALID_HANDLE( pReq->Runtime.hFile ))
 			CloseHandle( pReq->Runtime.hFile ), pReq->Runtime.hFile = NULL;
 		curl_easy_cleanup( curl );		// TODO: Clear all options + Return to cache
+	}
+}
+
+
+//++ CurlRequestFormatError
+void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen )
+{
+	if (pszError)
+		pszError[0] = 0;
+	if (pReq) {
+		if (pReq->Runtime.iWin32Error != ERROR_SUCCESS) {
+			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Runtime.iWin32Error, pReq->Runtime.pszWin32Error );
+		} else if (pReq->Runtime.iCurlError != CURLE_OK) {
+			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Runtime.iCurlError, pReq->Runtime.pszCurlError );
+		} else {
+			if (pReq->Runtime.iHttpStatus >= 200 && pReq->Runtime.iHttpStatus < 300) {
+				_sntprintf( pszError, iErrorLen, _T( "OK" ) );
+			} else {
+				_sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Runtime.iHttpStatus, pReq->Runtime.pszHttpStatus );
+			}
+		}
 	}
 }

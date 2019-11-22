@@ -38,9 +38,6 @@ VOID UtilsDestroy();
 	#define verify(expr) ((VOID)(expr))
 #endif
 
-//+ Win32Err
-LPCTSTR Win32Err( _In_ ULONG err, _Out_ LPTSTR pszError, _In_ ULONG iErrorLen );
-
 //+ Memory
 /// We'll use global memory, to be compatible with NSIS API
 typedef struct {
@@ -69,6 +66,9 @@ LPSTR  MyStrDupAA( _In_ LPCSTR pStr );
 LPSTR  MyStrDupAW( _In_ LPCWSTR pStr );
 LPWSTR MyStrDupWA( _In_ LPCSTR pStr );
 LPWSTR MyStrDupWW( _In_ LPCWSTR pStr );
+
+//? The caller must MyFree(..) the string
+LPCTSTR MyErrorStr( _In_ ULONG err );
 
 //+ VALID_HANDLE
 #define VALID_HANDLE(h) \

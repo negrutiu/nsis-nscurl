@@ -26,6 +26,8 @@ typedef struct {
 	ULONG   iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
 	struct {
 		CURL		*pCurl;
+		ULONG		iWin32Error;
+		LPCTSTR		pszWin32Error;
 		CURLcode	iCurlError;
 		LPCSTR		pszCurlError;
 		int			iHttpStatus;
@@ -76,4 +78,11 @@ BOOL CurlParseRequestParam(
 //+ CurlTransfer
 void CurlTransfer(
 	_In_ PCURL_REQUEST pReq
+);
+
+//+ CurlRequestFormatError
+void CurlRequestFormatError(
+	_In_ PCURL_REQUEST pReq,
+	_In_ LPTSTR pszError,
+	_In_ ULONG iErrorLen
 );
