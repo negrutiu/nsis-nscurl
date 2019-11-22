@@ -177,16 +177,10 @@ Section /o Test
 	DetailPrint 'NScurl::Echo(...) = "$0"'
 	!insertmacro STACK_VERIFY_END
 
-	; NScurl::DownloadCacert
-	!insertmacro STACK_VERIFY_START
-	CallInstDLL "${NSCURL}" DownloadCacert
-	Pop $0
-	DetailPrint "NScurl::DownloadCacert() = $0"
-	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
-Section "GET SysinternalsSuite.zip"
+Section "httpbin.org/GET"
 	SectionIn 1	; All
 
 	DetailPrint '-----------------------------------------------'
@@ -194,16 +188,14 @@ Section "GET SysinternalsSuite.zip"
 	DetailPrint '-----------------------------------------------'
 
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'http://live.sysinternals.com/Files/SysinternalsSuite.zip'
-	!define /redef FILE '$EXEDIR\_SysinternalsSuite.zip'
+	!define /redef LINK 'http://httpbin.org/get?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push "nscurl/1.2.3"
-	Push "/USERAGENT"
 	Push 30000
-	Push "/TIMEOUT"
+	Push "/CONNECTTIMEOUT"
 	Push "${FILE}"
 	Push "/TO"
 	Push "${LINK}"
@@ -212,6 +204,7 @@ Section "GET SysinternalsSuite.zip"
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
+
 SectionEnd
 
 /*

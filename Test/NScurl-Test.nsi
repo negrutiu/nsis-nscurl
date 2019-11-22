@@ -146,7 +146,7 @@ Section /o Test
 SectionEnd
 
 
-Section "GET SysinternalsSuite.zip"
+Section "httpbin.org/GET"
 	SectionIn 1	; All
 
 	DetailPrint '-----------------------------------------------'
@@ -154,13 +154,14 @@ Section "GET SysinternalsSuite.zip"
 	DetailPrint '-----------------------------------------------'
 
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'http://live.sysinternals.com/Files/SysinternalsSuite.zip'
-	!define /redef FILE '$EXEDIR\_SysinternalsSuite.zip'
+	!define /redef LINK 'http://httpbin.org/get?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /TIMEOUT 30000 /USERAGENT "nscurl/1.2.3" /REFERER "https://test.com" /END
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
+
 SectionEnd
 
 
