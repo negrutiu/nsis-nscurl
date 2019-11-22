@@ -176,6 +176,8 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			MyFree( pParam->pszAgent );
 			pParam->pszAgent = MyStrDupA( pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
+		pParam->bInsecure = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pParam->pszCacert );
@@ -290,7 +292,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
 
 		/// SSL
-		{
+		if (!pReq->bInsecure) {
 			CHAR szCacert[MAX_PATH];
 			if (pReq->pszCacert) {
 				lstrcpynA( szCacert, pReq->pszCacert, ARRAYSIZE( szCacert ) );
@@ -308,6 +310,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			} else {
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 			}
+		} else {
+			curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 		}
 
 		/// GET
