@@ -19,9 +19,10 @@ typedef struct {
 	LPCSTR  pszProxyPass;			/// can be NULL
 	LPCSTR  pszAgent;				/// can be NULL
 	LPCSTR  pszReferrer;			/// can be NULL
-	ULONG   iTimeout;				/// can be 0
 	BOOLEAN bInsecure;				/// can be 0
 	LPCSTR  pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
+	ULONG   iConnectTimeout;		/// can be 0. Connecting timeout
+	ULONG   iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
 	struct {
 		CURL		*pCurl;
 		CURLcode	iCurlError;

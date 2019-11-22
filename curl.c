@@ -149,8 +149,10 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 				assert( !"/DATAFILE: Failed to open" );
 			}
 		}
-	} else if (lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
-		pParam->iTimeout = popint();
+	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0) {
+		pParam->iConnectTimeout = popint();
+	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
+		pParam->iCompleteTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/PROXY" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pParam->pszProxy );
@@ -290,6 +292,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 		curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );				/// Follow redirects
 		curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
+		if (pReq->iConnectTimeout > 0)
+			curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, pReq->iConnectTimeout );
+		if (pReq->iCompleteTimeout > 0)
+			curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, pReq->iCompleteTimeout );
 
 		/// SSL
 		if (!pReq->bInsecure) {
