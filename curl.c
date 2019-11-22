@@ -86,21 +86,21 @@ ULONG CurlExtractCacert()
 
 
 //++ CurlParseRequestParam
-BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pParam )
+BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
 {
 	BOOL bRet = TRUE;
-	assert( iParamMaxLen && pszParam && pParam );
+	assert( iParamMaxLen && pszParam && pReq );
 
 	if (lstrcmpi( pszParam, _T( "/URL" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszURL );
-			pParam->pszURL = MyStrDupA( pszParam );
+			MyFree( pReq->pszURL );
+			pReq->pszURL = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/TO" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszPath );
+			MyFree( pReq->pszPath );
 			if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)
-				pParam->pszPath = MyStrDup( pszParam );
+				pReq->pszPath = MyStrDup( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/METHOD" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -109,8 +109,8 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		//x		lstrcmpi( pszParam, _T( "POST" ) ) == 0 ||
 		//x		lstrcmpi( pszParam, _T( "HEAD" ) ) == 0
 		//x	);
-			MyFree( pParam->pszMethod );
-			pParam->pszMethod = MyStrDupA( pszParam );
+			MyFree( pReq->pszMethod );
+			pReq->pszMethod = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -126,11 +126,11 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 					ch = *psz2, *psz2 = _T( '\0' );
 				#ifdef _UNICODE
 					if ((pszA = MyStrDupAW( psz1 )) != NULL) {
-						pParam->pInHeaders = curl_slist_append( pParam->pInHeaders, pszA );
+						pReq->pInHeaders = curl_slist_append( pReq->pInHeaders, pszA );
 						MyFree( pszA );
 					}
 				#else
-					pParam->pInHeaders = curl_slist_append( pParam->pInHeaders, psz1 );
+					pReq->pInHeaders = curl_slist_append( pReq->pInHeaders, psz1 );
 				#endif
 					*psz2 = ch;
 					psz1 = psz2;
@@ -139,9 +139,9 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pData );
-			pParam->pData = MyStrDup( pszParam );
-			pParam->iDataSize = lstrlenA( (LPCSTR)pParam->pData );
+			MyFree( pReq->pData );
+			pReq->pData = MyStrDup( pszParam );
+			pReq->iDataSize = lstrlenA( (LPCSTR)pReq->pData );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATAFILE" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -149,13 +149,13 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			if (hFile != INVALID_HANDLE_VALUE) {
 				ULONG iFileSize = GetFileSize( hFile, NULL );
 				if (iFileSize != INVALID_FILE_SIZE || GetLastError() == ERROR_SUCCESS) {
-					MyFree( pParam->pData );
-					pParam->iDataSize = 0;
-					pParam->pData = MyAlloc( iFileSize );
-					if (pParam->pData) {
-						if (!ReadFile( hFile, pParam->pData, iFileSize, &pParam->iDataSize, NULL )) {
-							MyFree( pParam->pData );
-							pParam->iDataSize = 0;
+					MyFree( pReq->pData );
+					pReq->iDataSize = 0;
+					pReq->pData = MyAlloc( iFileSize );
+					if (pReq->pData) {
+						if (!ReadFile( hFile, pReq->pData, iFileSize, &pReq->iDataSize, NULL )) {
+							MyFree( pReq->pData );
+							pReq->iDataSize = 0;
 							assert( !"/DATAFILE: Failed to read" );
 						}
 					} else {
@@ -170,42 +170,42 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0) {
-		pParam->iConnectTimeout = popint();
+		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
-		pParam->iCompleteTimeout = popint();
+		pReq->iCompleteTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/PROXY" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszProxy );
-			pParam->pszProxy = MyStrDupA( pszParam );
+			MyFree( pReq->pszProxy );
+			pReq->pszProxy = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/PROXYUSER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszProxyUser );
-			pParam->pszProxyUser = MyStrDupA( pszParam );
+			MyFree( pReq->pszProxyUser );
+			pReq->pszProxyUser = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/PROXYPASS" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszProxyPass );
-			pParam->pszProxyPass = MyStrDupA( pszParam );
+			MyFree( pReq->pszProxyPass );
+			pReq->pszProxyPass = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/REFERER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszReferrer );
-			pParam->pszReferrer = MyStrDupA( pszParam );
+			MyFree( pReq->pszReferrer );
+			pReq->pszReferrer = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/USERAGENT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszAgent );
-			pParam->pszAgent = MyStrDupA( pszParam );
+			MyFree( pReq->pszAgent );
+			pReq->pszAgent = MyStrDupA( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/NOREDIRECT" ) ) == 0) {
-		pParam->bNoRedirect = TRUE;
+		pReq->bNoRedirect = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
-		pParam->bInsecure = TRUE;
+		pReq->bInsecure = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pParam->pszCacert );
-			pParam->pszCacert = MyStrDupA( pszParam );
+			MyFree( pReq->pszCacert );
+			pReq->pszCacert = MyStrDupA( pszParam );
 		}
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
