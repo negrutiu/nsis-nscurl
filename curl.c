@@ -178,6 +178,8 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			MyFree( pParam->pszAgent );
 			pParam->pszAgent = MyStrDupA( pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/NOREDIRECT" ) ) == 0) {
+		pParam->bNoRedirect = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
 		pParam->bInsecure = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
@@ -290,8 +292,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		if (pReq->pszReferrer)
 			curl_easy_setopt( curl, CURLOPT_REFERER, pReq->pszReferrer );
 
-		curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );				/// Follow redirects
-		curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
+		if (pReq->bNoRedirect) {
+			curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, FALSE );
+		} else {
+			curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );			/// Follow redirects
+			curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
+		}
+
 		if (pReq->iConnectTimeout > 0)
 			curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, pReq->iConnectTimeout );
 		if (pReq->iCompleteTimeout > 0)

@@ -19,6 +19,7 @@ typedef struct {
 	LPCSTR  pszProxyPass;			/// can be NULL
 	LPCSTR  pszAgent;				/// can be NULL
 	LPCSTR  pszReferrer;			/// can be NULL
+	BOOLEAN bNoRedirect;			/// can be 0
 	BOOLEAN bInsecure;				/// can be 0
 	LPCSTR  pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
 	ULONG   iConnectTimeout;		/// can be 0. Connecting timeout
