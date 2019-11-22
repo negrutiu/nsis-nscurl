@@ -374,66 +374,6 @@ BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 }
 
 
-//++ StrListInitialize
-void StrListInitialize( _Inout_ STRLIST *pList )
-{
-	if (pList)
-		pList->String = NULL, pList->Next = NULL;
-}
-
-//++ StrListAddPtr
-void StrListAddPtr( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
-{
-	if (pList && pStr) {
-		STRLIST *p;
-		/// Find last element
-		for (p = pList; p->Next; p = p->Next);
-		/// The list head also hosts the first element
-		if (p != pList || p->String) {
-			p->Next = (STRLIST*)MyAlloc( sizeof( *p ) );
-			if (p->Next)
-				p->Next->String = NULL, p->Next->Next = NULL;
-			p = p->Next;
-		}
-		if (p) {
-			p->String = pStr;
-		}
-	}
-}
-
-//++ StrListAddA
-void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr )
-{
-	if (pList) {
-		LPSTR psz = MyStrDupAA( pStr );
-		if (psz)
-			StrListAddPtr( pList, psz );
-	}
-}
-
-//++ StrListAddW
-void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr )
-{
-	if (pList) {
-		LPSTR psz = MyStrDupAW( pStr );
-		if (psz)
-			StrListAddPtr( pList, psz );
-	}
-}
-
-//++ StrListDestroy
-void StrListDestroy( _Inout_ STRLIST *pList )
-{
-	while (pList->Next) {
-		STRLIST *pElem2 = pList->Next;
-		pList->Next = pElem2->Next;
-		MyFree( pElem2->String );
-		MyFree( pElem2 );
-	}
-	MyFree( pList->String );
-}
-
-
 //++ VirtualMemoryInitialize
 ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 {

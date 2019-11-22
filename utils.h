@@ -101,17 +101,6 @@ ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszS
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );
 
-//+ String List
-typedef struct _STRLIST {
-	LPCSTR String;													/// UTF8
-	struct _STRLIST *Next;
-} STRLIST;
-
-void StrListInitialize( _Inout_ STRLIST *pList );
-void StrListAddA( _Inout_ STRLIST *pList, _In_ LPCSTR pStr );		/// Add a copy of the string
-void StrListAddW( _Inout_ STRLIST *pList, _In_ LPCWSTR pStr );		/// Add a copy of the string
-void StrListDestroy( _Inout_ STRLIST *pList );
-
 //+ Virtual Memory
 typedef struct {
 	PCCH   pMem;		/// Memory buffer
