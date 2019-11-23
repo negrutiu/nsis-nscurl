@@ -139,34 +139,13 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pData );
-			pReq->pData = MyStrDup( pszParam );
-			pReq->iDataSize = lstrlenA( (LPCSTR)pReq->pData );
-		}
-	} else if (lstrcmpi( pszParam, _T( "/DATAFILE" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			HANDLE hFile = CreateFile( pszParam, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
-			if (hFile != INVALID_HANDLE_VALUE) {
-				ULONG iFileSize = GetFileSize( hFile, NULL );
-				if (iFileSize != INVALID_FILE_SIZE || GetLastError() == ERROR_SUCCESS) {
-					MyFree( pReq->pData );
-					pReq->iDataSize = 0;
-					pReq->pData = MyAlloc( iFileSize );
-					if (pReq->pData) {
-						if (!ReadFile( hFile, pReq->pData, iFileSize, &pReq->iDataSize, NULL )) {
-							MyFree( pReq->pData );
-							pReq->iDataSize = 0;
-							assert( !"/DATAFILE: Failed to read" );
-						}
-					} else {
-						assert( !"/DATAFILE: Failed to allocate memory" );
-					}
-				} else {
-					assert( !"/DATAFILE: Failed to get size" );
-				}
-				CloseHandle( hFile );
+			MyFree( pReq->pszData );
+			if (pszParam[0] == _T( '@' )) {
+				pReq->pszData = MyStrDup( pszParam + 1 );		/// Data file name
+				pReq->iDataSize = 0;
 			} else {
-				assert( !"/DATAFILE: Failed to open" );
+				pReq->pszData = MyStrDupA( pszParam );			/// Data string
+				pReq->iDataSize = lstrlenA( pReq->pszData );
 			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0) {
@@ -247,6 +226,37 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 }
 
 
+//++ CurlReadCallback
+size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instream )
+{
+	curl_off_t l = 0;
+	PCURL_REQUEST pReq = (PCURL_REQUEST)instream;
+
+	assert( pReq && pReq->Runtime.pCurl );
+
+	if (pReq->pszData) {	/// Either data buffer, or, file name
+		if (VALID_HANDLE( pReq->Runtime.hInFile )) {
+			// Read from input file
+			ULONG iRead;
+			if (ReadFile( pReq->Runtime.hInFile, (LPVOID)buffer, size * nitems, &iRead, NULL )) {
+				l = iRead;
+				pReq->Runtime.iDataPos += iRead;
+			} else {
+				l = CURL_READFUNC_ABORT;
+			}
+		} else {
+			// Read from input buffer
+			assert( pReq->Runtime.iDataPos <= pReq->iDataSize );
+			l = __min( size * nitems, pReq->iDataSize - pReq->Runtime.iDataPos );
+			CopyMemory( buffer, (PCCH)pReq->pszData + pReq->Runtime.iDataPos, (size_t)l );
+			pReq->Runtime.iDataPos += l;
+		}
+	}
+
+	return (size_t)l;
+}
+
+
 //++ CurlWriteCallback
 size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
@@ -284,11 +294,44 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	CURL *curl;
 	CHAR szError[CURL_ERROR_SIZE] = "";		/// Runtime error buffer
 	curl_off_t iResumeFrom = 0;
+	BOOLEAN bPostForm = FALSE;				/// TODO
 
-	if (!pReq || !pReq->pszURL || !*pReq->pszURL)
+	if (!pReq)
 		return;
+	if (!pReq->pszURL || !*pReq->pszURL) {
+		pReq->Error.iWin32 = ERROR_INVALID_PARAMETER;
+		pReq->Error.pszWin32 = MyErrorStr( pReq->Error.iWin32 );
+		return;
+	}
 
-	// Create destination file
+	// Input file
+	if (pReq->pszMethod && (
+		lstrcmpiA( pReq->pszMethod, "PUT" ) == 0 ||
+		(lstrcmpiA( pReq->pszMethod, "POST" ) == 0 && !bPostForm)
+		))
+	{
+		if (pReq->iDataSize == 0 && pReq->pszData && *(LPCTSTR)pReq->pszData) {
+			ULONG e = ERROR_SUCCESS;
+			pReq->Runtime.hInFile = CreateFile( (LPCTSTR)pReq->pszData, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
+			if (VALID_HANDLE( pReq->Runtime.hInFile )) {
+				LARGE_INTEGER l;
+				if (GetFileSizeEx( pReq->Runtime.hInFile, &l )) {
+					/// Store file size in iDataSize
+					pReq->iDataSize = l.QuadPart;
+				} else {
+					e = GetLastError();
+				}
+			} else {
+				e = GetLastError();
+			}
+			if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
+				pReq->Error.iWin32 = e;
+				pReq->Error.pszWin32 = MyErrorStr( e );
+			}
+		}
+	}
+
+	// Output file
 	if (pReq->pszPath && *pReq->pszPath) {
 		ULONG e = ERROR_SUCCESS;
 		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
@@ -311,138 +354,145 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		}
 	}
 
-	// Transfer
-	curl = curl_easy_init();	// TODO: Cache
-	if (curl) {
+	if (pReq->Error.iWin32 == ERROR_SUCCESS) {
 
-		/// Error buffer
-		szError[0] = ANSI_NULL;
-		curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, szError );
+		// Transfer
+		curl = curl_easy_init();	// TODO: Cache
+		if (curl) {
 
-		curl_easy_setopt( curl, CURLOPT_USERAGENT, pReq->pszAgent ? pReq->pszAgent : g.szUserAgent );
-		if (pReq->pszReferrer)
-			curl_easy_setopt( curl, CURLOPT_REFERER, pReq->pszReferrer );
+			/// Error buffer
+			szError[0] = ANSI_NULL;
+			curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, szError );
 
-		if (pReq->bNoRedirect) {
-			curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, FALSE );
-		} else {
-			curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );			/// Follow redirects
-			curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
-		}
+			curl_easy_setopt( curl, CURLOPT_USERAGENT, pReq->pszAgent ? pReq->pszAgent : g.szUserAgent );
+			if (pReq->pszReferrer)
+				curl_easy_setopt( curl, CURLOPT_REFERER, pReq->pszReferrer );
 
-		if (pReq->iConnectTimeout > 0)
-			curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, pReq->iConnectTimeout );
-		if (pReq->iCompleteTimeout > 0)
-			curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, pReq->iCompleteTimeout );
-
-		/// SSL
-		if (!pReq->bInsecure) {
-			CHAR szCacert[MAX_PATH];
-			if (pReq->pszCacert) {
-				lstrcpynA( szCacert, pReq->pszCacert, ARRAYSIZE( szCacert ) );
+			if (pReq->bNoRedirect) {
+				curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, FALSE );
 			} else {
-			#if _UNICODE
-				_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ws\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-			#else
-				_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-			#endif
+				curl_easy_setopt( curl, CURLOPT_FOLLOWLOCATION, TRUE );			/// Follow redirects
+				curl_easy_setopt( curl, CURLOPT_MAXREDIRS, 10 );
 			}
-			if (FileExistsA( szCacert )) {
-				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
-				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
-				curl_easy_setopt( curl, CURLOPT_CAINFO, szCacert );			/// cacert.pem path
-			} else {
+
+			if (pReq->iConnectTimeout > 0)
+				curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, pReq->iConnectTimeout );
+			if (pReq->iCompleteTimeout > 0)
+				curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, pReq->iCompleteTimeout );
+
+			/// SSL
+			if (!pReq->bInsecure) {
+				CHAR szCacert[MAX_PATH];
+				if (pReq->pszCacert) {
+					lstrcpynA( szCacert, pReq->pszCacert, ARRAYSIZE( szCacert ) );
+				} else {
+				#if _UNICODE
+					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ws\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
+				#else
+					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
+				#endif
+				}
+				if (FileExistsA( szCacert )) {
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
+					curl_easy_setopt( curl, CURLOPT_CAINFO, szCacert );			/// cacert.pem path
+				} else {
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
+				}
+				} else {
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 			}
-		} else {
-			curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
+
+			/// Request method
+			if (!pReq->pszMethod || !*pReq->pszMethod ||
+				lstrcmpiA( pReq->pszMethod, "GET" ) == 0)
+			{
+
+				// GET
+				curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
+
+			} else if (lstrcmpiA( pReq->pszMethod, "POST" ) == 0) {
+
+				// POST
+				curl_easy_setopt( curl, CURLOPT_POST, TRUE );
+				if (bPostForm) {
+					// TODO: POST FORM
+				//x	/// Send InData as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
+				//x	curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)InData.Size() );
+				} else {
+					/// Send input data as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
+					curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, pReq->iDataSize );
+				}
+
+			} else if (lstrcmpiA( pReq->pszMethod, "HEAD" ) == 0) {
+
+				// HEAD
+				curl_easy_setopt( curl, CURLOPT_NOBODY, TRUE );
+
+			} else if (lstrcmpiA( pReq->pszMethod, "PUT" ) == 0) {
+
+				// PUT
+				curl_easy_setopt( curl, CURLOPT_PUT, TRUE );
+				curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, pReq->iDataSize );		/// "Content-Length: <filesize>" header is mandatory in HTTP/1.x
+
+			} else {
+
+				// DELETE, OPTIONS, TRACE, etc.
+				curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, pReq->pszMethod );
+			}
+
+			/// Request Headers
+			if (pReq->pInHeaders)
+				curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pInHeaders );
+
+			// TODO: PROXY
+			// TODO: curl_easy_escape()
+
+			/// Resume
+			curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
+
+			/// Callbacks
+			VirtualMemoryInitialize( &pReq->Runtime.OutHeaders, DEFAULT_HEADERS_VIRTUAL_SIZE );
+			curl_easy_setopt( curl, CURLOPT_HEADERFUNCTION, CurlHeaderCallback );
+			curl_easy_setopt( curl, CURLOPT_HEADERDATA, pReq );
+			curl_easy_setopt( curl, CURLOPT_READFUNCTION, CurlReadCallback );
+			curl_easy_setopt( curl, CURLOPT_READDATA, pReq );
+			curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback );
+			curl_easy_setopt( curl, CURLOPT_WRITEDATA, pReq );
+
+			/// URL
+			curl_easy_setopt( curl, CURLOPT_URL, pReq->pszURL );
+
+			/// Transfer
+			pReq->Runtime.pCurl = curl;
+			pReq->Error.iCurl = curl_easy_perform( curl );
+
+			/// Error information
+			pReq->Error.pszCurl = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Error.iCurl ) );
+			curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Error.iHttp );	/// ...might not be available
+
+			// Cleanup
+			curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, NULL );
+			curl_easy_setopt( curl, CURLOPT_USERAGENT, NULL );
+			curl_easy_setopt( curl, CURLOPT_REFERER, NULL );
+			curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, 0 );
+			curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, NULL );
+			curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );
+			curl_easy_setopt( curl, CURLOPT_PUT, FALSE );					// HACK: Fix POST request that follows a PUT request
+			curl_easy_setopt( curl, CURLOPT_URL, NULL );
+			curl_easy_setopt( curl, CURLOPT_HEADERDATA, NULL );
+			curl_easy_setopt( curl, CURLOPT_READDATA, NULL );
+			curl_easy_setopt( curl, CURLOPT_WRITEDATA, NULL );
+			curl_easy_setopt( curl, CURLOPT_XFERINFODATA, NULL );
+
+			curl_easy_cleanup( curl );		// TODO: Return to cache
 		}
-
-		/// Request method
-		if (!pReq->pszMethod || !*pReq->pszMethod ||
-			lstrcmpiA( pReq->pszMethod, "GET" ) == 0)
-		{
-
-			// GET
-			curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
-
-		} else if (lstrcmpiA( pReq->pszMethod, "POST" ) == 0) {
-
-			// POST
-			curl_easy_setopt( curl, CURLOPT_POST, TRUE );
-		//x	if (InForm.empty()) {
-		//x		/// Send InData as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
-		//x		curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)InData.Size() );
-		//x	} else {
-		//x		/// Send InForm as multi-part MIME form (CURLOPT_MIMEPOST, "multipart/form-data")
-		//x		curl_easy_setopt( curl, CURLOPT_MIMEPOST, InForm.m_pMime );
-		//x	}
-
-		} else if (lstrcmpiA( pReq->pszMethod, "HEAD" ) == 0) {
-
-			// HEAD
-			curl_easy_setopt( curl, CURLOPT_NOBODY, TRUE );
-
-		} else if (lstrcmpiA( pReq->pszMethod, "PUT" ) == 0) {
-
-			// PUT
-			curl_easy_setopt( curl, CURLOPT_PUT, TRUE );
-		//x	curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)InData.Size() );		/// "Content-Length: FS" header is mandatory in HTTP/1.x
-
-		} else {
-
-			// DELETE, OPTIONS, TRACE, etc.
-			curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, pReq->pszMethod );
-		}
-
-		/// Request Headers
-		if (pReq->pInHeaders)
-			curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pInHeaders );
-
-		// TODO: DATA
-		// TODO: POST FORM
-		// TODO: PROXY
-		// TODO: curl_easy_escape()
-
-		/// Resume
-		curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
-
-		/// Callbacks
-		VirtualMemoryInitialize( &pReq->Runtime.OutHeaders, DEFAULT_HEADERS_VIRTUAL_SIZE );
-		curl_easy_setopt( curl, CURLOPT_HEADERFUNCTION, CurlHeaderCallback );
-		curl_easy_setopt( curl, CURLOPT_HEADERDATA, pReq );
-		curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback );
-		curl_easy_setopt( curl, CURLOPT_WRITEDATA, pReq );
-
-		/// URL
-		curl_easy_setopt( curl, CURLOPT_URL, pReq->pszURL );
-
-		/// Transfer
-		pReq->Runtime.pCurl = curl;
-		pReq->Error.iCurl = curl_easy_perform( curl );
-
-		/// Error information
-		pReq->Error.pszCurl = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Error.iCurl ) );
-		curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Error.iHttp );	/// ...might not be available
 
 		// Cleanup
+		if (VALID_HANDLE( pReq->Runtime.hInFile ))
+			CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
 		if (VALID_HANDLE( pReq->Runtime.hOutFile ))
 			CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
-
-		curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, NULL );
-		curl_easy_setopt( curl, CURLOPT_USERAGENT, NULL );
-		curl_easy_setopt( curl, CURLOPT_REFERER, NULL );
-		curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, 0 );
-		curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, NULL );
-		curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );
-		curl_easy_setopt( curl, CURLOPT_PUT, FALSE );					// HACK: Fix POST request that follows a PUT request
-		curl_easy_setopt( curl, CURLOPT_URL, NULL );
-		curl_easy_setopt( curl, CURLOPT_HEADERDATA, NULL );
-		curl_easy_setopt( curl, CURLOPT_READDATA, NULL );
-		curl_easy_setopt( curl, CURLOPT_WRITEDATA, NULL );
-		curl_easy_setopt( curl, CURLOPT_XFERINFODATA, NULL );
-
-		curl_easy_cleanup( curl );		// TODO: Return to cache
 	}
 }
 

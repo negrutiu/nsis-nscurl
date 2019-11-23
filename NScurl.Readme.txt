@@ -88,7 +88,7 @@ NScurl::Request		/URL url
 					/TO file|MEMORY
 					[/METHOD GET|POST|HEAD|PUT|...]
 					[/HEADER hdr1]...[/HEADER hdrN]
-					[/DATA data | /DATAFILE file]
+					[/DATA data|@datafile]
 					[/TIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
 					[/REFERER url]
