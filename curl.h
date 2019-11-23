@@ -11,7 +11,8 @@ typedef struct {
 	LPCSTR		pszURL;
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
-	struct curl_slist *pInHeaders;		/// can be NULL
+	struct curl_slist	*pInHeaders;	/// can be NULL
+	struct curl_slist	*pPostVars;		/// can be NULL
 	LPVOID		pszData;				/// can be NULL. If iDataSize != 0, (LPSTR)pszData is treated as data string. If iDataSize == 0, (LPTSTR)pszData is treated as data file name
 	curl_off_t	iDataSize;				/// can be 0
 	LPCSTR		pszProxy;				/// can be NULL
@@ -51,6 +52,7 @@ typedef struct {
 	MyFree( Req.pszPath ); \
 	MyFree( Req.pszMethod ); \
 	curl_slist_free_all( Req.pInHeaders ); \
+	curl_slist_free_all( Req.pPostVars ); \
 	MyFree( Req.pszData ); \
 	MyFree( Req.pszProxy ); \
 	MyFree( Req.pszProxyUser ); \

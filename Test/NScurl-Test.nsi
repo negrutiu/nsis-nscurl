@@ -16,7 +16,7 @@
 !include "Sections.nsh"
 
 !include "StrFunc.nsh"
-${StrRep}				; Declare in advance
+#${StrRep}				; Declare in advance
 
 !define /ifndef NULL 0
 
@@ -154,7 +154,7 @@ Section "httpbin.org/get"
 	DetailPrint '-----------------------------------------------'
 
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'http://httpbin.org/get?param1=value1&param2=value2'
+	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
 	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
@@ -165,7 +165,7 @@ Section "httpbin.org/get"
 SectionEnd
 
 
-Section "httpbin.org/post"
+Section "httpbin.org/post (multipart/form-data)"
 	SectionIn 1	; All
 
 	DetailPrint '-----------------------------------------------'
@@ -173,10 +173,114 @@ Section "httpbin.org/post"
 	DetailPrint '-----------------------------------------------'
 
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'http://httpbin.org/post?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_POST_httpbin.json'
-	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD POST /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	NScurl::Request \
+		/URL "${LINK}" \
+		/TO "${FILE}" \
+		/METHOD POST \
+		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
+		/HEADER "Header3: Value3" \
+		/POSTVAR "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
+		/POSTVAR "Name" "<Your name here>" \
+		/POSTVAR "Password" "<Your password here>" \
+		/POSTVAR "filename=cacert.pem" "cacert.pem" "@$PLUGINSDIR\cacert.pem" \
+		/CONNECTTIMEOUT 30000 \
+		/REFERER "https://test.com" \
+		/END
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section "httpbin.org/post (application/x-www-form-urlencoded)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_POST_httpbin_postfields.json'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	NScurl::Request \
+		/URL "${LINK}" \
+		/TO "${FILE}" \
+		/METHOD POST \
+		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
+		/HEADER "Header3: Value3" \
+		/DATA 'User=Your+name+here&Password=Your+password+here' \
+		/CONNECTTIMEOUT 30000 \
+		/REFERER "https://test.com" \
+		/END
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section "httpbin.org/post (application/json)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_POST_httpbin_json.json'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	NScurl::Request \
+		/URL "${LINK}" \
+		/TO "${FILE}" \
+		/METHOD POST \
+		/HEADER "Content-Type: application/json" \
+		/DATA '{ "number_of_the_beast" : 666 }' \
+		/CONNECTTIMEOUT 30000 \
+		/REFERER "https://test.com" \
+		/END
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section "httpbin.org/put"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_PUT_httpbin.json'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	NScurl::Request \
+		/URL "${LINK}" \
+		/TO "${FILE}" \
+		/METHOD PUT \
+		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
+		/HEADER "Header3: Value3" \
+		/HEADER "Content-Type: application/json" \
+		/DATA '{ "number_of_the_beast" : 666 }' \
+		/CONNECTTIMEOUT 30000 \
+		/REFERER "https://test.com" \
+		/END
+
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END

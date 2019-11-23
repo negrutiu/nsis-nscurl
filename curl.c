@@ -137,6 +137,38 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 				}
 			}
 		}
+	} else if (lstrcmpi( pszParam, _T( "/POSTVAR" ) ) == 0) {
+		LPSTR pszFilename = NULL, pszType = NULL, pszName = NULL, pszData = NULL;
+		/// Extract optional parameters "filename=XXX" and "type=XXX"
+		int e = NOERROR;
+		while (e == NOERROR) {
+			if ((e = popstring( pszParam )) == NOERROR) {
+				if (CompareString( CP_ACP, NORM_IGNORECASE, pszParam, 9, _T( "filename=" ), -1 ) == CSTR_EQUAL) {
+					pszFilename = MyStrDupA( pszParam + 9 );
+				} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszParam, 5, _T( "type=" ), -1 ) == CSTR_EQUAL) {
+					pszType = MyStrDupA( pszParam + 5 );
+				} else {
+					break;
+				}
+			}
+		}
+		/// Extract mandatory parameters "name" and "data|@datafile"
+		if (e == NOERROR) {
+			pszName = MyStrDupA( pszParam );
+			if ((e = popstring( pszParam )) == NOERROR) {
+				pszData = MyStrDupA( pszParam );
+
+				// Store 4-tuple MIME form part
+				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
+				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszType ? pszType : "" );
+				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszName ? pszName : "" );
+				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszData ? pszData : "" );
+			}
+		}
+		MyFree( pszFilename );
+		MyFree( pszType );
+		MyFree( pszName );
+		MyFree( pszData );
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszData );
@@ -292,9 +324,9 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 void CurlTransfer( _In_ PCURL_REQUEST pReq )
 {
 	CURL *curl;
+	curl_mime *form = NULL;
 	CHAR szError[CURL_ERROR_SIZE] = "";		/// Runtime error buffer
 	curl_off_t iResumeFrom = 0;
-	BOOLEAN bPostForm = FALSE;				/// TODO
 
 	if (!pReq)
 		return;
@@ -307,7 +339,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// Input file
 	if (pReq->pszMethod && (
 		lstrcmpiA( pReq->pszMethod, "PUT" ) == 0 ||
-		(lstrcmpiA( pReq->pszMethod, "POST" ) == 0 && !bPostForm)
+		(lstrcmpiA( pReq->pszMethod, "POST" ) == 0 && !pReq->pPostVars)
 		))
 	{
 		if (pReq->iDataSize == 0 && pReq->pszData && *(LPCTSTR)pReq->pszData) {
@@ -415,12 +447,44 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 				// POST
 				curl_easy_setopt( curl, CURLOPT_POST, TRUE );
-				if (bPostForm) {
-					// TODO: POST FORM
-				//x	/// Send InData as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
-				//x	curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)InData.Size() );
+				if (pReq->pPostVars) {
+					/// Send variables as multi-part MIME form (CURLOPT_MIMEPOST, "multipart/form-data")
+					form = curl_mime_init( curl );
+					if (form) {
+						struct curl_slist *p;
+						for (p = pReq->pPostVars; p; p = p->next) {
+							curl_mimepart *part = curl_mime_addpart( form );
+							if (part) {
+								/// String 1
+								if (p && p->data && *p->data)
+									curl_mime_filename( part, p->data );
+								/// String 2
+								p = p->next;
+								assert( p && p->data );
+								if (p && p->data && *p->data)
+									curl_mime_type( part, p->data );
+								/// String 3
+								p = p->next;
+								assert( p && p->data );
+								if (p && p->data && *p->data)
+									curl_mime_name( part, p->data );
+								/// String 4
+								p = p->next;
+								assert( p && p->data );
+								if (p && p->data && *p->data) {
+									if (p->data[0] == '@') {
+										curl_mime_filedata( part, p->data + 1 );				/// Data file
+									} else {
+										curl_mime_data( part, p->data, CURL_ZERO_TERMINATED );	/// Data string
+									}
+								}
+							}
+						}
+					}
+					curl_easy_setopt( curl, CURLOPT_MIMEPOST, form );
 				} else {
-					/// Send input data as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
+					/// Send input data as raw form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
+					//! The caller is responsible to format/escape the input data
 					curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, pReq->iDataSize );
 				}
 
@@ -472,19 +536,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Error.iHttp );	/// ...might not be available
 
 			// Cleanup
-			curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, NULL );
-			curl_easy_setopt( curl, CURLOPT_USERAGENT, NULL );
-			curl_easy_setopt( curl, CURLOPT_REFERER, NULL );
-			curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, 0 );
-			curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, NULL );
-			curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );
-			curl_easy_setopt( curl, CURLOPT_PUT, FALSE );					// HACK: Fix POST request that follows a PUT request
-			curl_easy_setopt( curl, CURLOPT_URL, NULL );
-			curl_easy_setopt( curl, CURLOPT_HEADERDATA, NULL );
-			curl_easy_setopt( curl, CURLOPT_READDATA, NULL );
-			curl_easy_setopt( curl, CURLOPT_WRITEDATA, NULL );
-			curl_easy_setopt( curl, CURLOPT_XFERINFODATA, NULL );
-
+			curl_easy_reset( curl );
 			curl_easy_cleanup( curl );		// TODO: Return to cache
 		}
 
@@ -493,6 +545,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
 		if (VALID_HANDLE( pReq->Runtime.hOutFile ))
 			CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
+		curl_mime_free( form );
 	}
 }
 

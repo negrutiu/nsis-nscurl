@@ -89,6 +89,7 @@ NScurl::Request		/URL url
 					[/METHOD GET|POST|HEAD|PUT|...]
 					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data|@datafile]
+					[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
 					[/TIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
 					[/REFERER url]
@@ -106,9 +107,13 @@ Parameters:
 	/URL url					| HTTP or HTTPS...
 	/TO file|MEMORY				| Remote content destination. Can be either a local file or a memory buffer
 	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
-	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF (\r\n). Multiple /HEADER parameters are accepted
-	/DATA data					| Additional data to be sent as part of the HTTP request
-	/DATAFILE file				| Additional data to be sent as part of the HTTP request (read from the specified file)
+	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF ($\r$\n). Multiple /HEADER parameters are accepted
+	/DATA data|@datafile		| Data/file to be uploaded. Used in the context of HTTP POST/PUT, ignored otherwise
+	/POSTVAR					| Multipart form part. Used only in the context of HTTP POST, ignored otherwise. Multiple /POSTVAR parameters are accepted
+		[FILENAME=file_name]	|	Optional. Remote file name (e.g. "data.json")
+		[TYPE=mime_type]		|	Optional. MIME type (e.g. "application\json")
+		name					|	Part name (e.g. "Name")
+		data|@datafile			|	Part data/datafile
 	/TIMEOUT msec				| Transfer timeout (default: infinite)
 	/PROXY server				| CERN type proxies (ex: "http=http://my_proxy:my_port"). SOCKS proxies are supported if Internet Explorer is installed
 	/PROXYUSER user				| Optional username for authenticated proxies
