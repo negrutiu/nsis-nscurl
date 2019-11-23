@@ -346,8 +346,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			ULONG e = ERROR_SUCCESS;
 			pReq->Runtime.hInFile = CreateFile( (LPCTSTR)pReq->pszData, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
 			if (VALID_HANDLE( pReq->Runtime.hInFile )) {
+				// NOTE: kernel32!GetFileSizeEx is only available in XP+
 				LARGE_INTEGER l;
-				if (GetFileSizeEx( pReq->Runtime.hInFile, &l )) {
+				l.LowPart = GetFileSize( pReq->Runtime.hInFile, &l.HighPart );
+				if (l.LowPart != INVALID_FILE_SIZE) {
 					/// Store file size in iDataSize
 					pReq->iDataSize = l.QuadPart;
 				} else {
@@ -369,7 +371,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 		if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
 			LARGE_INTEGER l;
-			if (GetFileSizeEx( pReq->Runtime.hOutFile, &l )) {
+			l.LowPart = GetFileSize( pReq->Runtime.hOutFile, &l.HighPart );
+			if (l.LowPart != INVALID_FILE_SIZE) {
 				iResumeFrom = l.QuadPart;
 				if (SetFilePointer( pReq->Runtime.hOutFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
 					e = GetLastError();
