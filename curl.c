@@ -224,22 +224,22 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 	LPCSTR psz1, psz2;
 	for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
 	if (psz2 > psz1) {
-		if (!pReq->Runtime.bHttpStatus) {
+		if (!pReq->Error.bStatusGrabbed) {
 			/// "HTTP/1.1 200 OK" -> "OK"
 			for (; (*psz1 != ANSI_NULL) && (*psz1 != ' '); psz1++);		/// Find space #1
 			for (; (*psz1 == ' '); psz1++);								/// Skip space #1
 			for (; (*psz1 != ANSI_NULL) && (*psz1 != ' '); psz1++);		/// Find space #2
 			for (; (*psz1 == ' '); psz1++);								/// Skip space #2
 			/// Collect
-			MyFree( pReq->Runtime.pszHttpStatus );
-			if ((pReq->Runtime.pszHttpStatus = (LPCSTR)MyAlloc( (ULONG)(psz2 - psz1) + 1 )) != NULL)
-				lstrcpynA( (LPSTR)pReq->Runtime.pszHttpStatus, psz1, (int)(psz2 - psz1) + 1 );
+			MyFree( pReq->Error.pszHttp );
+			if ((pReq->Error.pszHttp = (LPCSTR)MyAlloc( (ULONG)(psz2 - psz1) + 1 )) != NULL)
+				lstrcpynA( (LPSTR)pReq->Error.pszHttp, psz1, (int)(psz2 - psz1) + 1 );
 		}
-		pReq->Runtime.bHttpStatus = TRUE;
+		pReq->Error.bStatusGrabbed = TRUE;
 	} else {
 		/// Empty header
 		/// A new header block may be received, in which case we'll collect its status line again
-		pReq->Runtime.bHttpStatus = FALSE;
+		pReq->Error.bStatusGrabbed = FALSE;
 	}
 
 	// Collect headers
@@ -253,14 +253,14 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
 	assert( pReq && pReq->Runtime.pCurl );
 
-	if (VALID_HANDLE( pReq->Runtime.hFile )) {
+	if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
 		// Write to output file
 		ULONG iWritten = 0;
-		if (WriteFile( pReq->Runtime.hFile, ptr, (ULONG)(size * nmemb), &iWritten, NULL )) {
+		if (WriteFile( pReq->Runtime.hOutFile, ptr, (ULONG)(size * nmemb), &iWritten, NULL )) {
 			return iWritten;
 		} else {
-			pReq->Runtime.iWin32Error = GetLastError();
-			pReq->Runtime.pszWin32Error = MyErrorStr( pReq->Runtime.iWin32Error );
+			pReq->Error.iWin32 = GetLastError();
+			pReq->Error.pszWin32 = MyErrorStr( pReq->Error.iWin32 );
 		}
 	} else {
 		// Initialize output virtual memory (once)
@@ -291,12 +291,12 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// Create destination file
 	if (pReq->pszPath && *pReq->pszPath) {
 		ULONG e = ERROR_SUCCESS;
-		pReq->Runtime.hFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-		if (VALID_HANDLE( pReq->Runtime.hFile )) {
+		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+		if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
 			LARGE_INTEGER l;
-			if (GetFileSizeEx( pReq->Runtime.hFile, &l )) {
+			if (GetFileSizeEx( pReq->Runtime.hOutFile, &l )) {
 				iResumeFrom = l.QuadPart;
-				if (SetFilePointer( pReq->Runtime.hFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
+				if (SetFilePointer( pReq->Runtime.hOutFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
 					e = GetLastError();
 				}
 			} else {
@@ -305,9 +305,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		} else {
 			e = GetLastError();
 		}
-		if (e != ERROR_SUCCESS && pReq->Runtime.iWin32Error == ERROR_SUCCESS) {
-			pReq->Runtime.iWin32Error = e;
-			pReq->Runtime.pszWin32Error = MyErrorStr( e );
+		if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
+			pReq->Error.iWin32 = e;
+			pReq->Error.pszWin32 = MyErrorStr( e );
 		}
 	}
 
@@ -419,15 +419,15 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 		/// Transfer
 		pReq->Runtime.pCurl = curl;
-		pReq->Runtime.iCurlError = curl_easy_perform( curl );
+		pReq->Error.iCurl = curl_easy_perform( curl );
 
 		/// Error information
-		pReq->Runtime.pszCurlError = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Runtime.iCurlError ) );
-		curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Runtime.iHttpStatus );	/// ...might not be available
+		pReq->Error.pszCurl = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Error.iCurl ) );
+		curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Error.iHttp );	/// ...might not be available
 
 		// Cleanup
-		if (VALID_HANDLE( pReq->Runtime.hFile ))
-			CloseHandle( pReq->Runtime.hFile ), pReq->Runtime.hFile = NULL;
+		if (VALID_HANDLE( pReq->Runtime.hOutFile ))
+			CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
 
 		curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, NULL );
 		curl_easy_setopt( curl, CURLOPT_USERAGENT, NULL );
@@ -453,15 +453,15 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_
 	if (pszError)
 		pszError[0] = 0;
 	if (pReq) {
-		if (pReq->Runtime.iWin32Error != ERROR_SUCCESS) {
-			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Runtime.iWin32Error, pReq->Runtime.pszWin32Error );
-		} else if (pReq->Runtime.iCurlError != CURLE_OK) {
-			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Runtime.iCurlError, pReq->Runtime.pszCurlError );
+		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
+			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
+		} else if (pReq->Error.iCurl != CURLE_OK) {
+			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Error.iCurl, pReq->Error.pszCurl );
 		} else {
-			if (pReq->Runtime.iHttpStatus >= 200 && pReq->Runtime.iHttpStatus < 300) {
+			if (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300) {
 				_sntprintf( pszError, iErrorLen, _T( "OK" ) );
 			} else {
-				_sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Runtime.iHttpStatus, pReq->Runtime.pszHttpStatus );
+				_sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iHttp, pReq->Error.pszHttp );
 			}
 		}
 	}
