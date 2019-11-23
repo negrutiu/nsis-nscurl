@@ -108,7 +108,7 @@ typedef struct {
 	SIZE_T iReserved, iCommitted;
 } VMEMO;
 ULONG  VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize );			/// Return Win32 error
-SIZE_T VirtualMemoryWrite( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
+SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
 void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 
 //+ Unicode

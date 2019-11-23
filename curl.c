@@ -254,7 +254,7 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 	}
 
 	// Collect headers
-	return VirtualMemoryWrite( &pReq->Runtime.OutHeaders, buffer, nitems * size );
+	return VirtualMemoryAppend( &pReq->Runtime.OutHeaders, buffer, nitems * size );
 }
 
 
@@ -313,7 +313,7 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 			VirtualMemoryInitialize( &pReq->Runtime.OutData, (SIZE_T)iMaxSize );
 		}
 		// Write to RAM
-		return VirtualMemoryWrite( &pReq->Runtime.OutData, ptr, size * nmemb );
+		return VirtualMemoryAppend( &pReq->Runtime.OutData, ptr, size * nmemb );
 	}
 
 	return 0;

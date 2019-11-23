@@ -390,8 +390,8 @@ ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 	return ERROR_SUCCESS;
 }
 
-//++ VirtualMemoryWrite
-SIZE_T VirtualMemoryWrite( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T size )
+//++ VirtualMemoryAppend
+SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T size )
 {
 	ULONG e = ERROR_SUCCESS;
 	if (pMem && pMem->pMem && buf && size) {
