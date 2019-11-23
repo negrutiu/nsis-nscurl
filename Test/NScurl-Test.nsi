@@ -146,7 +146,7 @@ Section /o Test
 SectionEnd
 
 
-Section "httpbin.org/GET"
+Section "httpbin.org/get"
 	SectionIn 1	; All
 
 	DetailPrint '-----------------------------------------------'
@@ -157,7 +157,26 @@ Section "httpbin.org/GET"
 	!define /redef LINK 'http://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section "httpbin.org/post"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'http://httpbin.org/post?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_POST_httpbin.json'
+	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD POST /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END

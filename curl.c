@@ -358,9 +358,42 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 		}
 
-		// TODO: METHOD
-		/// GET
-		curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
+		/// Request method
+		if (!pReq->pszMethod || !*pReq->pszMethod ||
+			lstrcmpiA( pReq->pszMethod, "GET" ) == 0)
+		{
+
+			// GET
+			curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
+
+		} else if (lstrcmpiA( pReq->pszMethod, "POST" ) == 0) {
+
+			// POST
+			curl_easy_setopt( curl, CURLOPT_POST, TRUE );
+		//x	if (InForm.empty()) {
+		//x		/// Send InData as regular form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
+		//x		curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)InData.Size() );
+		//x	} else {
+		//x		/// Send InForm as multi-part MIME form (CURLOPT_MIMEPOST, "multipart/form-data")
+		//x		curl_easy_setopt( curl, CURLOPT_MIMEPOST, InForm.m_pMime );
+		//x	}
+
+		} else if (lstrcmpiA( pReq->pszMethod, "HEAD" ) == 0) {
+
+			// HEAD
+			curl_easy_setopt( curl, CURLOPT_NOBODY, TRUE );
+
+		} else if (lstrcmpiA( pReq->pszMethod, "PUT" ) == 0) {
+
+			// PUT
+			curl_easy_setopt( curl, CURLOPT_PUT, TRUE );
+		//x	curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)InData.Size() );		/// "Content-Length: FS" header is mandatory in HTTP/1.x
+
+		} else {
+
+			// DELETE, OPTIONS, TRACE, etc.
+			curl_easy_setopt( curl, CURLOPT_CUSTOMREQUEST, pReq->pszMethod );
+		}
 
 		/// Request Headers
 		if (pReq->pInHeaders)
@@ -369,6 +402,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		// TODO: DATA
 		// TODO: POST FORM
 		// TODO: PROXY
+		// TODO: curl_easy_escape()
 
 		/// Resume
 		curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
@@ -391,10 +425,24 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		pReq->Runtime.pszCurlError = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Runtime.iCurlError ) );
 		curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Runtime.iHttpStatus );	/// ...might not be available
 
-		// Destroy
+		// Cleanup
 		if (VALID_HANDLE( pReq->Runtime.hFile ))
 			CloseHandle( pReq->Runtime.hFile ), pReq->Runtime.hFile = NULL;
-		curl_easy_cleanup( curl );		// TODO: Clear all options + Return to cache
+
+		curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, NULL );
+		curl_easy_setopt( curl, CURLOPT_USERAGENT, NULL );
+		curl_easy_setopt( curl, CURLOPT_REFERER, NULL );
+		curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, 0 );
+		curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, NULL );
+		curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );
+		curl_easy_setopt( curl, CURLOPT_PUT, FALSE );					// HACK: Fix POST request that follows a PUT request
+		curl_easy_setopt( curl, CURLOPT_URL, NULL );
+		curl_easy_setopt( curl, CURLOPT_HEADERDATA, NULL );
+		curl_easy_setopt( curl, CURLOPT_READDATA, NULL );
+		curl_easy_setopt( curl, CURLOPT_WRITEDATA, NULL );
+		curl_easy_setopt( curl, CURLOPT_XFERINFODATA, NULL );
+
+		curl_easy_cleanup( curl );		// TODO: Return to cache
 	}
 }
 
