@@ -173,7 +173,7 @@ void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ Request
+//++ [exported] Request
 EXTERN_C __declspec(dllexport)
 void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -219,6 +219,66 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	pushstringEx( psz );		// TODO
 
 	CurlRequestDestroy( Req );
+	MyFree( psz );
+}
+
+
+//++ [exported] UrlEscape
+EXTERN_C __declspec(dllexport)
+void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz = NULL;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "NSxfer!EscapeURL" ) );
+
+	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
+	assert( psz );
+
+	if (popstring( psz ) == NOERROR) {
+		LPSTR pszA = MyStrDupA( psz );
+		if (pszA) {
+			LPSTR pszOut = curl_easy_escape( NULL, pszA, 0 );
+			if (pszOut) {
+				PushStringA( pszOut );
+				curl_free( pszOut );
+			}
+			MyFree( pszA );
+		}
+	}
+
+	MyFree( psz );
+}
+
+
+//++ [exported] UrlUnescape
+EXTERN_C __declspec(dllexport)
+void __cdecl UrlUnescape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz = NULL;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "NSxfer!UnescapeURL" ) );
+
+	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
+	assert( psz );
+
+	if (popstring( psz ) == NOERROR) {
+		LPSTR pszA = MyStrDupA( psz );
+		if (pszA) {
+			LPSTR pszOut = curl_easy_unescape( NULL, pszA, 0, NULL );
+			if (pszOut) {
+				PushStringA( pszOut );
+				curl_free( pszOut );
+			}
+			MyFree( pszA );
+		}
+	}
+
 	MyFree( psz );
 }
 

@@ -137,11 +137,9 @@ Section /o Test
 	SectionIn 1
 
 	; NScurl::Echo
-	!insertmacro STACK_VERIFY_START
 	NScurl::Echo "aaa" bbb 1 0x2 /END
 	Pop $0
 	DetailPrint 'NScurl::Echo(...) = "$0"'
-	!insertmacro STACK_VERIFY_END
 
 SectionEnd
 
@@ -153,14 +151,14 @@ Section "httpbin.org/get"
 	DetailPrint '${__SECTION__}'
 	DetailPrint '-----------------------------------------------'
 
-	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
+
 	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
+
 	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
 SectionEnd
 
@@ -172,7 +170,6 @@ Section "httpbin.org/post (multipart/form-data)"
 	DetailPrint '${__SECTION__}'
 	DetailPrint '-----------------------------------------------'
 
-	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
@@ -193,7 +190,6 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	Pop $0
 	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
 SectionEnd
 
@@ -205,7 +201,6 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	DetailPrint '${__SECTION__}'
 	DetailPrint '-----------------------------------------------'
 
-	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_postfields.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
@@ -223,7 +218,6 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 
 	Pop $0
 	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
 SectionEnd
 
@@ -235,7 +229,6 @@ Section "httpbin.org/post (application/json)"
 	DetailPrint '${__SECTION__}'
 	DetailPrint '-----------------------------------------------'
 
-	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_json.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
@@ -252,7 +245,6 @@ Section "httpbin.org/post (application/json)"
 
 	Pop $0
 	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
 SectionEnd
 
@@ -264,7 +256,6 @@ Section "httpbin.org/put"
 	DetailPrint '${__SECTION__}'
 	DetailPrint '-----------------------------------------------'
 
-	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_PUT_httpbin.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
@@ -283,7 +274,27 @@ Section "httpbin.org/put"
 
 	Pop $0
 	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section /o "Un/Escape"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	StrCpy $R0 "aaa bbb ccc=ddd&eee"
+	DetailPrint "Original: $R0"
+
+	NScurl::UrlEscape $R0
+	Pop $1
+	DetailPrint "Escaped: $1"
+
+	NScurl::UrlUnescape $1
+	Pop $0
+	DetailPrint "Unescaped: $0"
 
 SectionEnd
 

@@ -513,7 +513,6 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pInHeaders );
 
 			// TODO: PROXY
-			// TODO: curl_easy_escape()
 
 			/// Resume
 			curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );

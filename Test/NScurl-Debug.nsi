@@ -390,6 +390,34 @@ Section "httpbin.org/put"
 
 SectionEnd
 
+
+Section /o "Un/Escape"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	StrCpy $R0 "aaa bbb ccc=ddd&eee"
+	DetailPrint "Original: $R0"
+
+	!insertmacro STACK_VERIFY_START
+	Push $R0
+	CallInstDLL "${NSCURL}" UrlEscape
+	Pop $1
+	DetailPrint "Escaped: $1"
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push $1
+	CallInstDLL "${NSCURL}" UrlUnescape
+	Pop $0
+	DetailPrint "Unescaped: $0"
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
 /*
 Section /o "HTTP GET (Popup mode)"
 	SectionIn 1	; All

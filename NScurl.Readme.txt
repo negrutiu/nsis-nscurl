@@ -409,3 +409,24 @@ Examples:
 	NScurl::md5 $EXEPATH
 	Pop $0
 _________________________________________________________________________________________________
+
+_________________________________________________________________________________________________
+
+NScurl::UrlEscape <str>
+NScurl::UrlUnescape <str>
+
+Remarks:
+	Converts the "plain string" to/from an URL-encoded string
+
+Parameters:
+	<str>					| Escaped/Unescaped string
+
+Return:
+	[Stack] The un/escaped string
+
+Examples:
+	NScurl::UrlEscape "aaa bbb"
+	Pop $0 ; "aaa%20bbb"
+
+	NScurl::UrlUnescape "aaa%20bbb"
+	Pop $0 ; "aaa bbb"
