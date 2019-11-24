@@ -5,6 +5,7 @@
 #include "curl.h"
 #include "utils.h"
 #include "crypto.h"
+#include "queue.h"
 
 
 HINSTANCE g_hInst = NULL;
@@ -21,6 +22,7 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 
 		UtilsInitialize();
 		CurlInitialize();
+		QueueInitialize();
 
 		return TRUE;
 	}
@@ -36,6 +38,7 @@ BOOL PluginUninit()
 
 		TRACE( _T( "PluginUninit\n" ) );
 
+		QueueDestroy();
 		CurlDestroy();
 		UtilsDestroy();
 
@@ -193,7 +196,7 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	assert( psz );
 
 	/// Parameters
-	CurlRequestInit( Req );
+	CurlRequestInit( &Req );
 	for (;;)
 	{
 		if (popstring( psz ) != 0)
@@ -218,7 +221,7 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	CurlRequestFormatError( &Req, psz, string_size );
 	pushstringEx( psz );		// TODO
 
-	CurlRequestDestroy( Req );
+	CurlRequestDestroy( &Req );
 	MyFree( psz );
 }
 

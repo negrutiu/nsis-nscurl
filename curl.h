@@ -7,7 +7,12 @@
 
 
 //+ struct CURL_REQUEST
-typedef struct {
+typedef struct _CURL_REQUEST {
+	/// Queue data
+	struct _CURL_REQUEST* pNext;		/// Singly linked list
+	ULONG		iId;					/// Unique ID
+	CHAR		iStatus;				/// '\0' = Waiting, 'r' = Running, 'c' = Completed
+	/// Request data
 	LPCSTR		pszURL;
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
@@ -44,31 +49,31 @@ typedef struct {
 	} Error;
 } CURL_REQUEST, *PCURL_REQUEST;
 
-#define CurlRequestInit(Req) \
-	ZeroMemory( &Req, sizeof( Req ) );
+#define CurlRequestInit(pReq) \
+	ZeroMemory( pReq, sizeof( *pReq ) );
 
-#define CurlRequestDestroy(Req) \
-	MyFree( Req.pszURL ); \
-	MyFree( Req.pszPath ); \
-	MyFree( Req.pszMethod ); \
-	curl_slist_free_all( Req.pInHeaders ); \
-	curl_slist_free_all( Req.pPostVars ); \
-	MyFree( Req.pszData ); \
-	MyFree( Req.pszProxy ); \
-	MyFree( Req.pszProxyUser ); \
-	MyFree( Req.pszProxyPass ); \
-	MyFree( Req.pszAgent ); \
-	MyFree( Req.pszReferrer ); \
-	MyFree( Req.pszCacert ); \
-	Req.Runtime.pCurl = NULL; \
-	if (VALID_HANDLE(Req.Runtime.hInFile))  CloseHandle(Req.Runtime.hInFile); \
-	if (VALID_HANDLE(Req.Runtime.hOutFile)) CloseHandle(Req.Runtime.hOutFile); \
-	VirtualMemoryDestroy( &Req.Runtime.OutHeaders ); \
-	VirtualMemoryDestroy( &Req.Runtime.OutData ); \
-	MyFree( Req.Error.pszWin32 ); \
-	MyFree( Req.Error.pszCurl ); \
-	MyFree( Req.Error.pszHttp ); \
-	ZeroMemory( &Req, sizeof( Req ) );
+#define CurlRequestDestroy(pReq) \
+	MyFree( (pReq)->pszURL ); \
+	MyFree( (pReq)->pszPath ); \
+	MyFree( (pReq)->pszMethod ); \
+	curl_slist_free_all( (pReq)->pInHeaders ); \
+	curl_slist_free_all( (pReq)->pPostVars ); \
+	MyFree( (pReq)->pszData ); \
+	MyFree( (pReq)->pszProxy ); \
+	MyFree( (pReq)->pszProxyUser ); \
+	MyFree( (pReq)->pszProxyPass ); \
+	MyFree( (pReq)->pszAgent ); \
+	MyFree( (pReq)->pszReferrer ); \
+	MyFree( (pReq)->pszCacert ); \
+	(pReq)->Runtime.pCurl = NULL; \
+	if (VALID_HANDLE((pReq)->Runtime.hInFile))  CloseHandle((pReq)->Runtime.hInFile); \
+	if (VALID_HANDLE((pReq)->Runtime.hOutFile)) CloseHandle((pReq)->Runtime.hOutFile); \
+	VirtualMemoryDestroy( &(pReq)->Runtime.OutHeaders ); \
+	VirtualMemoryDestroy( &(pReq)->Runtime.OutData ); \
+	MyFree( (pReq)->Error.pszWin32 ); \
+	MyFree( (pReq)->Error.pszCurl ); \
+	MyFree( (pReq)->Error.pszHttp ); \
+	ZeroMemory( pReq, sizeof( *pReq ) );
 
 
 //+ Initialization
