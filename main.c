@@ -56,8 +56,15 @@ BOOL PluginUninit()
 UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 {
 	switch ( iMessage ) {
-		case NSPIM_UNLOAD:		TRACE( _T( "%hs( NSPIM_UNLOAD )\n" ),    __FUNCTION__ ); break;
-		case NSPIM_GUIUNLOAD:	TRACE( _T( "%hs( NSPIM_GUIUNLOAD )\n" ), __FUNCTION__ ); break;
+		case NSPIM_GUIUNLOAD: {
+			TRACE( _T( "%hs( NSPIM_GUIUNLOAD )\n" ), __FUNCTION__ );
+			break;
+		}
+		case NSPIM_UNLOAD: {
+			TRACE( _T( "%hs( NSPIM_UNLOAD )\n" ), __FUNCTION__ );
+			PluginUninit();
+			break;
+		}
 	}
 	return 0;
 }
