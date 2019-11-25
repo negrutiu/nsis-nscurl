@@ -9,6 +9,7 @@
 
 
 HINSTANCE	g_hInst = NULL;
+HANDLE		g_hTerm = NULL;
 
 
 //++ PluginInit
@@ -18,7 +19,10 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 	if (!g_hInst) {
 
 		TRACE( _T( "PluginInit\n" ) );
+
 		g_hInst = hInst;
+		g_hTerm = CreateEvent( NULL, TRUE, FALSE, NULL );
+		assert( g_hTerm );
 
 		UtilsInitialize();
 		CurlInitialize();
@@ -37,11 +41,14 @@ BOOL PluginUninit()
 	if ( g_hInst ) {
 
 		TRACE( _T( "PluginUninit\n" ) );
+		
+		SetEvent( g_hTerm );
 
 		QueueDestroy();
 		CurlDestroy();
 		UtilsDestroy();
 
+		CloseHandle( g_hTerm );
 		g_hInst = NULL;
 		return TRUE;
 	}
