@@ -8,11 +8,6 @@
 
 //+ struct CURL_REQUEST
 typedef struct _CURL_REQUEST {
-	/// Queue data
-	struct _CURL_REQUEST* pNext;		/// Singly linked list
-	ULONG		iId;					/// Unique ID
-	CHAR		iStatus;				/// '\0' = Waiting, 'r' = Running, 'c' = Completed
-	/// Request data
 	LPCSTR		pszURL;
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
@@ -30,6 +25,12 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
+	struct {
+		struct _CURL_REQUEST* pNext;	/// Singly linked list
+		ULONG			iId;			/// Unique ID
+		CHAR			iStatus;		/// '\0' = Waiting, 'r' = Running, 'c' = Completed
+		volatile LONG	iFlagAbort;		/// If TRUE, the transfer will abort. iStatus will be set to 'c'
+	} Queue;
 	struct {
 		CURL		*pCurl;
 		HANDLE		hInFile;			/// Upload file. iDataSize represents its size

@@ -16,12 +16,13 @@ void QueueLock();
 void QueueUnlock();
 
 //+ Add/Remove
-//! The queue must be locked by the caller
-ULONG QueueAdd( _In_ PCURL_REQUEST pReq );		/// The queue will automatically MyFree(pReq)
-void QueueRemove( _In_ PCURL_REQUEST pReq );	/// The queue will automatically MyFree(pReq)
+//? The queue *must not* be locked
+ULONG QueueAdd( _In_ PCURL_REQUEST pReq );		/// The queue takes ownership of pReq
+void  QueueRemove( _In_ ULONG iId );
 
 //+ Find
 //! The queue must be locked by the caller
 PCURL_REQUEST QueueHead();
 PCURL_REQUEST QueueTail();
+PCURL_REQUEST QueueFind( _In_ ULONG iId );
 PCURL_REQUEST QueueFirstWaiting();

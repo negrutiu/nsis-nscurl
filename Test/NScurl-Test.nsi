@@ -112,7 +112,16 @@ done:
 SectionEnd
 
 
-Section /o Hash
+Section Parallel
+	${For} $R0 1 100
+		NScurl::Request /URL "https://httpbin.org/put" /TO "$EXEDIR\_test_$R0.json" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
+		Pop $0
+		DetailPrint "Status[$R0] = $0"
+	${Next}
+SectionEnd
+
+
+Section /o Hashes
 	SectionIn 1
 
 	; NScurl::md5

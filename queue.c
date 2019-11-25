@@ -12,22 +12,23 @@
 struct {
 	CRITICAL_SECTION	Lock;
 	PCURL_REQUEST		Head;
-	ULONG				NextId;
+	volatile LONG		NextId;
 	LONG				ThreadMax;
 	volatile LONG		ThreadCount;
-	volatile LONG		FlagTermAll;
 } g_Queue = {0};
 
+#define QueueThreadCount(...)	\
+	(InterlockedCompareExchange( &g_Queue.ThreadCount, -1, -1 ))
 
 //+ Prototypes
-ULONG QueueStartTransfer( _In_ PCURL_REQUEST pReq );
-ULONG QueueStopTransfer( _In_ PCURL_REQUEST pReq );
+ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam );
 
 
 //++ QueueInitialize
 void QueueInitialize()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+
 	InitializeCriticalSection( &g_Queue.Lock );
 	g_Queue.Head = NULL;
 	g_Queue.NextId = 0;
@@ -48,9 +49,18 @@ void QueueDestroy()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
+	// The global TERM event has already been set
+	// Transfers are being aborted, worker threads are closing
+//x	while (QueueThreadCount() > 0)
+//x		Sleep( 10 );
+
+	// Destroy the queue
 	while (g_Queue.Head)
-		QueueRemove( g_Queue.Head );
+		QueueRemove( g_Queue.Head->Queue.iId );
+
+	// Cleanup
 	DeleteCriticalSection( &g_Queue.Lock );
+	ZeroMemory( &g_Queue, sizeof( g_Queue ) );
 }
 
 
@@ -63,20 +73,55 @@ void QueueUnlock() { LeaveCriticalSection( &g_Queue.Lock ); }
 ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 {
 	ULONG e = ERROR_SUCCESS;
+
+	if (IsTermEventSet)
+		return ERROR_SHUTDOWN_IN_PROGRESS;
+
 	if (pReq) {
-		PCURL_REQUEST pTail = QueueTail();
-		if (pTail) {
-			pTail->pNext = pReq;
+		if (!pReq->pszURL || !*pReq->pszURL)
+			return ERROR_INVALID_PARAMETER;
+	}
+
+	if (pReq) {
+
+		// Create a worker thread (suspended)
+		HANDLE hThread = NULL;
+		if (QueueThreadCount() + 1 <= g_Queue.ThreadMax) {
+			if ((hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, CREATE_SUSPENDED, NULL )) != NULL) {
+				// NOTE: Testing/Incrementing the thread count is not atomic. It's possible that we exceed the maximum limit. We can live with that ;)
+				InterlockedIncrement( &g_Queue.ThreadCount );
+			} else {
+				// TODO: GetLastError()
+			}
 		} else {
-			g_Queue.Head = pReq;
+			/// No more threads are allowed
+			/// The new HTTP request will wait in queue until an existing worker thread becomes available
 		}
-		pReq->pNext = NULL;
-		pReq->iStatus = STATUS_WAITING;
-		pReq->iId = ++g_Queue.NextId;
-		// Start transfer
-		e = QueueStartTransfer( pReq );
-		if (e == ERROR_IO_PENDING)
-			e = ERROR_SUCCESS;
+
+		// Add to queue
+		pReq->Queue.pNext   = NULL;
+		pReq->Queue.iStatus = (hThread ? STATUS_RUNNING : STATUS_WAITING);
+		pReq->Queue.iId     = InterlockedIncrement( &g_Queue.NextId );
+
+		QueueLock();
+		{
+			PCURL_REQUEST pTail = QueueTail();
+			if (pTail) {
+				pTail->Queue.pNext = pReq;
+			} else {
+				g_Queue.Head = pReq;
+			}
+		}
+		QueueUnlock();
+
+		TRACE( _T( "%hs( Id:%u, Url:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL );
+
+		// Resume the thread
+		if (hThread) {
+			ResumeThread( hThread );
+			CloseHandle( hThread );			//? Thread handle is no longer needed. The thread will continue to run until its procedure exits
+		}
+	
 	} else {
 		e = ERROR_INVALID_PARAMETER;
 	}
@@ -85,20 +130,47 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 
 
 //++ QueueRemove
-void QueueRemove( _In_ PCURL_REQUEST pReq )
+//?  The queue must be *unlocked*
+void QueueRemove( _In_ ULONG iId )
 {
+	// Find request by ID
+	PCURL_REQUEST pReq;
+	QueueLock();
+	pReq = QueueFind( iId );
+	QueueUnlock();
+
 	if (pReq) {
-		// Stop transfer (if in progress...)
-		QueueStopTransfer( pReq );
+
+		ULONG t0 = GetTickCount();
+
+		// If running, abort the transfer now
+		InterlockedExchange( &pReq->Queue.iFlagAbort, TRUE );
+
+		// Wait for the transfer to abort
+		// TODO: Polling sucks. Find something better!
+		while (TRUE) {
+			MemoryBarrier();
+			if (pReq->Queue.iStatus != STATUS_RUNNING) {
+				break;
+			} else {
+				Sleep( 10 );
+			}
+		}
+
 		// Remove from queue
+		QueueLock();
 		if (g_Queue.Head == pReq) {
-			g_Queue.Head = pReq->pNext;
+			g_Queue.Head = pReq->Queue.pNext;
 		} else {
 			PCURL_REQUEST pPrev;
-			for (pPrev = g_Queue.Head; pPrev->pNext != pReq; pPrev = pPrev->pNext);
+			for (pPrev = g_Queue.Head; pPrev->Queue.pNext != pReq; pPrev = pPrev->Queue.pNext);
 			assert( pPrev );
-			pPrev->pNext = pReq->pNext;
+			pPrev->Queue.pNext = pReq->Queue.pNext;
 		}
+		QueueUnlock();
+
+		TRACE( _T( "%hs( Id:%u, Url:%hs ), %ums\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL, GetTickCount() - t0 );
+
 		// Free
 		CurlRequestDestroy( pReq );
 		MyFree( pReq );
@@ -112,25 +184,34 @@ PCURL_REQUEST QueueHead()
 	return g_Queue.Head;
 }
 
-
 //++ QueueTail
 PCURL_REQUEST QueueTail()
 {
 	if (g_Queue.Head) {
 		PCURL_REQUEST pTail;
-		for (pTail = g_Queue.Head; pTail->pNext; pTail = pTail->pNext);
+		for (pTail = g_Queue.Head; pTail->Queue.pNext; pTail = pTail->Queue.pNext);
 		return pTail;
 	}
 	return NULL;
 }
 
+//++ QueueFind
+PCURL_REQUEST QueueFind( _In_ ULONG iId )
+{
+	if (iId) {
+		PCURL_REQUEST p;
+		for (p = g_Queue.Head; p && (p->Queue.iId != iId); p = p->Queue.pNext);
+		return p;
+	}
+	return NULL;
+}
 
 //++ QueueFirstWaiting
 PCURL_REQUEST QueueFirstWaiting()
 {
 	if (g_Queue.Head) {
 		PCURL_REQUEST p;
-		for (p = g_Queue.Head; p && (p->iStatus != STATUS_WAITING); p = p->pNext);
+		for (p = g_Queue.Head; p && (p->Queue.iStatus != STATUS_WAITING); p = p->Queue.pNext);
 		return p;
 	}
 	return NULL;
@@ -140,19 +221,24 @@ PCURL_REQUEST QueueFirstWaiting()
 //++ QueueThreadProc
 ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 {
-	ULONG e = ERROR_SUCCESS;
+	ULONG e = ERROR_SUCCESS, t0;
+	LONG iThreadCount;
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
+
+	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", QueueThreadCount(), g_Queue.ThreadMax );
 
 	while (TRUE) {
 
-		// Check TERM-ALL flag
-		if (InterlockedCompareExchange( &g_Queue.FlagTermAll, 1, 1 ) != 0)
+		// Check TERM event
+		if (IsTermEventSet)
 			break;
 
-		// Select the next waiting request, or, the one received as parameter...
+		// Select the next waiting request
 		if (!pReq) {
 			QueueLock();
 			pReq = QueueFirstWaiting();
+			if (pReq)
+				pReq->Queue.iStatus = STATUS_RUNNING;
 			QueueUnlock();
 		}
 
@@ -161,57 +247,26 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 			break;
 
 		// Transfer
+		t0 = GetTickCount();
 		CurlTransfer( pReq );
+	#ifdef TRACE_ENABLED
+		{
+			TCHAR szErr[256];
+			CurlRequestFormatError( pReq, szErr, ARRAYSIZE( szErr ) );
+			TRACE( _T( "%hs( Id:%u, Url:%hs ) = %s, %ums\n" ), "CurlTransfer", pReq->Queue.iId, pReq->pszURL, szErr, GetTickCount() - t0 );
+		}
+	#endif
+
+		pReq->Queue.iStatus = STATUS_COMPLETED;
+		MemoryBarrier();
 
 		// Cleanup
 		pReq = NULL;
 	}
 
 	// Exit
-	InterlockedDecrement( &g_Queue.ThreadCount );
-	return e;
-}
+	iThreadCount = InterlockedDecrement( &g_Queue.ThreadCount );
+	TRACE( _T( "%hs( Count:%d/%d )\n" ), "ExitThread", iThreadCount, g_Queue.ThreadMax );
 
-
-//++ QueueStartTransfer
-ULONG QueueStartTransfer( _In_ PCURL_REQUEST pReq )
-{
-	ULONG e = ERROR_SUCCESS;
-	if (!pReq)
-		return ERROR_INVALID_PARAMETER;
-	if (pReq->iStatus == STATUS_WAITING) {
-		if (g_Queue.ThreadCount < g_Queue.ThreadMax) {
-			// TODO: Start thread
-			HANDLE hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, 0, NULL );
-			if (hThread) {
-				/// Close thread handle. The thread will continue to run until its procedure exits
-				CloseHandle( hThread );
-				g_Queue.ThreadCount++;
-			} else {
-				e = GetLastError();
-			}
-		} else {
-			/// The maximum number of worker threads are already running
-			/// This request will wait in the queue until a thread becomes available
-			e = ERROR_IO_PENDING;	//? This is a success error code
-		}
-	} else {
-		/// This request is either Running or Completed
-		e = ERROR_ALREADY_EXISTS;
-	}
-	return e;
-}
-
-
-//++ QueueStopTransfer
-ULONG QueueStopTransfer( _In_ PCURL_REQUEST pReq )
-{
-	ULONG e = ERROR_SUCCESS;
-	if (!pReq)
-		return ERROR_INVALID_PARAMETER;
-	if (pReq->iStatus == STATUS_RUNNING) {
-		// TODO: Signal termination
-		// TODO: Wait to stop
-	}
 	return e;
 }

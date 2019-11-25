@@ -132,6 +132,25 @@ done:
 SectionEnd
 
 
+Section Parallel
+	${For} $R0 1 100
+		Push /END
+		Push "@$PLUGINSDIR\cacert.pem"
+		Push /DATA
+		Push "PUT"
+		Push /METHOD
+		Push "$EXEDIR\_test_$R0.json"
+		Push /To
+		Push "https://httpbin.org/put"
+		Push /URL
+		CallInstDLL "${NSCURL}" Request
+		Pop $0
+		DetailPrint "Status[$R0] = $0"
+		; Sleep 200
+	${Next}
+SectionEnd
+
+
 Section /o Hashes
 	SectionIn 1
 

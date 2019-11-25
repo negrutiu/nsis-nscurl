@@ -194,48 +194,55 @@ void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 EXTERN_C __declspec(dllexport)
 void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
+	ULONG iRequestID = 0;
 	LPTSTR psz = NULL;
-	CURL_REQUEST Req;
+	PCURL_REQUEST pReq = NULL;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "NSxfer!Request\n" ) );
 
-	/// Lock the plugin in memory
+	// Lock the plugin in memory
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
 
-	/// Working buffer
+	// Working buffer
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
 
-	/// Parameters
-	CurlRequestInit( &Req );
-	for (;;)
-	{
-		if (popstring( psz ) != 0)
-			break;
-		if (lstrcmpi( psz, _T( "/END" ) ) == 0)
-			break;
+	// Prepare a HTTP request
+	pReq = (PCURL_REQUEST)MyAlloc( sizeof( *pReq ) );
+	if (pReq) {
 
-		if (!CurlParseRequestParam( psz, string_size, &Req )) {
-			TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
+		CurlRequestInit( pReq );
+		for (;;)
+		{
+			if (popstring( psz ) != 0)
+				break;
+			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
+				break;
+
+			if (!CurlParseRequestParam( psz, string_size, pReq )) {
+				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
+			}
+		}
+
+		// If not already done, extract "$PLUGINSDIR\cacert.pem" now
+		CurlExtractCacert();
+
+		// Append to the queue
+		if (QueueAdd( pReq ) == ERROR_SUCCESS) {
+
+			// Return value
+			iRequestID = pReq->Queue.iId;
+
+		} else {
+			CurlRequestDestroy( pReq );
+			MyFree( pReq );
 		}
 	}
 
-	// Add to the queue
-//x	QueueLock( &g_Queue );
-//x	QueueAdd( &g_Queue, &Req, &pReq );
-//x	pushint( pReq ? pReq->iId : 0 );	/// Return the request's ID
-//x	QueueUnlock( &g_Queue );
-
-	CurlExtractCacert();
-	CurlTransfer( &Req );
-
-	CurlRequestFormatError( &Req, psz, string_size );
-	pushstringEx( psz );		// TODO
-
-	CurlRequestDestroy( &Req );
+	pushint( iRequestID );
 	MyFree( psz );
 }
 

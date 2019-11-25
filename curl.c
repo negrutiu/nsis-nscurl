@@ -7,14 +7,11 @@
 
 
 typedef struct {
-	CRITICAL_SECTION		Lock;
-	HANDLE					hTerm;
-	HANDLE					hSema;
 	CHAR					szUserAgent[128];
 } CURL_GLOBALS;
 
 
-CURL_GLOBALS g = {0};
+CURL_GLOBALS g_Curl = {0};
 #define DEFAULT_HEADERS_VIRTUAL_SIZE	1024 * 128				/// 128KB
 #define DEFAULT_UKNOWN_VIRTUAL_SIZE		1024 * 1024 * 200		/// 200MB
 
@@ -23,46 +20,26 @@ CURL_GLOBALS g = {0};
 ULONG CurlInitialize()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
-	ULONG e = ERROR_SUCCESS, nThreads;
-	SYSTEM_INFO si;
-
-	if (g.hTerm)
-		return ERROR_SUCCESS;
-
-	GetSystemInfo( &si );
-	nThreads = si.dwNumberOfProcessors * 2;
-	nThreads = __max( nThreads, 4 );
-	nThreads = __min( nThreads, 64 );
-
-	InitializeCriticalSection( &g.Lock );
-	g.hTerm = CreateEvent( NULL, TRUE, FALSE, NULL );
-	g.hSema = CreateSemaphore( NULL, nThreads, nThreads, NULL );
-
 	{
 		// Default user agent
 		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
 		GetModuleFileName( g_hInst, szBuf, ARRAYSIZE( szBuf ) );
 		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
 	#if _UNICODE
-		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%ws", szVer );
+		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%ws", szVer );
 	#else
-		_snprintf( g.szUserAgent, ARRAYSIZE( g.szUserAgent ), "nscurl/%s", szVer );
+		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", szVer );
 	#endif
 	}
 
-	return e;
+	return ERROR_SUCCESS;
 }
+
 
 //++ CurlDestroy
 void CurlDestroy()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
-	if (g.hSema)
-		CloseHandle( g.hSema ), g.hSema = NULL;
-	if (g.hTerm) {
-		CloseHandle( g.hTerm ), g.hTerm = NULL;
-		DeleteCriticalSection( &g.Lock );
-	}
 }
 
 
@@ -322,6 +299,22 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 }
 
 
+//++ CurlProgressCallback
+int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
+{
+	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
+	assert( pReq && pReq->Runtime.pCurl );
+
+	if (IsTermEventSet)
+		return CURLE_ABORTED_BY_CALLBACK;
+
+	if (InterlockedCompareExchange(&pReq->Queue.iFlagAbort, -1, -1) != FALSE)
+		return CURLE_ABORTED_BY_CALLBACK;
+
+	return CURLE_OK;
+}
+
+
 //++ CurlTransfer
 void CurlTransfer( _In_ PCURL_REQUEST pReq )
 {
@@ -403,7 +396,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			szError[0] = ANSI_NULL;
 			curl_easy_setopt( curl, CURLOPT_ERRORBUFFER, szError );
 
-			curl_easy_setopt( curl, CURLOPT_USERAGENT, pReq->pszAgent ? pReq->pszAgent : g.szUserAgent );
+			curl_easy_setopt( curl, CURLOPT_USERAGENT, pReq->pszAgent ? pReq->pszAgent : g_Curl.szUserAgent );
 			if (pReq->pszReferrer)
 				curl_easy_setopt( curl, CURLOPT_REFERER, pReq->pszReferrer );
 
@@ -529,6 +522,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_setopt( curl, CURLOPT_READDATA, pReq );
 			curl_easy_setopt( curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback );
 			curl_easy_setopt( curl, CURLOPT_WRITEDATA, pReq );
+			curl_easy_setopt( curl, CURLOPT_XFERINFOFUNCTION, CurlProgressCallback );
+			curl_easy_setopt( curl, CURLOPT_XFERINFODATA, pReq );
+			curl_easy_setopt( curl, CURLOPT_NOPROGRESS, FALSE );	/// Activate progress callback function
 
 			/// URL
 			curl_easy_setopt( curl, CURLOPT_URL, pReq->pszURL );
@@ -546,13 +542,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_cleanup( curl );		// TODO: Return to cache
 		}
 
-		// Cleanup
-		if (VALID_HANDLE( pReq->Runtime.hInFile ))
-			CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
-		if (VALID_HANDLE( pReq->Runtime.hOutFile ))
-			CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
 		curl_mime_free( form );
 	}
+
+	// Cleanup
+	if (VALID_HANDLE( pReq->Runtime.hInFile ))
+		CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
+	if (VALID_HANDLE( pReq->Runtime.hOutFile ))
+		CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
 }
 
 
