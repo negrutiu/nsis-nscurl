@@ -22,6 +22,7 @@ CURL_GLOBALS g = {0};
 //++ CurlInitialize
 ULONG CurlInitialize()
 {
+	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 	ULONG e = ERROR_SUCCESS, nThreads;
 	SYSTEM_INFO si;
 
@@ -55,6 +56,7 @@ ULONG CurlInitialize()
 //++ CurlDestroy
 void CurlDestroy()
 {
+	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 	if (g.hSema)
 		CloseHandle( g.hSema ), g.hSema = NULL;
 	if (g.hTerm) {
@@ -361,6 +363,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 				pReq->Error.iWin32 = e;
 				pReq->Error.pszWin32 = MyErrorStr( e );
+				TRACE( _T( "[!] CreateFile( DataFile:%s ) = %s\n" ), (LPCTSTR)pReq->pszData, pReq->Error.pszWin32 );
 			}
 		}
 	}
@@ -386,6 +389,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 			pReq->Error.iWin32 = e;
 			pReq->Error.pszWin32 = MyErrorStr( e );
+			TRACE( _T( "[!] CreateFile( OutFile:%s ) = %s\n" ), pReq->pszPath, pReq->Error.pszWin32 );
 		}
 	}
 

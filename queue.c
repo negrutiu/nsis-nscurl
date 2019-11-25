@@ -27,6 +27,7 @@ ULONG QueueStopTransfer( _In_ PCURL_REQUEST pReq );
 //++ QueueInitialize
 void QueueInitialize()
 {
+	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 	InitializeCriticalSection( &g_Queue.Lock );
 	g_Queue.Head = NULL;
 	g_Queue.NextId = 0;
@@ -45,6 +46,8 @@ void QueueInitialize()
 //++ QueueDestroy
 void QueueDestroy()
 {
+	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+
 	while (g_Queue.Head)
 		QueueRemove( g_Queue.Head );
 	DeleteCriticalSection( &g_Queue.Lock );

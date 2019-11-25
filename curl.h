@@ -49,31 +49,37 @@ typedef struct _CURL_REQUEST {
 	} Error;
 } CURL_REQUEST, *PCURL_REQUEST;
 
-#define CurlRequestInit(pReq) \
+//+ CurlRequestInit
+static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	ZeroMemory( pReq, sizeof( *pReq ) );
+}
 
-#define CurlRequestDestroy(pReq) \
-	MyFree( (pReq)->pszURL ); \
-	MyFree( (pReq)->pszPath ); \
-	MyFree( (pReq)->pszMethod ); \
-	curl_slist_free_all( (pReq)->pInHeaders ); \
-	curl_slist_free_all( (pReq)->pPostVars ); \
-	MyFree( (pReq)->pszData ); \
-	MyFree( (pReq)->pszProxy ); \
-	MyFree( (pReq)->pszProxyUser ); \
-	MyFree( (pReq)->pszProxyPass ); \
-	MyFree( (pReq)->pszAgent ); \
-	MyFree( (pReq)->pszReferrer ); \
-	MyFree( (pReq)->pszCacert ); \
-	(pReq)->Runtime.pCurl = NULL; \
-	if (VALID_HANDLE((pReq)->Runtime.hInFile))  CloseHandle((pReq)->Runtime.hInFile); \
-	if (VALID_HANDLE((pReq)->Runtime.hOutFile)) CloseHandle((pReq)->Runtime.hOutFile); \
-	VirtualMemoryDestroy( &(pReq)->Runtime.OutHeaders ); \
-	VirtualMemoryDestroy( &(pReq)->Runtime.OutData ); \
-	MyFree( (pReq)->Error.pszWin32 ); \
-	MyFree( (pReq)->Error.pszCurl ); \
-	MyFree( (pReq)->Error.pszHttp ); \
+//+ CurlRequestDestroy
+static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
+	MyFree( pReq->pszURL );
+	MyFree( pReq->pszPath );
+	MyFree( pReq->pszMethod );
+	curl_slist_free_all( pReq->pInHeaders );
+	curl_slist_free_all( pReq->pPostVars );
+	MyFree( pReq->pszData );
+	MyFree( pReq->pszProxy );
+	MyFree( pReq->pszProxyUser );
+	MyFree( pReq->pszProxyPass );
+	MyFree( pReq->pszAgent );
+	MyFree( pReq->pszReferrer );
+	MyFree( pReq->pszCacert );
+	pReq->Runtime.pCurl = NULL;
+	if (VALID_HANDLE( pReq->Runtime.hInFile ))
+		CloseHandle( pReq->Runtime.hInFile );
+	if (VALID_HANDLE( pReq->Runtime.hOutFile ))
+		CloseHandle( pReq->Runtime.hOutFile );
+	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
+	VirtualMemoryDestroy( &pReq->Runtime.OutData );
+	MyFree( pReq->Error.pszWin32 );
+	MyFree( pReq->Error.pszCurl );
+	MyFree( pReq->Error.pszHttp );
 	ZeroMemory( pReq, sizeof( *pReq ) );
+}
 
 
 //+ Initialization

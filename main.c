@@ -8,7 +8,7 @@
 #include "queue.h"
 
 
-HINSTANCE g_hInst = NULL;
+HINSTANCE	g_hInst = NULL;
 
 
 //++ PluginInit
@@ -186,7 +186,7 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!Request" ) );
+	TRACE( _T( "NSxfer!Request\n" ) );
 
 	/// Lock the plugin in memory
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
@@ -235,7 +235,7 @@ void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!EscapeURL" ) );
+	TRACE( _T( "NSxfer!EscapeURL\n" ) );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
@@ -265,7 +265,7 @@ void __cdecl UrlUnescape( HWND parent, int string_size, TCHAR *variables, stack_
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!UnescapeURL" ) );
+	TRACE( _T( "NSxfer!UnescapeURL\n" ) );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );

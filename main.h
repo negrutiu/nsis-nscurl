@@ -9,11 +9,11 @@
 	#endif
 #endif
 
-#define PLUGINNAME					_T( "NScurl" )
+#define PLUGINNAME			_T( "NScurl" )
 
 #define _CRT_SECURE_NO_WARNINGS
-#define _WIN32_WINNT 0x0500
-#define _WIN32_IE    0x0600
+#define _WIN32_WINNT		0x0400
+//#define _WIN32_IE			0x0600
 
 #include <winsock2.h>
 #include <windows.h>

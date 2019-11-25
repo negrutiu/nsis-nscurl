@@ -10,16 +10,15 @@ MEMORY_STATS g_MemStats = { 0 };
 //++ UtilsInitialize
 VOID UtilsInitialize()
 {
-	TRACE( _T( "  UtilsInitialize()\n" ) );
+	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 }
 
 
 //++ UtilsDestroy
 VOID UtilsDestroy()
 {
-	TRACE( _T( "  MyAlloc: %u calls, %I64u bytes\n" ), g_MemStats.AllocCalls, g_MemStats.AllocBytes );
-	TRACE( _T( "  MyFree:  %u calls, %I64u bytes\n" ), g_MemStats.FreeCalls, g_MemStats.FreeBytes );
-	TRACE( _T( "  UtilsDestroy()\n" ) );
+	TRACE( _T( "%hs( Alloc: #%u/%I64u bytes, Free: #%u/%I64u bytes )\n" ), __FUNCTION__, g_MemStats.AllocCalls, g_MemStats.AllocBytes, g_MemStats.FreeCalls, g_MemStats.FreeBytes );
+	assert( g_MemStats.AllocBytes == g_MemStats.FreeBytes );
 }
 
 
