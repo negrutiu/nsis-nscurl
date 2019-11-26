@@ -268,6 +268,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 		}
 	#endif
 
+		// Mark as Completed
 		pReq->Queue.iStatus = STATUS_COMPLETED;
 		MemoryBarrier();
 

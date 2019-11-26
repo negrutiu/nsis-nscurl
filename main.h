@@ -32,4 +32,4 @@
 extern HINSTANCE			g_hInst;				/// main.c
 extern HANDLE				g_hTerm;				/// main.c
 
-#define IsTermEventSet		(g_hTerm && (WaitForSingleObject(g_hTerm, 0) != WAIT_TIMEOUT))
+#define TermSignaled(...)	(g_hTerm && (WaitForSingleObject(g_hTerm, 0) != WAIT_TIMEOUT))

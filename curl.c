@@ -305,7 +305,7 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
 	assert( pReq && pReq->Runtime.pCurl );
 
-	if (IsTermEventSet)
+	if (TermSignaled())
 		return CURLE_ABORTED_BY_CALLBACK;
 
 	if (InterlockedCompareExchange(&pReq->Queue.iFlagAbort, -1, -1) != FALSE)
