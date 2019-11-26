@@ -310,19 +310,19 @@ ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCT
 
 
 //++ Dec2Hex
-TCHAR Dec2Hex( _In_ UCHAR dec )
+UCHAR Dec2Hex( _In_ UCHAR dec )
 {
 	if (dec < 10) {
-		return dec + _T( '0' );
+		return dec + '0';
 	} else if (dec < 16) {
-		return dec - 10 + _T( 'a' );
+		return dec - 10 + 'a';
 	}
-	return _T( '.' );
+	return '.';
 }
 
 
-//++ BinaryToHex
-ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen )
+//++ BinaryToHexW
+ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr, _In_ ULONG iStrLen )
 {
 	ULONG i, j, n;
 
@@ -331,11 +331,30 @@ ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr,
 
 	n = __min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
 	for (i = 0, j = 0; i < n; i++, j = i << 1) {
-		pszStr[j] = Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
-		pszStr[j + 1] = Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
+		pszStr[j] = (WCHAR)Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
+		pszStr[j + 1] = (WCHAR)Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
 	}
 
-	pszStr[j] = _T( '\0' );
+	pszStr[j] = UNICODE_NULL;
+	return j;										/// Characters written, not including \0
+}
+
+
+//++ BinaryToHexA
+ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen )
+{
+	ULONG i, j, n;
+
+	if (pszStr && iStrLen)
+		pszStr[0] = 0;
+
+	n = __min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
+	for (i = 0, j = 0; i < n; i++, j = i << 1) {
+		pszStr[j] = (CHAR)Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
+		pszStr[j + 1] = (CHAR)Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
+	}
+
+	pszStr[j] = ANSI_NULL;
 	return j;										/// Characters written, not including \0
 }
 

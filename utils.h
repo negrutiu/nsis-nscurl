@@ -95,7 +95,8 @@ ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCT
 
 //+ BinaryToHex
 // Returns number of TCHAR-s written, not including the NULL terminator
-ULONG BinaryToHex( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen );
+ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen );
+ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr, _In_ ULONG iStrLen );
 
 //+ BinaryToString
 // Returns number of TCHAR-s written, not including the NULL terminator
@@ -119,11 +120,13 @@ void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 #ifdef _UNICODE
 	#define FileExists		FileExistsW
 	#define StrListAdd		StrListAddW
+	#define BinaryToHex		BinaryToHexW
 	#define MyStrDup		MyStrDupWW		/// LPTSTR -> LPTSTR
 	#define MyStrDupA		MyStrDupAW		/// LPTSTR -> LPSTR
 #else
 	#define FileExists		FileExistsA
 	#define StrListAdd		StrListAddA
+	#define BinaryToHex		BinaryToHexA
 	#define MyStrDup		MyStrDupAA		/// LPTSTR -> LPTSTR
 	#define MyStrDupA		MyStrDupAA		/// LPTSTR -> LPSTR
 #endif
