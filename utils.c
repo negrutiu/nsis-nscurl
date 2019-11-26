@@ -54,18 +54,16 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 void SetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 {
 	typedef HRESULT( WINAPI *TfnSetThreadDescription )(_In_ HANDLE hThread, _In_ PCWSTR lpThreadDescription);
+	#define NO_INIT (TfnSetThreadDescription)1
 
-	static BOOL						bSetThreadDescriptionInit = FALSE;
-	static TfnSetThreadDescription	fnSetThreadDescription = NULL;
+	// One-time initialization
+	static TfnSetThreadDescription fnSetThreadDescription = NO_INIT;
+	if (fnSetThreadDescription == NO_INIT)
+		fnSetThreadDescription = (TfnSetThreadDescription)GetProcAddress( GetModuleHandle( _T("kernel32") ), "SetThreadDescription" );
 
-	/// One-time initialization
-	if (!bSetThreadDescriptionInit) {
-		fnSetThreadDescription = (TfnSetThreadDescription)GetProcAddress( GetModuleHandle( L"kernel32" ), "SetThreadDescription" );
-		bSetThreadDescriptionInit = TRUE;
-	}
-
-	if (fnSetThreadDescription)
+	if (fnSetThreadDescription > NO_INIT)
 		fnSetThreadDescription( hThread, pszName );
+	#undef NO_INIT
 }
 
 
