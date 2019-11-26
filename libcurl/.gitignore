@@ -1,2 +1,4 @@
-/inc
+/curl
+/mbedtls
+/zlib
 /lib

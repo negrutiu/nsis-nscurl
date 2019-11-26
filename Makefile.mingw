@@ -16,7 +16,7 @@
 PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o resource.res
-INC      = -I. -Ilibcurl/inc
+INC      = -I. -Ilibcurl/curl/include -Ilibcurl/mbedtls/include -Ilibcurl/mbedtls/crypto/include
 LIB      = -l:libcurl.a -l:libmbedtls.a -l:libmbedcrypto.a -l:libmbedx509.a -lkernel32 -ladvapi32 -luser32 -lversion -lws2_32 -lmsvcrt -lgcc
 SAL      = -D__in= -D__out= -D__inout= -D__in_opt= -D__out_opt= \
            -D_In_= -D_Out_= -D_Inout_= -D_In_opt_= -D_Out_opt_=

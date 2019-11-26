@@ -5,9 +5,9 @@
 #include "main.h"
 #include "crypto.h"
 
-#include <crypto/md5.h>
-#include <crypto/sha1.h>
-#include <crypto/sha256.h>
+#include <mbedtls/md5.h>
+#include <mbedtls/sha1.h>
+#include <mbedtls/sha256.h>
 
 
 //++ FileHash
