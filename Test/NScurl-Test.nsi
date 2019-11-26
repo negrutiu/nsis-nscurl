@@ -287,6 +287,40 @@ Section "httpbin.org/put"
 SectionEnd
 
 
+Section /o "Big file (100MB)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
+	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
+
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /RESUME /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section /o "Big file (10GB)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
+	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
+	
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	NScurl::Request /URL "${LINK}" /TO "${FILE}" /RESUME /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
 Section /o "Un/Escape"
 	SectionIn 1	; All
 

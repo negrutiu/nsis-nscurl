@@ -90,6 +90,7 @@ NScurl::Request		/URL url
 					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data|@datafile]
 					[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
+					[/RESUME]
 					[/TIMEOUT | /CONNECTTIMEOUT msec]
 					[/COMPLETETIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
@@ -116,6 +117,7 @@ Parameters:
 		[TYPE=mime_type]		|	Optional. MIME type (e.g. "application\json")
 		name					|	Part name (e.g. "Name")
 		data|@datafile			|	Part data/datafile
+	/RESUME						| Resume existing files. By default they are overwritten
 	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
 	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
 	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT

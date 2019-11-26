@@ -20,8 +20,9 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszProxyPass;			/// can be NULL
 	LPCSTR		pszAgent;				/// can be NULL
 	LPCSTR		pszReferrer;			/// can be NULL
-	BOOLEAN		bNoRedirect : 1;		/// can be 0
-	BOOLEAN		bInsecure : 1;			/// can be 0
+	BOOLEAN		bResume       : 1;
+	BOOLEAN		bNoRedirect   : 1;
+	BOOLEAN		bInsecure     : 1;
 	LPCSTR		pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout

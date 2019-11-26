@@ -159,6 +159,8 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 				pReq->iDataSize = lstrlenA( pReq->pszData );
 			}
 		}
+	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
+		pReq->bResume = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
 		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
@@ -364,17 +366,20 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// Output file
 	if (pReq->pszPath && *pReq->pszPath) {
 		ULONG e = ERROR_SUCCESS;
-		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, (pReq->bResume ? OPEN_ALWAYS : CREATE_ALWAYS), FILE_ATTRIBUTE_NORMAL, NULL );
 		if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
-			LARGE_INTEGER l;
-			l.LowPart = GetFileSize( pReq->Runtime.hOutFile, &l.HighPart );
-			if (l.LowPart != INVALID_FILE_SIZE) {
-				iResumeFrom = l.QuadPart;
-				if (SetFilePointer( pReq->Runtime.hOutFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
+			/// Resume?
+			if (pReq->bResume) {
+				LARGE_INTEGER l;
+				l.LowPart = GetFileSize( pReq->Runtime.hOutFile, &l.HighPart );
+				if (l.LowPart != INVALID_FILE_SIZE) {
+					iResumeFrom = l.QuadPart;
+					if (SetFilePointer( pReq->Runtime.hOutFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
+						e = GetLastError();
+					}
+				} else {
 					e = GetLastError();
 				}
-			} else {
-				e = GetLastError();
 			}
 		} else {
 			e = GetLastError();
@@ -512,7 +517,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			// TODO: PROXY
 
 			/// Resume
-			curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
+			if (iResumeFrom > 0)
+				curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
 
 			/// Callbacks
 			VirtualMemoryInitialize( &pReq->Runtime.OutHeaders, DEFAULT_HEADERS_VIRTUAL_SIZE );

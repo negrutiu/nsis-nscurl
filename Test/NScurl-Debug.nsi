@@ -410,6 +410,68 @@ Section "httpbin.org/put"
 SectionEnd
 
 
+Section /o "Big file (100MB)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
+	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TTIMEOUT"
+
+	Push "/RESUME"
+
+	Push "${FILE}"
+	Push "/TO"
+	Push "${LINK}"
+	Push "/URL"
+	CallInstDLL "${NSCURL}" Request
+
+	Pop $0
+	DetailPrint "Status: $0"
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section /o "Big file (10GB)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
+	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TTIMEOUT"
+
+	Push "/RESUME"
+
+	Push "${FILE}"
+	Push "/TO"
+	Push "${LINK}"
+	Push "/URL"
+	CallInstDLL "${NSCURL}" Request
+
+	Pop $0
+	DetailPrint "Status: $0"
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section /o "Un/Escape"
 	SectionIn 1	; All
 
