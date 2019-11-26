@@ -94,7 +94,8 @@ NScurl::Request		/URL url
 					[/COMPLETETIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
 					[/REFERER url]
-					[/AGENT agent]
+					[/USERAGENT agent]
+					[/NOREDIRECT]
 					[/INSECURE]
 					[/CACERT cacert.pem_path]
 					/END
@@ -123,6 +124,7 @@ Parameters:
 	/PROXYPASS pass				| Optional password for authenticated proxies
 	/REFERER url				| Optional referer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
+	/NOREDIRECT					| Don't follow HTTP redirections. They are by default
 	/INSECURE					| Don't validate server certificate. Accept anything (default: false)
 	/CACERT cacert.pem_path		| Specify a custom cacert.pem file (default: $PLUGINSDIR\cacert.pem)
 	/END						| Must conclude the parameter list, otherwise the NSIS stack will be emptied...
