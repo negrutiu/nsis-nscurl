@@ -12,13 +12,11 @@
 struct {
 	CRITICAL_SECTION	Lock;
 	PCURL_REQUEST		Head;
-	volatile LONG		NextId;
+	ULONG				NextId;
 	LONG				ThreadMax;
-	volatile LONG		ThreadCount;
+	LONG				ThreadCount;
 } g_Queue = {0};
 
-#define QueueThreadCount(...)	\
-	(InterlockedCompareExchange( &g_Queue.ThreadCount, -1, -1 ))
 
 //+ Prototypes
 ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam );
@@ -51,8 +49,15 @@ void QueueDestroy()
 
 	// The global TERM event has already been set
 	// Transfers are being aborted, worker threads are closing
-//x	while (QueueThreadCount() > 0)
+//x	while (TRUE) {
+//x		LONG iThreadCount;
+//x		QueueLock();
+//x		iThreadCount = g_Queue.ThreadCount;
+//x		QueueUnlock();
+//x		if (iThreadCount <= 0)
+//x			break;
 //x		Sleep( 10 );
+//x	}
 
 	// Destroy the queue
 	while (g_Queue.Head)
@@ -74,7 +79,7 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 {
 	ULONG e = ERROR_SUCCESS;
 
-	if (IsTermEventSet)
+	if (TermSignaled())
 		return ERROR_SHUTDOWN_IN_PROGRESS;
 
 	if (pReq) {
@@ -84,33 +89,35 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 
 	if (pReq) {
 
-		// Create a worker thread (suspended)
 		HANDLE hThread = NULL;
-		if (QueueThreadCount() + 1 <= g_Queue.ThreadMax) {
-			if ((hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, CREATE_SUSPENDED, NULL )) != NULL) {
-				// NOTE: Testing/Incrementing the thread count is not atomic. It's possible that we exceed the maximum limit. We can live with that ;)
-				InterlockedIncrement( &g_Queue.ThreadCount );
-			} else {
-				// TODO: GetLastError()
-			}
-		} else {
-			/// No more threads are allowed
-			/// The new HTTP request will wait in queue until an existing worker thread becomes available
-		}
-
-		// Add to queue
-		pReq->Queue.pNext   = NULL;
-		pReq->Queue.iStatus = (hThread ? STATUS_RUNNING : STATUS_WAITING);
-		pReq->Queue.iId     = InterlockedIncrement( &g_Queue.NextId );
 
 		QueueLock();
 		{
+			// Append to queue
 			PCURL_REQUEST pTail = QueueTail();
 			if (pTail) {
 				pTail->Queue.pNext = pReq;
 			} else {
 				g_Queue.Head = pReq;
 			}
+
+			// Create a new (suspended) worker thread
+			if (g_Queue.ThreadCount + 1 <= g_Queue.ThreadMax) {
+				if ((hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, CREATE_SUSPENDED, NULL )) != NULL) {
+					g_Queue.ThreadCount++;
+					SetThreadName( hThread, L"NScurl" );
+				} else {
+					// TODO: GetLastError()
+				}
+			} else {
+				//? The maximum number of threads are already running
+				//? The new HTTP request will wait in queue until an existing thread will handle it
+			}
+
+			// Final touches
+			pReq->Queue.pNext = NULL;
+			pReq->Queue.iStatus = (hThread ? STATUS_RUNNING : STATUS_WAITING);
+			pReq->Queue.iId = ++g_Queue.NextId;
 		}
 		QueueUnlock();
 
@@ -225,12 +232,15 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 	LONG iThreadCount;
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
 
-	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", QueueThreadCount(), g_Queue.ThreadMax );
+	QueueLock();
+	iThreadCount = g_Queue.ThreadCount;
+	QueueUnlock();
+	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
 
 	while (TRUE) {
 
 		// Check TERM event
-		if (IsTermEventSet)
+		if (TermSignaled())
 			break;
 
 		// Select the next waiting request
@@ -238,7 +248,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 			QueueLock();
 			pReq = QueueFirstWaiting();
 			if (pReq)
-				pReq->Queue.iStatus = STATUS_RUNNING;
+				pReq->Queue.iStatus = STATUS_RUNNING;		/// Mark as Running while locked
 			QueueUnlock();
 		}
 
@@ -246,9 +256,10 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 		if (!pReq)
 			break;
 
-		// Transfer
+		//+ Transfer
 		t0 = GetTickCount();
 		CurlTransfer( pReq );
+
 	#ifdef TRACE_ENABLED
 		{
 			TCHAR szErr[256];
@@ -265,7 +276,11 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 	}
 
 	// Exit
-	iThreadCount = InterlockedDecrement( &g_Queue.ThreadCount );
+	QueueLock();
+	iThreadCount = --g_Queue.ThreadCount;
+	assert( g_Queue.ThreadCount >= 0 );
+	QueueUnlock();
+
 	TRACE( _T( "%hs( Count:%d/%d )\n" ), "ExitThread", iThreadCount, g_Queue.ThreadMax );
 
 	return e;
