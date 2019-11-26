@@ -159,7 +159,7 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 				pReq->iDataSize = lstrlenA( pReq->pszData );
 			}
 		}
-	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
 		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
 		pReq->iCompleteTimeout = popint();

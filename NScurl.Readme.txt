@@ -90,7 +90,8 @@ NScurl::Request		/URL url
 					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data|@datafile]
 					[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
-					[/TIMEOUT msec]
+					[/TIMEOUT | /CONNECTTIMEOUT msec]
+					[/COMPLETETIMEOUT msec]
 					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
 					[/REFERER url]
 					[/AGENT agent]
@@ -114,7 +115,9 @@ Parameters:
 		[TYPE=mime_type]		|	Optional. MIME type (e.g. "application\json")
 		name					|	Part name (e.g. "Name")
 		data|@datafile			|	Part data/datafile
-	/TIMEOUT msec				| Transfer timeout (default: infinite)
+	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
+	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
+	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT
 	/PROXY server				| CERN type proxies (ex: "http=http://my_proxy:my_port"). SOCKS proxies are supported if Internet Explorer is installed
 	/PROXYUSER user				| Optional username for authenticated proxies
 	/PROXYPASS pass				| Optional password for authenticated proxies
