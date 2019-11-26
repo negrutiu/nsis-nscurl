@@ -50,6 +50,25 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 #endif
 
 
+//++ SetThreadName
+void SetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
+{
+	typedef HRESULT( WINAPI *TfnSetThreadDescription )(_In_ HANDLE hThread, _In_ PCWSTR lpThreadDescription);
+
+	static BOOL						bSetThreadDescriptionInit = FALSE;
+	static TfnSetThreadDescription	fnSetThreadDescription = NULL;
+
+	/// One-time initialization
+	if (!bSetThreadDescriptionInit) {
+		fnSetThreadDescription = (TfnSetThreadDescription)GetProcAddress( GetModuleHandle( L"kernel32" ), "SetThreadDescription" );
+		bSetThreadDescriptionInit = TRUE;
+	}
+
+	if (fnSetThreadDescription)
+		fnSetThreadDescription( hThread, pszName );
+}
+
+
 //++ MyStrDupAA
 LPSTR MyStrDupAA( _In_ LPCSTR pStr )
 {

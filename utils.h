@@ -82,6 +82,10 @@ BOOL FileExistsA( _In_ LPCSTR pszFile );
 // Returns milliseconds
 ULONG MyTimeDiff( _In_ PFILETIME pEndTime, _In_ PFILETIME pStartTime );
 
+//+ SetThreadName
+// Available in Win10+
+void SetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName );
+
 //+ ReadVersionInfoString
 // Returns Win32 error
 ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen );
