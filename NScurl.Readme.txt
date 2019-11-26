@@ -98,6 +98,7 @@ NScurl::Request		/URL url
 					[/USERAGENT agent]
 					[/NOREDIRECT]
 					[/INSECURE]
+					[/CERT thumbprint1]...[/CERT thumbprintN]
 					[/CACERT cacert.pem_path]
 					/END
 
@@ -127,12 +128,13 @@ Parameters:
 	/REFERER url				| Optional referer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
 	/NOREDIRECT					| Don't follow HTTP redirections. They are by default
-	/INSECURE					| Don't validate server certificate. Accept anything (default: false)
-	/CACERT cacert.pem_path		| Specify a custom cacert.pem file (default: $PLUGINSDIR\cacert.pem)
-	/END						| Must conclude the parameter list, otherwise the NSIS stack will be emptied...
+	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
+	/CERT thumbprint			| Specify a TRUSTED certificate SHA1 thumbprint. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
+	/CACERT cacert.pem_path		| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
+	/END						| Must conclude the parameter list
 
 Return:
-	[Stack] An unique request ID. You'll need it later, to query the status
+	[Stack] An unique request ID. It's needed later for querying
 
 Examples:
 
@@ -141,13 +143,30 @@ Examples:
 	Pop $0	; Request ID
 
 	; Download to memory
-	NScurl::Request /URL "http://mydomain.com:800?param1=va1&param2=val2" /LOCAL MEMORY /END
+	NScurl::Request /URL "https://httpbin.org/get?param1=va1&param2=val2" /TO MEMORY /END
 	Pop $0	; Request ID
 
 	; POST a form
-	NScurl::Request /METHOD POST /URL "http://httpbin.org/post" /TO "Post.txt" /HEADERS "Content-Type: application/x-www-form-urlencoded" /DATA "user=MY+NAME&pass=MY+PASSWORD" /END
+	NScurl::Request \
+		/METHOD POST \
+		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
+		/TO "Post.json" \
+		/POSTVAR "User" "Your username here" \
+		/POSTVAR "Pass" "Your password here" \
+		/POSTVAR "filename=image.jpeg" type=image/jpeg "Photo" "@$DESKTOP\My photo.jpg" \
+		/END
 	Pop R0	; Request ID
-_________________________________________________________________________________________________
+
+	; POST a json (as HTTP data)
+	NScurl::Request \
+		/METHOD POST \
+		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
+		/TO "Post.json" \
+		/DATA "@$DESKTOP\My file.json" \
+		/HEADER "Content-Type: application/json" \
+		/END
+	Pop R0	; Request ID
+_____________________________________________________________________________________________________
 
 NScurl::Wait		[/ID id]
 					[/MODE SILENT|POPUP|PAGE]

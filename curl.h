@@ -23,6 +23,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bResume       : 1;
 	BOOLEAN		bNoRedirect   : 1;
 	BOOLEAN		bInsecure     : 1;
+	struct curl_slist *pCertList;		/// can be NULL. Ignored if bInsecure is TRUE
 	LPCSTR		pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
@@ -39,6 +40,7 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutHeaders;
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
+		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
 	} Runtime;
 	struct {
 		ULONG		iWin32;
@@ -69,6 +71,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszProxyPass );
 	MyFree( pReq->pszAgent );
 	MyFree( pReq->pszReferrer );
+	curl_slist_free_all( pReq->pCertList );
 	MyFree( pReq->pszCacert );
 	pReq->Runtime.pCurl = NULL;
 	if (VALID_HANDLE( pReq->Runtime.hInFile ))
@@ -87,7 +90,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 //+ Initialization
 ULONG CurlInitialize();
 void  CurlDestroy();
-ULONG CurlExtractCacert();
+ULONG CurlExtractCacert();		/// Called automatically
 
 //+ CurlParseRequestParam
 BOOL CurlParseRequestParam(

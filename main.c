@@ -227,9 +227,6 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 			}
 		}
 
-		// If not already done, extract "$PLUGINSDIR\cacert.pem" now
-		CurlExtractCacert();
-
 		// Append to the queue
 		if (QueueAdd( pReq ) == ERROR_SUCCESS) {
 

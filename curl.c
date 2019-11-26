@@ -4,6 +4,8 @@
 
 #include "main.h"
 #include "curl.h"
+#include <mbedtls/ssl.h>
+#include <mbedtls/sha1.h>
 
 
 typedef struct {
@@ -194,6 +196,21 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		pReq->bNoRedirect = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
 		pReq->bInsecure = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			/// Validate SHA1 hash
+			if (lstrlen( pszParam ) == 40) {
+				int i;
+				for (i = 0; isxdigit( pszParam[i] ); i++);
+				if (i == 40) {
+					LPSTR psz = MyStrDupA( pszParam );
+					if (psz) {
+						pReq->pCertList = curl_slist_append( pReq->pCertList, psz );
+						MyFree( psz );
+					}
+				}
+			}
+		}
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszCacert );
@@ -207,10 +224,91 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 }
 
 
+
+//++ MbedtlsCertVerify
+int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint32_t *piVerifyFlags)
+{
+	//? This function gets called during SSL negotiation to analyze server's certificate chain
+	//? It'll be called sequentially for each certificate in the chain
+	//? That usually happens three times per connection: 2(root certificate), 1(intermediate certificate), 0(user certificate)
+
+	//? Our logic:
+	//? * If all certificates in the chain are UNTRUSTED, we'll set the MBEDTLS_X509_BADCERT_NOT_TRUSTED verification flag when returning from the last call (index 0)
+	//? * If we TRUST at least one certificate we simply do nothing (return all zeros)
+
+	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
+	assert( !pReq->bInsecure && pReq->pCertList );
+
+	if (!crt)
+		return 1;
+
+	// Reset all verification flags pre-calculated by libcurl
+	// When validating against explicit thumbprints we don't care about the status of the certificate (expired, invalid, whatever...)
+	// If the caller TRUSTs it, the connection is allowed to continue
+	*piVerifyFlags = 0;
+
+	// Don't verify any more certificates if we already found one that we TRUST
+	if (!pReq->Runtime.bTrustedCert) {
+
+		UCHAR Thumbprint[20];
+		CHAR szThumbprint[41];
+
+		// Compute certificate's thumbprint
+		mbedtls_sha1_context sha1c;
+		mbedtls_sha1_init( &sha1c );
+		mbedtls_sha1_starts( &sha1c );
+		mbedtls_sha1_update( &sha1c, crt->raw.p, crt->raw.len );
+		mbedtls_sha1_finish( &sha1c, Thumbprint );
+		mbedtls_sha1_free( &sha1c );
+		BinaryToHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
+
+		// Verify against our list of accepted certificates
+		{
+			struct curl_slist *p;
+			for (p = pReq->pCertList; p; p = p->next) {
+				if (lstrcmpiA( p->data, szThumbprint ) == 0) {
+
+					pReq->Runtime.bTrustedCert = TRUE;
+					break;
+				}
+			}
+			TRACE( _T( "Certificate( \"%hs\" ) = %hs\n" ), szThumbprint, p ? "TRUSTED" : "UNTRUSTED" );
+		}
+	}
+
+	// Final verdict
+	if (iChainIndex == 0)
+		if (!pReq->Runtime.bTrustedCert)
+			(*piVerifyFlags) |= MBEDTLS_X509_BADCERT_NOT_TRUSTED;
+
+	return 0;	/// Success always
+}
+
+
+//++ CurlSSLCallback
+//? This callback function gets called by libcurl just before the initialization of an SSL connection
+CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
+{
+	PCURL_REQUEST pReq = (PCURL_REQUEST)userptr;
+	mbedtls_ssl_config *pssl = (mbedtls_ssl_config*)ssl_ctx;
+
+	assert( pReq && pReq->Runtime.pCurl == curl);
+	assert( !pReq->bInsecure && pReq->pCertList );
+
+	//? Setup an mbedTLS low-level callback function to analyze server's certificate chain
+	pssl->f_vrfy = MbedtlsCertVerify;
+	pssl->p_vrfy = pReq;
+
+	return CURLE_OK;
+}
+
+
 //++ CurlHeaderCallback
 size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userdata )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
+
+	assert( pReq && pReq->Runtime.pCurl );
 
 	// Collect status line
 	LPCSTR psz1, psz2;
@@ -418,26 +516,37 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, pReq->iCompleteTimeout );
 
 			/// SSL
-			if (!pReq->bInsecure) {
-				CHAR szCacert[MAX_PATH];
-				if (pReq->pszCacert) {
-					lstrcpynA( szCacert, pReq->pszCacert, ARRAYSIZE( szCacert ) );
+			if (pReq->bInsecure) {
+				// Don't validate server certificate
+				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
+			} else {
+				if (pReq->pCertList) {
+					// Verify against /CERT thumbprints
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 );		/// No host name
+					curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );				/// No cacert.pem
+					// SSL callback
+					curl_easy_setopt( curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback );
+					curl_easy_setopt( curl, CURLOPT_SSL_CTX_DATA, pReq );
+				} else if (pReq->pszCacert) {
+					// Verify against custom "cacert.pem"
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
+					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
+					curl_easy_setopt( curl, CURLOPT_CAINFO, pReq->pszCacert );	/// cacert.pem path
 				} else {
-				#if _UNICODE
-					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ws\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-				#else
-					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-				#endif
-				}
-				if (FileExistsA( szCacert )) {
+					// Verify against the built-in "cacert.pem"
+					// It's extracted at runtime in $PLUGINSDIR\cacert.pem
+					CHAR szCacert[MAX_PATH];
+					#if _UNICODE
+						_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ws\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
+					#else
+						_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
+					#endif
+					CurlExtractCacert();
 					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
 					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
 					curl_easy_setopt( curl, CURLOPT_CAINFO, szCacert );			/// cacert.pem path
-				} else {
-					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 				}
-				} else {
-				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 			}
 
 			/// Request method
