@@ -9,6 +9,7 @@
 
 
 typedef struct {
+	CRITICAL_SECTION		csLock;
 	CHAR					szUserAgent[128];
 } CURL_GLOBALS;
 
@@ -22,6 +23,8 @@ CURL_GLOBALS g_Curl = {0};
 ULONG CurlInitialize()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+
+	InitializeCriticalSection( &g_Curl.csLock );
 	{
 		// Default user agent
 		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
@@ -42,12 +45,13 @@ ULONG CurlInitialize()
 void CurlDestroy()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+	DeleteCriticalSection( &g_Curl.csLock );
 }
 
 
 //++ CurlExtractCacert
-//?  Extracts $PLUGINSDIR\cacert.pem from plugin's resource block
-//?  If the file already exists the does nothing
+//?  Extract the built-in certificate storage to "$PLUGINSDIR\cacert.pem"
+//?  The function does nothing if the file already exists
 ULONG CurlExtractCacert()
 {
 	ULONG e = ERROR_SUCCESS;
@@ -58,8 +62,15 @@ ULONG CurlExtractCacert()
 	{
 		TCHAR szPem[MAX_PATH];
 		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
-		if (!FileExists( szPem ))
-			e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
+		if (!FileExists( szPem )) {
+
+			EnterCriticalSection( &g_Curl.csLock );
+			
+			if (!FileExists( szPem )) 		/// Verify again
+				e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
+			
+			LeaveCriticalSection( &g_Curl.csLock );
+		}
 	}
 
 	return e;
@@ -431,6 +442,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		return;
 	}
 
+	// Extract "$PLUGINSDIR\cacert.pem" once
+	if (!pReq->bInsecure && !pReq->pCertList && !pReq->pszCacert)
+		CurlExtractCacert();
+
 	// Input file
 	if (pReq->pszMethod && (
 		lstrcmpiA( pReq->pszMethod, "PUT" ) == 0 ||
@@ -542,7 +557,6 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					#else
 						_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
 					#endif
-					CurlExtractCacert();
 					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
 					curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
 					curl_easy_setopt( curl, CURLOPT_CAINFO, szCacert );			/// cacert.pem path
