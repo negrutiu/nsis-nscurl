@@ -112,6 +112,19 @@ done:
 SectionEnd
 
 
+Section About
+	SectionIn 1
+
+	NScurl::Query "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+
+	NScurl::Query "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+SectionEnd
+
+
 Section Parallel
 	${For} $R0 1 100
 		NScurl::Request /URL "https://httpbin.org/put" /TO "$EXEDIR\_test_$R0.json" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END

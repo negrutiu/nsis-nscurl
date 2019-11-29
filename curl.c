@@ -10,6 +10,7 @@
 
 typedef struct {
 	CRITICAL_SECTION		csLock;
+	CHAR					szVersion[64];
 	CHAR					szUserAgent[128];
 } CURL_GLOBALS;
 
@@ -26,15 +27,13 @@ ULONG CurlInitialize()
 
 	InitializeCriticalSection( &g_Curl.csLock );
 	{
+		// Plugin version
 		// Default user agent
 		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
 		GetModuleFileName( g_hInst, szBuf, ARRAYSIZE( szBuf ) );
 		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
-	#if _UNICODE
-		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%ws", szVer );
-	#else
-		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", szVer );
-	#endif
+		MyStrCopy( T2A, g_Curl.szVersion, ARRAYSIZE( g_Curl.szVersion ), szVer );
+		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
 
 	return ERROR_SUCCESS;
@@ -706,20 +705,65 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_
 //+ [internal] CurlQueryKeywordCallback
 void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam)
 {
+	// NOTE: pReq may be NULL
+	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
 	assert( pszKeyword );
-	if (lstrcmpi( pszKeyword, _T("@@") ) == 0) {
-		lstrcpyn( pszKeyword, _T("@"), iMaxLen );
-	} else if (lstrcmpi( pszKeyword, _T("@URL@") ) == 0) {
-		lstrcpyn( pszKeyword, _T("TODO_URL"), iMaxLen );
+	if (lstrcmpi( pszKeyword, _T( "@PLUGINNAME@" ) ) == 0) {
+		MyStrCopy( T2T, pszKeyword, iMaxLen, PLUGINNAME );
+	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINVERSION@" ) ) == 0) {
+		MyStrCopy( A2T, pszKeyword, iMaxLen, g_Curl.szVersion );
+	} else if (lstrcmpi( pszKeyword, _T( "@CURLVERSION@" ) ) == 0) {
+		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
+		MyStrCopy( A2T, pszKeyword, iMaxLen, ver->version );
+	} else if (lstrcmpi( pszKeyword, _T( "@MBEDTLSVERSION@" ) ) == 0) {
+		//? "mbedTLS/x.y.z" -> "x.y.z"
+		LPCSTR psz;
+		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
+		for (psz = ver->ssl_version; *psz && *psz != '/'; psz++);
+		if (*psz)
+			psz++;
+		MyStrCopy( A2T, pszKeyword, iMaxLen, psz );
+	} else if (lstrcmpi( pszKeyword, _T( "@USERAGENT@" ) ) == 0) {
+		MyStrCopy( A2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
 	}
+/*
+	{ID}
+	{STATUS}
+	{METHOD}
+	{URL}
+	{IP}
+	{PROXY}
+	{TO}
+	{LOCALFILEDIR}
+	{LOCALFILENAME}
+	{FILESIZE}
+	{FILESIZEBYTES}
+	{RECVSIZE}
+	{RECVSIZEBYTES}
+	{PERCENT}
+	{SPEED}
+	{SPEEDBYTES}
+	{TIMESTART}
+	{TIMEELAPSED}
+	{TIMEREMAINING}
+
+	/SENTHEADERS
+	/RECVHEADERS
+	/CONTENT
+	/DATA
+	/TIMEWAITING
+	/TIMEDOWNLOADING
+	/ERRORCODE
+	/ERRORTEXT
+*/
 }
 
 
 //++ CurlQuery
 LONG CurlQuery( _In_ PCURL_REQUEST pReq, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
 {
-	if (!pReq || !pszStr || !iStrMaxLen)
+	if (!pszStr || !iStrMaxLen)
 		return -1;
 
-	return ReplaceKeywords( pszStr, iStrMaxLen, _T('@'), _T('@'), CurlQueryKeywordCallback, pReq );
+	return ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), CurlQueryKeywordCallback, pReq );
 }

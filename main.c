@@ -77,28 +77,6 @@ UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 }
 
 
-//+ [internal] GlobalQueryKeywordCallback
-void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
-{
-	assert( pszKeyword );
-	if (lstrcmpi( pszKeyword, _T( "@@" ) ) == 0) {
-		lstrcpyn( pszKeyword, _T( "@" ), iMaxLen );
-	} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
-		lstrcpyn( pszKeyword, _T( "TODO_URL" ), iMaxLen );
-	}
-}
-
-
-//++ GlobalQuery
-LONG GlobalQuery( _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
-{
-	if (!pszStr || !iStrMaxLen)
-		return -1;
-
-	return ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
-}
-
-
 //++ [exported] md5 <file>
 EXTERN_C __declspec(dllexport)
 void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
@@ -266,6 +244,16 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 }
 
 
+//+ [internal] GlobalQueryKeywordCallback
+void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+{
+	assert( pszKeyword );
+	if (lstrcmpi( pszKeyword, _T( "@@" ) ) == 0) {
+		lstrcpyn( pszKeyword, _T( "@" ), iMaxLen );		// @@ -> @
+	}
+}
+
+
 //++ [exported] Query
 EXTERN_C __declspec(dllexport)
 void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
@@ -296,9 +284,12 @@ void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 		}
 		if (e == NOERROR) {
 
-			// Replace in string
-			GlobalQuery( psz, string_size );
+			// Replace queue keywords
 			QueueQuery( iId, psz, string_size );
+
+			// Replace global keywords
+			ReplaceKeywords( psz, string_size, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
+
 			pushstringEx( psz );
 		}
 	}

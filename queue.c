@@ -288,19 +288,56 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 }
 
 
+//+ [internal] QueueQueryKeywordCallback
+void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+{
+	assert( pszKeyword );
+	if (lstrcmpi( pszKeyword, _T( "@QUEUE@" ) ) == 0) {
+		MyStrCopy( A2T, pszKeyword, iMaxLen, "QUEUE" );
+	}
+/*
+	/TOTALCOUNT				| The overall number of requests( waiting + downloading + completed )
+	/TOTALWAITING			| The number of waiting requests
+	/TOTALDOWNLOADING		| The number of requests in progress
+	/TOTALCOMPLETED			| The number of completed requests
+	/TOTALRECVSIZE			| The amount of bytes received, nicely formatted( ex: "1,3 GB" )
+	/TOTALRECVSIZEBYTES		| The amount of bytes received
+	/TOTALSPEED				| The combined speed of requests in progress( nicely formatted, ex: "1,4 MB/s" )
+	/TOTALSPEEDBYTES		| The combined speed of requests in progress( bytes/second )
+
+	{TOTALCOUNT}			| The overall number of requests (waiting + downloading + completed)
+	{TOTALWAITING}			| The number of waiting requests
+	{TOTALACTIVE}			| The number of downloading + completed requests
+	{TOTALDOWNLOADING}		| The number of requests in progress
+	{TOTALCOMPLETED}		| The number of completed requests
+	{TOTALSPEED}			| The combined speed of transfers in progress (nicely formatted, ex: "1,4 MB/s")
+	{TOTALSPEEDBYTES}		| The combined speed of transfers in progress (bytes/second)
+
+	{ORIGINALTITLE}			| The original title text
+	{ORIGINALSTATUS}		| The original status text
+	{ANIMLINE}				| The classic \|/- animation
+	{ANIMDOTS}				| The classic ./../... animation
+*/
+}
+
+
 //++ QueueQuery
 LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
 {
 	LONG iStrLen = -1;
 	if (pszStr && iStrMaxLen) {
 
+		PCURL_REQUEST pReq = NULL;
 		QueueLock();
 
-		// Query specific HTTP request
-		if (iId != QUEUE_NO_ID) {
-			PCURL_REQUEST pReq = QueueFind( iId );
-			if (pReq)
-				iStrLen = CurlQuery( pReq, pszStr, iStrMaxLen );
+		// Replace request-specific keywords
+		if (iId != QUEUE_NO_ID)
+			pReq = QueueFind( iId );
+		iStrLen = CurlQuery( pReq, pszStr, iStrMaxLen );		//? pReq can be NULL
+
+		// Replace global queue keywords
+		if (iStrLen != -1) {
+			iStrLen = ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, NULL );
 		}
 
 		QueueUnlock();

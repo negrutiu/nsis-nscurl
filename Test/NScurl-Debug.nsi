@@ -132,6 +132,26 @@ done:
 SectionEnd
 
 
+Section About
+	SectionIn 1
+
+	; NScurl::Query
+	!insertmacro STACK_VERIFY_START
+	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section Parallel
 	${For} $R0 1 100
 		Push /END
