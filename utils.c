@@ -127,6 +127,48 @@ LPWSTR MyStrDupWW( _In_ LPCWSTR pStr )
 }
 
 
+//++ MyStrCopy
+LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc )
+{
+	if (!pszDest)
+		return NULL;
+	if (!pszSrc)
+		return pszDest;
+
+	// Resolve "T"-s
+#ifdef _UNICODE
+	if (iEnc == A2T)
+		iEnc = A2W;
+	else if (iEnc == W2T || iEnc == T2W || iEnc == T2T)
+		iEnc = W2W;
+	else if (iEnc == T2A)
+		iEnc = W2A;
+#else
+	if (iEnc == A2T || iEnc == T2A || iEnc == T2T)
+		iEnc = A2A;
+	else if (iEnc == W2T)
+		iEnc = W2A;
+	else if (iEnc == T2W)
+		iEnc = A2W;
+#endif
+
+	// Copy
+	if (iEnc == W2W) {
+		lstrcpynW( (LPWSTR)pszDest, (LPCWSTR)pszSrc, iDestMaxLen );
+	} else if (iEnc == A2A) {
+		lstrcpynA( (LPSTR)pszDest, (LPCSTR)pszSrc, iDestMaxLen );
+	} else if (iEnc == W2A) {
+		WideCharToMultiByte( CP_UTF8, 0, (LPCWSTR)pszSrc, -1, (LPSTR)pszDest, (int)iDestMaxLen, NULL, NULL );
+	} else if (iEnc == A2W) {
+		MultiByteToWideChar( CP_UTF8, 0, (LPCSTR)pszSrc, -1, (LPWSTR)pszDest, (int)iDestMaxLen );
+	} else {
+		assert( !"MyStrCopy( Unexpected encoding )" );
+	}
+
+	return pszDest;
+}
+
+
 //++ MyErrorStr
 LPCTSTR MyErrorStr( _In_ ULONG err )
 {

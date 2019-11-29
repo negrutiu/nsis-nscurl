@@ -67,6 +67,14 @@ LPSTR  MyStrDupAW( _In_ LPCWSTR pStr );
 LPWSTR MyStrDupWA( _In_ LPCSTR pStr );
 LPWSTR MyStrDupWW( _In_ LPCWSTR pStr );
 
+
+// ANSI (multi byte) <-> Unicode (wide char)
+typedef enum { A2A, A2W, A2T, W2A, W2W, W2T, T2A, T2W, T2T } SrcDestEncoding;
+
+//+ MyStrCopy
+LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc );
+
+
 //? The caller must MyFree(..) the string
 LPCTSTR MyErrorStr( _In_ ULONG err );
 
