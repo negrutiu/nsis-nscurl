@@ -102,6 +102,23 @@ ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr
 // Returns number of TCHAR-s written, not including the NULL terminator
 ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen );
 
+//+ ReplaceKeywordsA
+// Replaces "keywords" in a string
+// A callback function is called for each keyword
+// Returns the lstrlen(..) of the output string, or -1 if errors occurred
+typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_A)(_Inout_ LPSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam);
+typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_W)(_Inout_ LPWSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam);
+LONG ReplaceKeywordsA(
+	_Inout_ LPSTR pszStr, _In_ LONG iMaxLen,
+	_In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd,
+	_In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam
+);
+LONG ReplaceKeywordsW(
+	_Inout_ LPWSTR pszStr, _In_ LONG iMaxLen,
+	_In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd,
+	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam
+);
+
 //+ MyStrToInt64
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );
@@ -123,10 +140,12 @@ void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 	#define BinaryToHex		BinaryToHexW
 	#define MyStrDup		MyStrDupWW		/// LPTSTR -> LPTSTR
 	#define MyStrDupA		MyStrDupAW		/// LPTSTR -> LPSTR
+	#define ReplaceKeywords	ReplaceKeywordsW
 #else
 	#define FileExists		FileExistsA
 	#define StrListAdd		StrListAddA
 	#define BinaryToHex		BinaryToHexA
 	#define MyStrDup		MyStrDupAA		/// LPTSTR -> LPTSTR
 	#define MyStrDupA		MyStrDupAA		/// LPTSTR -> LPSTR
+	#define ReplaceKeywords	ReplaceKeywordsA
 #endif

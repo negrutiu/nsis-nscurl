@@ -384,6 +384,126 @@ ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszS
 }
 
 
+//++ ReplaceKeywordsA
+LONG ReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam )
+{
+	LPSTR pszBuf = NULL, psz1, psz2;
+	LONG iStrLen;
+	LONG l1, l2;
+
+	if (!pszStr || !iMaxLen || !fnReplace)
+		return -1;
+
+	pszBuf = (LPSTR)malloc( iMaxLen * sizeof( CHAR ) );		/// Working buffer
+	if (!pszBuf)
+		return -1;
+
+	iStrLen = lstrlenA( pszStr );
+	for (psz1 = pszStr; *psz1; ) {
+
+		// Find the next keyword start
+		for (; *psz1 && (*psz1 != chKeywordStart); psz1++);
+		if (!*psz1)
+			break;
+
+		// Find the next keyword end
+		for (psz2 = psz1 + 1; *psz2 && (*psz2 != chKeywordEnd); psz2++);
+		if (!*psz2++)
+			break;
+
+		// Replace callback function
+		lstrcpynA( pszBuf, psz1, (int)(psz2 - psz1) + 1 );
+		fnReplace( pszBuf, iMaxLen, pReplaceParam );
+
+		l1 = (LONG)(psz2 - psz1);			// Old substring length
+		l2 = (LONG)lstrlenA( pszBuf );		// New substring length
+		if ((l1 != l2) || (CompareStringA( CP_ACP, 0, pszBuf, -1, psz1, l1 ) != CSTR_EQUAL)) {
+
+			if ((iStrLen + l2 - l1) < iMaxLen) {
+				// Replace keyword <-> value
+				size_t iSubstrIndex = psz1 - pszStr;
+				size_t iMoveSize = (iStrLen - iSubstrIndex - l1 + 1) * sizeof( CHAR );
+				MoveMemory( psz1 + l2, psz1 + l1, iMoveSize );
+				CopyMemory( psz1, pszBuf, l2 * sizeof( CHAR ) );
+				iStrLen += (l2 - l1);
+				psz1 += l2;
+			} else {
+				//x ERROR_INSUFFICIENT_BUFFER;
+				iStrLen = -1;
+				break;
+			}
+
+		} else {
+			// The keyword/substring is unmodified
+			psz1++;
+		}
+	}	/// for
+
+	free( pszBuf );
+	return iStrLen;
+}
+
+
+//++ ReplaceKeywordsW
+LONG ReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam )
+{
+	LPWSTR pszBuf = NULL, psz1, psz2;
+	LONG iStrLen;
+	LONG l1, l2;
+
+	if (!pszStr || !iMaxLen || !fnReplace)
+		return -1;
+
+	pszBuf = (LPWSTR)malloc( iMaxLen * sizeof( WCHAR ) );		/// Working buffer
+	if (!pszBuf)
+		return -1;
+
+	iStrLen = lstrlenW( pszStr );
+	for (psz1 = pszStr; *psz1; ) {
+
+		// Find the next keyword start
+		for (; *psz1 && (*psz1 != chKeywordStart); psz1++);
+		if (!*psz1)
+			break;
+
+		// Find the next keyword end
+		for (psz2 = psz1 + 1; *psz2 && (*psz2 != chKeywordEnd); psz2++);
+		if (!*psz2++)
+			break;
+
+		// Replace callback function
+		lstrcpynW( pszBuf, psz1, (int)(psz2 - psz1) + 1 );
+		fnReplace( pszBuf, iMaxLen, pReplaceParam );
+
+		l1 = (LONG)(psz2 - psz1);			// Old substring length
+		l2 = (LONG)lstrlenW( pszBuf );		// New substring length
+		if ((l1 != l2) || (CompareStringW( CP_ACP, 0, pszBuf, -1, psz1, l1 ) != CSTR_EQUAL)) {
+
+			if ((iStrLen + l2 - l1) < iMaxLen) {
+				// Replace keyword <-> value
+				size_t iSubstrIndex = psz1 - pszStr;
+				size_t iMoveSize = (iStrLen - iSubstrIndex - l1 + 1) * sizeof( WCHAR );
+				MoveMemory( psz1 + l2, psz1 + l1, iMoveSize );
+				CopyMemory( psz1, pszBuf, l2 * sizeof( WCHAR ) );
+				iStrLen += (l2 - l1);
+				psz1 += l2;
+			} else {
+				//x ERROR_INSUFFICIENT_BUFFER;
+				iStrLen = -1;
+				break;
+			}
+
+		} else {
+			// The keyword/substring is unmodified
+			psz1++;
+		}
+	}	/// for
+
+	free( pszBuf );
+	return iStrLen;
+}
+
+
 //++ MyStrToInt64
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 {
