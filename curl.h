@@ -110,3 +110,11 @@ void CurlRequestFormatError(
 	_In_ LPTSTR pszError,
 	_In_ ULONG iErrorLen
 );
+
+//+ CurlQuery
+//? Find and replace "keywords" in the specified string
+//? Returns the length of the output string, or -1 if errors occur
+LONG CurlQuery(
+	_In_ PCURL_REQUEST pReq,
+	_Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
+);

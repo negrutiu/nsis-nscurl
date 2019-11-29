@@ -77,6 +77,28 @@ UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 }
 
 
+//+ [internal] GlobalQueryKeywordCallback
+void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+{
+	assert( pszKeyword );
+	if (lstrcmpi( pszKeyword, _T( "@@" ) ) == 0) {
+		lstrcpyn( pszKeyword, _T( "@" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
+		lstrcpyn( pszKeyword, _T( "TODO_URL" ), iMaxLen );
+	}
+}
+
+
+//++ GlobalQuery
+LONG GlobalQuery( _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+{
+	if (!pszStr || !iStrMaxLen)
+		return -1;
+
+	return ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
+}
+
+
 //++ [exported] md5 <file>
 EXTERN_C __declspec(dllexport)
 void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
@@ -240,6 +262,47 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	}
 
 	pushint( iRequestID );
+	MyFree( psz );
+}
+
+
+//++ [exported] Query
+EXTERN_C __declspec(dllexport)
+void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	ULONG iId = QUEUE_NO_ID;
+	LPTSTR psz = NULL;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "NSxfer!Query\n" ) );
+
+	// Working buffer
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz );
+	if (psz) {
+
+		const ULONG OPTIONAL_PARAMS = 1;
+		ULONG i, e = NOERROR;
+		for (i = 0; (i <= OPTIONAL_PARAMS) && (e == NOERROR); i++) {
+			if ((e = popstring( psz )) == NOERROR) {
+				if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
+					iId = (ULONG)popintptr();
+				} else {
+					break;		/// Done reading optional parameters. Continue reading mandatory parameters
+				}
+			}
+		}
+		if (e == NOERROR) {
+
+			// Replace in string
+			GlobalQuery( psz, string_size );
+			QueueQuery( iId, psz, string_size );
+			pushstringEx( psz );
+		}
+	}
+
 	MyFree( psz );
 }
 

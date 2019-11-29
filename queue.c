@@ -286,3 +286,24 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 
 	return e;
 }
+
+
+//++ QueueQuery
+LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+{
+	LONG iStrLen = -1;
+	if (pszStr && iStrMaxLen) {
+
+		QueueLock();
+
+		// Query specific HTTP request
+		if (iId != QUEUE_NO_ID) {
+			PCURL_REQUEST pReq = QueueFind( iId );
+			if (pReq)
+				iStrLen = CurlQuery( pReq, pszStr, iStrMaxLen );
+		}
+
+		QueueUnlock();
+	}
+	return iStrLen;
+}

@@ -701,3 +701,25 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_
 		}
 	}
 }
+
+
+//+ [internal] CurlQueryKeywordCallback
+void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam)
+{
+	assert( pszKeyword );
+	if (lstrcmpi( pszKeyword, _T("@@") ) == 0) {
+		lstrcpyn( pszKeyword, _T("@"), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T("@URL@") ) == 0) {
+		lstrcpyn( pszKeyword, _T("TODO_URL"), iMaxLen );
+	}
+}
+
+
+//++ CurlQuery
+LONG CurlQuery( _In_ PCURL_REQUEST pReq, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+{
+	if (!pReq || !pszStr || !iStrMaxLen)
+		return -1;
+
+	return ReplaceKeywords( pszStr, iStrMaxLen, _T('@'), _T('@'), CurlQueryKeywordCallback, pReq );
+}

@@ -6,6 +6,7 @@
 
 #include "curl.h"
 
+#define QUEUE_NO_ID (ULONG)-1
 
 //+ Initialization
 void QueueInitialize();
@@ -26,3 +27,9 @@ PCURL_REQUEST QueueHead();
 PCURL_REQUEST QueueTail();
 PCURL_REQUEST QueueFind( _In_ ULONG iId );
 PCURL_REQUEST QueueFirstWaiting();
+
+//+ Query
+//? Find and replace "keywords" in the specified string
+//? Returns the length of the output string, or -1 if errors occur
+//? The queue *must not* be locked
+LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen );		/// ID can be QUEUE_NO_ID
