@@ -87,7 +87,7 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 			MyFree( pReq->pszURL );
 			pReq->pszURL = MyStrDupA( pszParam );
 		}
-	} else if (lstrcmpi( pszParam, _T( "/TO" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "/OUT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszPath );
 			if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)

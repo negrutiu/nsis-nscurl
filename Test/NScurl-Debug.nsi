@@ -160,7 +160,7 @@ Section Parallel
 		Push "PUT"
 		Push /METHOD
 		Push "$EXEDIR\_test_$R0.json"
-		Push /To
+		Push /Out
 		Push "https://httpbin.org/put"
 		Push /URL
 		CallInstDLL "${NSCURL}" Request
@@ -242,7 +242,7 @@ Section "httpbin.org/get"
 	Push "GET"
 	Push "/METHOD"
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -298,7 +298,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "POST"
 	Push "/METHOD"
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -337,7 +337,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	Push "POST"
 	Push "/METHOD"
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -375,7 +375,7 @@ Section "httpbin.org/post (application/json)"
 	Push "POST"
 	Push "/METHOD"
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -418,7 +418,7 @@ Section "httpbin.org/put"
 	Push "PUT"
 	Push "/METHOD"
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -449,7 +449,7 @@ Section /o "Big file (100MB)"
 	Push "/RESUME"
 
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
@@ -480,7 +480,7 @@ Section /o "Big file (10GB)"
 	Push "/RESUME"
 
 	Push "${FILE}"
-	Push "/TO"
+	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request

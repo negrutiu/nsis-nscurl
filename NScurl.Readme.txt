@@ -85,7 +85,7 @@ Return:
 _________________________________________________________________________________________________
 
 NScurl::Request		/URL url
-					/TO file|MEMORY
+					/OUT file|MEMORY
 					[/METHOD GET|POST|HEAD|PUT|...]
 					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data|@datafile]
@@ -109,7 +109,7 @@ Remarks:
 	
 Parameters:
 	/URL url					| HTTP or HTTPS...
-	/TO file|MEMORY				| Remote content destination. Can be either a local file or a memory buffer
+	/OUT file|MEMORY			| Remote content destination. Can be either a local file or a memory buffer
 	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
 	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF ($\r$\n). Multiple /HEADER parameters are accepted
 	/DATA data|@datafile		| Data/file to be uploaded. Used in the context of HTTP POST/PUT, ignored otherwise
@@ -139,18 +139,18 @@ Return:
 Examples:
 
 	; Download to file
-	NScurl::Request /URL "http://live.sysinternals.com/Files/SysinternalsSuite.zip" /TO "$EXEDIR\SysinternalsSuite.zip" /TIMEOUT 60000 /END
+	NScurl::Request /URL "http://live.sysinternals.com/Files/SysinternalsSuite.zip" /OUT "$EXEDIR\SysinternalsSuite.zip" /TIMEOUT 60000 /END
 	Pop $0	; Request ID
 
 	; Download to memory
-	NScurl::Request /URL "https://httpbin.org/get?param1=va1&param2=val2" /TO MEMORY /END
+	NScurl::Request /URL "https://httpbin.org/get?param1=va1&param2=val2" /OUT MEMORY /END
 	Pop $0	; Request ID
 
 	; POST a form
 	NScurl::Request \
 		/METHOD POST \
 		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
-		/TO "Post.json" \
+		/OUT "Post.json" \
 		/POSTVAR "User" "Your username here" \
 		/POSTVAR "Pass" "Your password here" \
 		/POSTVAR "filename=image.jpeg" type=image/jpeg "Photo" "@$DESKTOP\My photo.jpg" \
@@ -161,7 +161,7 @@ Examples:
 	NScurl::Request \
 		/METHOD POST \
 		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
-		/TO "Post.json" \
+		/OUT "Post.json" \
 		/DATA "@$DESKTOP\My file.json" \
 		/HEADER "Content-Type: application/json" \
 		/END
@@ -288,7 +288,7 @@ ________________________________________________________________________________
 
 NScurl::Query	/ID id
 				[/STATUS waiting|downloading|completed]
-				[/METHOD] [/URL] [/IP] [/PROXY] [/TO]
+				[/METHOD] [/URL] [/IP] [/PROXY] [/OUT]
 				[/SENTHEADERS] [/RECVHEADERS]
 				[/FILESIZE] [/RECVSIZE] [/PERCENT] [/SPEEDBYTES] [/SPEED]
 				[/CONTENT] [/DATA]
@@ -310,7 +310,7 @@ Parameters:
 	/URL					| Full URL
 	/IP						| Server's IP address, or an empty string
 	/PROXY					| The proxy server, or an empty string
-	/TO						| Remote content destination (file|MEMORY)
+	/OUT					| Remote content destination (file|MEMORY)
 	/SENTHEADERS			| The raw HTTP request headers
 	/RECVHEADERS			| The raw HTTP reply headers
 	/FILESIZE				| The remote content length (can exceed 4GB (32-bit boundary))

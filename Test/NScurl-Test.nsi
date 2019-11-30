@@ -127,7 +127,7 @@ SectionEnd
 
 Section Parallel
 	${For} $R0 1 100
-		NScurl::Request /URL "https://httpbin.org/put" /TO "$EXEDIR\_test_$R0.json" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
+		NScurl::Request /URL "https://httpbin.org/put" /OUT "$EXEDIR\_test_$R0.json" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
 		Pop $0
 		DetailPrint "Status[$R0] = $0"
 	${Next}
@@ -177,7 +177,7 @@ Section "httpbin.org/get"
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
 
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -198,7 +198,7 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	NScurl::Request \
 		/URL "${LINK}" \
-		/TO "${FILE}" \
+		/OUT "${FILE}" \
 		/METHOD POST \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
@@ -229,7 +229,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 
 	NScurl::Request \
 		/URL "${LINK}" \
-		/TO "${FILE}" \
+		/OUT "${FILE}" \
 		/METHOD POST \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
@@ -257,7 +257,7 @@ Section "httpbin.org/post (application/json)"
 
 	NScurl::Request \
 		/URL "${LINK}" \
-		/TO "${FILE}" \
+		/OUT "${FILE}" \
 		/METHOD POST \
 		/HEADER "Content-Type: application/json" \
 		/DATA '{ "number_of_the_beast" : 666 }' \
@@ -284,7 +284,7 @@ Section "httpbin.org/put"
 
 	NScurl::Request \
 		/URL "${LINK}" \
-		/TO "${FILE}" \
+		/OUT "${FILE}" \
 		/METHOD PUT \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
@@ -311,7 +311,7 @@ Section /o "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
@@ -328,7 +328,7 @@ Section /o "Big file (10GB)"
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /TO "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
