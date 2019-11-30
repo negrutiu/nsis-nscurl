@@ -4,10 +4,6 @@
 #include "main.h"
 #include "queue.h"
 
-#define STATUS_WAITING		0
-#define STATUS_RUNNING		'r'
-#define STATUS_COMPLETED	'c'
-
 //+ Global
 struct {
 	CRITICAL_SECTION	Lock;
@@ -263,13 +259,13 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 	#ifdef TRACE_ENABLED
 		{
 			TCHAR szErr[256];
-			CurlRequestFormatError( pReq, szErr, ARRAYSIZE( szErr ) );
+			CurlRequestFormatError( pReq, szErr, ARRAYSIZE( szErr ), NULL, NULL );
 			TRACE( _T( "%hs( Id:%u, Url:%hs ) = %s, %ums\n" ), "CurlTransfer", pReq->Queue.iId, pReq->pszURL, szErr, GetTickCount() - t0 );
 		}
 	#endif
 
 		// Mark as Completed
-		pReq->Queue.iStatus = STATUS_COMPLETED;
+		pReq->Queue.iStatus = STATUS_COMPLETE;
 		MemoryBarrier();
 
 		// Cleanup
@@ -288,36 +284,78 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 }
 
 
+//++ QueueStatistics
+void QueueStatistics( _Out_ PQUEUE_STATS pStats )
+{
+	PCURL_REQUEST p;
+	BOOLEAN bOK;
+	assert( pStats );
+	ZeroMemory( pStats, sizeof( *pStats ) );
+	MemoryBarrier();
+	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
+
+		if (p->Queue.iStatus == STATUS_WAITING)
+			pStats->iWaiting++;
+		else if (p->Queue.iStatus == STATUS_RUNNING)
+			pStats->iRunning++;
+		else if (p->Queue.iStatus == STATUS_COMPLETE)
+			pStats->iCompleted++;
+		else
+			assert( !"Unexpected request status" );
+
+		pStats->iDlXferred += p->Statistics.iDlXferred;
+		pStats->iUlXferred += p->Statistics.iUlXferred;
+		pStats->iSpeed     += p->Statistics.iSpeed;
+
+		CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
+		if (!bOK)
+			pStats->iErrors++;
+	}
+}
+
+
 //+ [internal] QueueQueryKeywordCallback
 void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
 {
+	QUEUE_STATS qs;
+
+	QueueLock();
+	QueueStatistics( &qs );
+	QueueUnlock();
+
 	assert( pszKeyword );
-	if (lstrcmpi( pszKeyword, _T( "@QUEUE@" ) ) == 0) {
-		MyStrCopy( A2T, pszKeyword, iMaxLen, "QUEUE" );
+	if (lstrcmpi( pszKeyword, _T( "@TOTALCOUNT@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning + qs.iCompleted );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALWAITING@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALRUNNING@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOMPLETED@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iCompleted );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALACTIVE@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSTARTED@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning + qs.iCompleted );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALERRORS@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iErrors );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSPEED@" ) ) == 0) {
+		MyFormatBytes( qs.iSpeed, pszKeyword, iMaxLen );
+		_tcscat( pszKeyword, _T( "/s" ) );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSPEED_B@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iSpeed );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZE@" ) ) == 0) {
+		MyFormatBytes( qs.iUlXferred + qs.iDlXferred, pszKeyword, iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZE_B@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iUlXferred + qs.iDlXferred );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEUP@" ) ) == 0) {
+		MyFormatBytes( qs.iUlXferred, pszKeyword, iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEUP_B@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iUlXferred );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEDOWN@" ) ) == 0) {
+		MyFormatBytes( qs.iDlXferred, pszKeyword, iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEDOWN_B@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iDlXferred );
 	}
-/*
-	/TOTALCOUNT				| The overall number of requests( waiting + downloading + completed )
-	/TOTALWAITING			| The number of waiting requests
-	/TOTALDOWNLOADING		| The number of requests in progress
-	/TOTALCOMPLETED			| The number of completed requests
-	/TOTALRECVSIZE			| The amount of bytes received, nicely formatted( ex: "1,3 GB" )
-	/TOTALRECVSIZEBYTES		| The amount of bytes received
-	/TOTALSPEED				| The combined speed of requests in progress( nicely formatted, ex: "1,4 MB/s" )
-	/TOTALSPEEDBYTES		| The combined speed of requests in progress( bytes/second )
-
-	{TOTALCOUNT}			| The overall number of requests (waiting + downloading + completed)
-	{TOTALWAITING}			| The number of waiting requests
-	{TOTALACTIVE}			| The number of downloading + completed requests
-	{TOTALDOWNLOADING}		| The number of requests in progress
-	{TOTALCOMPLETED}		| The number of completed requests
-	{TOTALSPEED}			| The combined speed of transfers in progress (nicely formatted, ex: "1,4 MB/s")
-	{TOTALSPEEDBYTES}		| The combined speed of transfers in progress (bytes/second)
-
-	{ORIGINALTITLE}			| The original title text
-	{ORIGINALSTATUS}		| The original status text
-	{ANIMLINE}				| The classic \|/- animation
-	{ANIMDOTS}				| The classic ./../... animation
-*/
 }
 
 
@@ -331,8 +369,28 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 		QueueLock();
 
 		// Replace request-specific keywords
-		if (iId != QUEUE_NO_ID)
+		if (iId != QUEUE_NO_ID) {
 			pReq = QueueFind( iId );
+		} else {
+			// If a single request is running, use it for querying
+			if (!pReq) {
+				PCURL_REQUEST p;
+				for (p = QueueHead(); p; p = p->Queue.pNext) {
+					if (pReq == NULL && p->Queue.iStatus == STATUS_RUNNING) {
+						pReq = p;		/// First running
+					} else if (pReq != NULL && (p->Queue.iStatus == STATUS_RUNNING || p->Queue.iStatus == STATUS_WAITING)) {
+						pReq = NULL;	/// Others are running/waiting as well
+						break;
+					}
+				}
+			}
+			// If there's a single request, use it for querying
+			if (!pReq) {
+				if (QueueHead() && !QueueHead()->Queue.pNext) {
+					pReq = QueueHead();
+				}
+			}
+		}
 		iStrLen = CurlQuery( pReq, pszStr, iStrMaxLen );		//? pReq can be NULL
 
 		// Replace global queue keywords

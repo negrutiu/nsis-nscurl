@@ -20,6 +20,70 @@ CURL_GLOBALS g_Curl = {0};
 #define DEFAULT_UKNOWN_VIRTUAL_SIZE		1024 * 1024 * 200		/// 200MB
 
 
+//+ CurlRequestSizes
+void CurlRequestSizes( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PBOOL pbDown )
+{
+	assert( pReq );
+
+	// Uploading data goes first. Downloading server's response (remote content) goes second
+	if (pReq->Statistics.iDlXferred > 0 || pReq->Statistics.iDlTotal > 0) {
+		// Downloading (phase 2)
+		if (pbDown)
+			*pbDown = TRUE;
+		if (piSizeTotal)
+			*piSizeTotal = pReq->Statistics.iDlTotal;
+		if (piSizeXferred)
+			*piSizeXferred = pReq->Statistics.iDlXferred;
+	} else {
+		// Uploading (phase 1)
+		if (pbDown)
+			*pbDown = FALSE;
+		if (piSizeTotal)
+			*piSizeTotal = pReq->Statistics.iUlTotal;
+		if (piSizeXferred)
+			*piSizeXferred = pReq->Statistics.iUlXferred;
+	}
+}
+
+
+//+ CurlRequestFormatError
+void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, _In_opt_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrCode )
+{
+	if (pszError)
+		pszError[0] = 0;
+	if (pbSuccess)
+		*pbSuccess = TRUE;
+	if (piErrCode)
+		*piErrCode = 0;
+	if (pReq) {
+		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
+			// Win32 error code
+			if (pbSuccess) *pbSuccess = FALSE;
+			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
+			if (piErrCode) *piErrCode = pReq->Error.iWin32;
+		} else if (pReq->Error.iCurl != CURLE_OK) {
+			// CURL error
+			if (pbSuccess) *pbSuccess = FALSE;
+			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Error.iCurl, pReq->Error.pszCurl );
+			if (piErrCode) *piErrCode = pReq->Error.iCurl;
+		} else {
+			// HTTP status
+			if (piErrCode) *piErrCode = pReq->Error.iHttp;
+			if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
+				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "OK" ) );
+			} else {
+				if (pbSuccess) *pbSuccess = FALSE;
+				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iHttp, pReq->Error.pszHttp );
+			}
+		}
+	}
+}
+
+
+// ____________________________________________________________________________________________________________________________________ //
+//                                                                                                                                      //
+
+
 //++ CurlInitialize
 ULONG CurlInitialize()
 {
@@ -317,11 +381,20 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
 size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userdata )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
+	LPCSTR psz1, psz2;
 
 	assert( pReq && pReq->Runtime.pCurl );
 
+	// Collect connection info
+	if (!pReq->Runtime.pszServerIP) {
+		/// Server IP address
+		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_IP, &psz1 );
+		pReq->Runtime.pszServerIP = MyStrDupAA( psz1 );
+		/// Server port
+		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_PORT, &pReq->Runtime.iServerPort );
+	}
+
 	// Collect status line
-	LPCSTR psz1, psz2;
 	for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
 	if (psz2 > psz1) {
 		if (!pReq->Error.bStatusGrabbed) {
@@ -413,6 +486,8 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
+	curl_off_t iPercent, iSpeed;
+
 	assert( pReq && pReq->Runtime.pCurl );
 
 	if (TermSignaled())
@@ -420,6 +495,33 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 
 	if (InterlockedCompareExchange(&pReq->Queue.iFlagAbort, -1, -1) != FALSE)
 		return CURLE_ABORTED_BY_CALLBACK;
+
+//x	TRACE( _T( "%hs( DL:%I64u/%I64u, UL:%I64u/%I64u )\n" ), __FUNCTION__, dlnow, dltotal, ulnow, ultotal );
+
+	iPercent = 0, iSpeed = 0;
+	if (dlnow > 0) {
+		if (dltotal == 0) {
+			iPercent = -1;		/// Unknown size
+		} else {
+			iPercent = (dlnow * 100) / dltotal;
+		}
+		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_DOWNLOAD_T, &iSpeed );
+	} else if (ulnow > 0) {
+		if (ultotal == 0) {
+			iPercent = -1;		/// Unknown size
+		} else {
+			iPercent = (ulnow * 100) / ultotal;
+		}
+		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_UPLOAD_T, &iSpeed );
+	}
+
+	pReq->Statistics.iDlTotal = dltotal;
+	pReq->Statistics.iDlXferred = dlnow;
+	pReq->Statistics.iUlTotal = ultotal;
+	pReq->Statistics.iUlXferred = ulnow;
+	pReq->Statistics.iPercent = (short)iPercent;
+	pReq->Statistics.iSpeed = (ULONG)iSpeed;
+	MemoryBarrier();
 
 	return CURLE_OK;
 }
@@ -681,33 +783,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 }
 
 
-//++ CurlRequestFormatError
-void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen )
-{
-	if (pszError)
-		pszError[0] = 0;
-	if (pReq) {
-		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
-			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
-		} else if (pReq->Error.iCurl != CURLE_OK) {
-			_sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Error.iCurl, pReq->Error.pszCurl );
-		} else {
-			if (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300) {
-				_sntprintf( pszError, iErrorLen, _T( "OK" ) );
-			} else {
-				_sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iHttp, pReq->Error.pszHttp );
-			}
-		}
-	}
-}
-
-
 //+ [internal] CurlQueryKeywordCallback
 void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam)
 {
 	// NOTE: pReq may be NULL
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
 	assert( pszKeyword );
+
 	if (lstrcmpi( pszKeyword, _T( "@PLUGINNAME@" ) ) == 0) {
 		MyStrCopy( T2T, pszKeyword, iMaxLen, PLUGINNAME );
 	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINVERSION@" ) ) == 0) {
@@ -725,24 +807,89 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		MyStrCopy( A2T, pszKeyword, iMaxLen, psz );
 	} else if (lstrcmpi( pszKeyword, _T( "@USERAGENT@" ) ) == 0) {
 		MyStrCopy( A2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
+	} else if (pReq) {
+
+		if (lstrcmpi( pszKeyword, _T( "@ID@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), pReq->Queue.iId );
+		} else if (lstrcmpi( pszKeyword, _T( "@STATUS@" ) ) == 0) {
+			switch (pReq->Queue.iStatus) {
+				case STATUS_WAITING:  lstrcpyn( pszKeyword, _T( "Waiting" ), iMaxLen ); break;
+				case STATUS_RUNNING:  lstrcpyn( pszKeyword, _T( "Running" ), iMaxLen ); break;
+				case STATUS_COMPLETE: lstrcpyn( pszKeyword, _T( "Complete" ), iMaxLen ); break;
+				default: assert( !"Unexpected request status" );
+			}
+		} else if (lstrcmpi( pszKeyword, _T( "@STATUS@" ) ) == 0) {
+			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszMethod ? pReq->pszMethod : "GET" );
+		} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
+			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszURL );
+		} else if (lstrcmpi( pszKeyword, _T( "@OUT@" ) ) == 0) {
+			MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath ? pReq->pszPath : _T( "Memory" ) );
+		} else if (lstrcmpi( pszKeyword, _T( "@OUTFILE@" ) ) == 0) {
+			if (pReq->pszPath) {
+				LPCTSTR psz, pszLastSep = NULL;
+				for (psz = pReq->pszPath; *psz; psz++)
+					if (*psz == '\\')
+						pszLastSep = psz;		/// Last '\\'
+				if (pszLastSep) {
+					MyStrCopy( T2T, pszKeyword, iMaxLen, pszLastSep + 1 );
+				} else {
+					MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath );
+				}
+			} else {
+				MyStrCopy( T2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+			}
+		} else if (lstrcmpi( pszKeyword, _T( "@OUTDIR@" ) ) == 0) {
+			if (pReq->pszPath) {
+				LPCTSTR psz, pszLastSep = NULL;
+				for (psz = pReq->pszPath; *psz; psz++)
+					if (*psz == '\\')
+						pszLastSep = psz;		/// Last '\\'
+				if (pszLastSep) {
+					for (; pszLastSep > pReq->pszPath && *pszLastSep == '\\'; pszLastSep--);	/// Move before '\\'
+					lstrcpyn( pszKeyword, pReq->pszPath, (int)__min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
+				} else {
+					MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath );
+				}
+			} else {
+				MyStrCopy( T2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+			}
+		} else if (lstrcmpi( pszKeyword, _T( "@SERVERIP@" ) ) == 0) {
+			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.pszServerIP );
+		} else if (lstrcmpi( pszKeyword, _T( "@SERVERPORT@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%d" ), pReq->Runtime.iServerPort );
+		} else if (lstrcmpi( pszKeyword, _T( "@FILESIZE@" ) ) == 0) {
+			ULONG64 iTotal;
+			CurlRequestSizes( pReq, &iTotal, NULL, NULL );
+			MyFormatBytes( iTotal, pszKeyword, iMaxLen );
+		} else if (lstrcmpi( pszKeyword, _T( "@FILESIZE_B@" ) ) == 0) {
+			ULONG64 iTotal;
+			CurlRequestSizes( pReq, &iTotal, NULL, NULL );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), iTotal );
+		} else if (lstrcmpi( pszKeyword, _T( "@XFERSIZE@" ) ) == 0) {
+			ULONG64 iXferred;
+			CurlRequestSizes( pReq, NULL, &iXferred, NULL );
+			MyFormatBytes( iXferred, pszKeyword, iMaxLen );
+		} else if (lstrcmpi( pszKeyword, _T( "@XFERSIZE_B@" ) ) == 0) {
+			ULONG64 iXferred;
+			CurlRequestSizes( pReq, NULL, &iXferred, NULL );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), iXferred );
+		} else if (lstrcmpi( pszKeyword, _T( "@PERCENT@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), pReq->Statistics.iPercent );	/// Can be -1
+		} else if (lstrcmpi( pszKeyword, _T( "@SPEED@" ) ) == 0) {
+			MyFormatBytes( pReq->Statistics.iSpeed, pszKeyword, iMaxLen );
+			_tcscat( pszKeyword, _T( "/s" ) );
+		} else if (lstrcmpi( pszKeyword, _T( "@SPEED_B@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), pReq->Statistics.iSpeed );
+		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
+			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
+		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
+			ULONG e;
+			CurlRequestFormatError( pReq, NULL, 0, NULL, &e );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), e );
+		}
 	}
 /*
-	{ID}
-	{STATUS}
-	{METHOD}
-	{URL}
-	{IP}
 	{PROXY}
-	{TO}
-	{LOCALFILEDIR}
-	{LOCALFILENAME}
-	{FILESIZE}
-	{FILESIZEBYTES}
-	{RECVSIZE}
-	{RECVSIZEBYTES}
-	{PERCENT}
-	{SPEED}
-	{SPEEDBYTES}
 	{TIMESTART}
 	{TIMEELAPSED}
 	{TIMEREMAINING}
@@ -751,10 +898,10 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	/RECVHEADERS
 	/CONTENT
 	/DATA
-	/TIMEWAITING
-	/TIMEDOWNLOADING
-	/ERRORCODE
-	/ERRORTEXT
+
+	{SSL/TLS info}
+	{EffectiveURL}
+	{HTTPAuth available}
 */
 }
 

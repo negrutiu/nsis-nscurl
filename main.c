@@ -251,6 +251,12 @@ void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG 
 	if (lstrcmpi( pszKeyword, _T( "@@" ) ) == 0) {
 		lstrcpyn( pszKeyword, _T( "@" ), iMaxLen );		// @@ -> @
 	}
+/*
+	{ORIGINALTITLE}			| The original title text
+	{ORIGINALSTATUS}		| The original status text
+	{ANIMLINE}				| The classic \|/- animation
+	{ANIMDOTS}				| The classic ./../... animation
+*/
 }
 
 

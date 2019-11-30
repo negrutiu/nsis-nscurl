@@ -185,6 +185,23 @@ Section "httpbin.org/get"
 SectionEnd
 
 
+Section "httpbin.org/get (SysinternalsSuite.zip)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+
+SectionEnd
+
+
 Section "httpbin.org/post (multipart/form-data)"
 	SectionIn 1	; All
 
@@ -206,6 +223,7 @@ Section "httpbin.org/post (multipart/form-data)"
 		/POSTVAR "Name" "<Your name here>" \
 		/POSTVAR "Password" "<Your password here>" \
 		/POSTVAR "filename=cacert.pem" "cacert.pem" "@$PLUGINSDIR\cacert.pem" \
+		/POSTVAR "filename=cacert2.pem" "cacert2.pem" "@$PLUGINSDIR\cacert.pem" \
 		/CONNECTTIMEOUT 30000 \
 		/REFERER "https://test.com" \
 		/END
@@ -331,6 +349,36 @@ Section /o "Big file (10GB)"
 	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "Wait for all"
+	SectionIn 1	2 ; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+_wait_loop:
+
+	NScurl::Query "@TOTALACTIVE@"
+	Pop $R0	; Waiting + Running
+
+	${If} $R0 > 1
+		NScurl::Query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
+		Pop $0
+		DetailPrint $0
+	${Else}
+		NScurl::Query "[Wait] @OUTFILE@: @PERCENT@% @XFERSIZE@/@FILESIZE@ @@ @SPEED@ | {@ERRORCODE@} @ERROR@"
+		Pop $0
+		DetailPrint $0
+	${EndIf}
+
+	IntCmp $R0 0 _wait_end
+	Sleep 1000
+	Goto _wait_loop
+_wait_end:
+
 SectionEnd
 
 

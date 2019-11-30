@@ -5,6 +5,10 @@
 #pragma once
 #include "utils.h"
 
+#define STATUS_WAITING		0
+#define STATUS_RUNNING		'r'
+#define STATUS_COMPLETE		'c'
+
 
 //+ struct CURL_REQUEST
 typedef struct _CURL_REQUEST {
@@ -41,7 +45,15 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
+		LONG		iServerPort;
+		LPCSTR		pszServerIP;		/// Can be IPv6
 	} Runtime;
+	struct {
+		ULONG64		iDlXferred, iDlTotal;
+		ULONG64		iUlXferred, iUlTotal;
+		ULONG		iSpeed;
+		short		iPercent;			/// -1 if the total size is unknown
+	} Statistics;
 	struct {
 		ULONG		iWin32;
 		LPCTSTR		pszWin32;
@@ -80,12 +92,21 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 		CloseHandle( pReq->Runtime.hOutFile );
 	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutData );
+	MyFree( pReq->Runtime.pszServerIP );
 	MyFree( pReq->Error.pszWin32 );
 	MyFree( pReq->Error.pszCurl );
 	MyFree( pReq->Error.pszHttp );
 	ZeroMemory( pReq, sizeof( *pReq ) );
 }
 
+//+ CurlRequestSizes
+void CurlRequestSizes( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PBOOL pbDown );
+
+//+ CurlRequestFormatError
+void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrCode  );
+
+// ____________________________________________________________________________________________________________________________________ //
+//                                                                                                                                      //
 
 //+ Initialization
 ULONG CurlInitialize();
@@ -102,13 +123,6 @@ BOOL CurlParseRequestParam(
 //+ CurlTransfer
 void CurlTransfer(
 	_In_ PCURL_REQUEST pReq
-);
-
-//+ CurlRequestFormatError
-void CurlRequestFormatError(
-	_In_ PCURL_REQUEST pReq,
-	_In_ LPTSTR pszError,
-	_In_ ULONG iErrorLen
 );
 
 //+ CurlQuery

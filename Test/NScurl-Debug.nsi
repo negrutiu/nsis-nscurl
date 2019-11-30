@@ -253,6 +253,31 @@ Section "httpbin.org/get"
 SectionEnd
 
 
+Section "httpbin.org/get (SysinternalsSuite.zip)"
+	SectionIn 1	; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
+	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "${FILE}"
+	Push "/OUT"
+	Push "${LINK}"
+	Push "/URL"
+	CallInstDLL "${NSCURL}" Request
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section "httpbin.org/post (multipart/form-data)"
 	SectionIn 1	; All
 
@@ -270,6 +295,11 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "/REFERER"
 	Push 30000
 	Push "/CONNECTTIMEOUT"
+
+	Push "@$PLUGINSDIR\cacert.pem"
+	Push "cacert2.pem"
+	Push "filename=cacert2.pem"
+	Push "/POSTVAR"
 
 	Push "@$PLUGINSDIR\cacert.pem"
 	Push "cacert.pem"
@@ -489,6 +519,45 @@ Section /o "Big file (10GB)"
 	DetailPrint "Status: $0"
 
 	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "Wait for all"
+	SectionIn 1	2 ; All
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+_wait_loop:
+
+	!insertmacro STACK_VERIFY_START
+	Push "@TOTALACTIVE@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $R0	; Waiting + Running
+	!insertmacro STACK_VERIFY_END
+
+	${If} $R0 > 1
+		!insertmacro STACK_VERIFY_START
+		Push "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
+		CallInstDLL "${NSCURL}" Query
+		Pop $0
+		!insertmacro STACK_VERIFY_END
+		DetailPrint $0
+	${Else}
+		!insertmacro STACK_VERIFY_START
+		Push "[Wait] @OUTFILE@: @PERCENT@% @XFERSIZE@/@FILESIZE@ @@ @SPEED@ | {@ERRORCODE@} @ERROR@"
+		CallInstDLL "${NSCURL}" Query
+		Pop $0
+		!insertmacro STACK_VERIFY_END
+		DetailPrint $0
+	${EndIf}
+
+	IntCmp $R0 0 _wait_end
+	Sleep 1000
+	Goto _wait_loop
+_wait_end:
+
 SectionEnd
 
 
