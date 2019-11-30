@@ -132,8 +132,6 @@ LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDe
 {
 	if (!pszDest)
 		return NULL;
-	if (!pszSrc)
-		return pszDest;
 
 	// Resolve "T"-s
 #ifdef _UNICODE
@@ -154,13 +152,13 @@ LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDe
 
 	// Copy
 	if (iEnc == W2W) {
-		lstrcpynW( (LPWSTR)pszDest, (LPCWSTR)pszSrc, iDestMaxLen );
+		lstrcpynW( (LPWSTR)pszDest, pszSrc ? (LPCWSTR)pszSrc : L"", iDestMaxLen );
 	} else if (iEnc == A2A) {
-		lstrcpynA( (LPSTR)pszDest, (LPCSTR)pszSrc, iDestMaxLen );
+		lstrcpynA( (LPSTR)pszDest, pszSrc ? (LPCSTR)pszSrc : "", iDestMaxLen );
 	} else if (iEnc == W2A) {
-		WideCharToMultiByte( CP_UTF8, 0, (LPCWSTR)pszSrc, -1, (LPSTR)pszDest, (int)iDestMaxLen, NULL, NULL );
+		WideCharToMultiByte( CP_UTF8, 0, pszSrc ? (LPCWSTR)pszSrc : L"", -1, (LPSTR)pszDest, (int)iDestMaxLen, NULL, NULL );
 	} else if (iEnc == A2W) {
-		MultiByteToWideChar( CP_UTF8, 0, (LPCSTR)pszSrc, -1, (LPWSTR)pszDest, (int)iDestMaxLen );
+		MultiByteToWideChar( CP_UTF8, 0, pszSrc ? (LPCSTR)pszSrc : "", -1, (LPWSTR)pszDest, (int)iDestMaxLen );
 	} else {
 		assert( !"MyStrCopy( Unexpected encoding )" );
 	}
