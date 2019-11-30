@@ -569,6 +569,26 @@ BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 }
 
 
+//++ MyFormatBytes
+void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen )
+{
+	if (pszStr && iStrMaxLen) {
+		pszStr[0] = 0;
+		if (iBytes >= 1024ULL * 1024 * 1024 * 1024) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%.1f TB" ), (double)iBytes / (1024ULL * 1024 * 1024 * 1024) );
+		} else if (iBytes >= 1024ULL * 1024 * 1024) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%.1f GB" ), (double)iBytes / (1024ULL * 1024 * 1024) );
+		} else if (iBytes >= 1024ULL * 1024) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%.1f MB" ), (double)iBytes / (1024ULL * 1024) );
+		} else if (iBytes >= 1024ULL) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%.1f KB" ), (double)iBytes / 1024ULL );
+		} else {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%I64u bytes" ), iBytes );
+		}
+	}
+}
+
+
 //++ VirtualMemoryInitialize
 ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 {
