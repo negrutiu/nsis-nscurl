@@ -34,7 +34,7 @@ VOID UtilsDestroy();
 		}
 	#define verify assert
 #else
-	#define assert(...)
+	#define assert(...)  ((VOID)0)
 	#define verify(expr) ((VOID)(expr))
 #endif
 
