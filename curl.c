@@ -422,8 +422,11 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 
 		/// Server port
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_PORT, &pReq->Runtime.iServerPort );
-	}
 
+		// Collect last effective URL
+		MyFree( pReq->Runtime.pszFinalURL );
+		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_EFFECTIVE_URL, &psz1 );
+		pReq->Runtime.pszFinalURL = MyStrDupAA( psz1 );
 	}
 
 	// Collect incoming headers
@@ -878,6 +881,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszMethod ? pReq->pszMethod : "GET" );
 		} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
 			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszURL );
+		} else if (lstrcmpi( pszKeyword, _T( "@FINALURL@" ) ) == 0) {
+			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.pszFinalURL ? pReq->Runtime.pszFinalURL : "" );
 		} else if (lstrcmpi( pszKeyword, _T( "@OUT@" ) ) == 0) {
 			MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath ? pReq->pszPath : _T( "Memory" ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@OUTFILE@" ) ) == 0) {
@@ -1004,9 +1009,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	}
 /*
 	{PROXY}
-
 	{SSL/TLS info}
-	{EffectiveURL}
 	{HTTPAuth available}
 */
 }

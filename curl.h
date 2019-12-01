@@ -46,6 +46,7 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
+		LPCSTR		pszFinalURL;		/// The final URL, after following all redirections
 		LONG		iServerPort;
 		LPCSTR		pszServerIP;		/// Can be IPv6
 		curl_off_t	iTimeElapsed;		/// Microseconds
@@ -94,6 +95,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	VirtualMemoryDestroy( &pReq->Runtime.InHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutData );
+	MyFree( pReq->Runtime.pszFinalURL );
 	MyFree( pReq->Runtime.pszServerIP );
 	MyFree( pReq->Error.pszWin32 );
 	MyFree( pReq->Error.pszCurl );
