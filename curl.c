@@ -472,6 +472,8 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 			curl_off_t iMaxSize;
 			if (curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &iMaxSize ) != CURLE_OK)
 				iMaxSize = DEFAULT_UKNOWN_VIRTUAL_SIZE;
+			if (iMaxSize == -1)
+				iMaxSize = DEFAULT_UKNOWN_VIRTUAL_SIZE;
 			VirtualMemoryInitialize( &pReq->Runtime.OutData, (SIZE_T)iMaxSize );
 		}
 		// Write to RAM
