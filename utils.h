@@ -145,6 +145,7 @@ typedef struct {
 } VMEMO;
 ULONG  VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize );			/// Return Win32 error
 SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
+void   VirtualMemoryReset( _Inout_ VMEMO *pMem );
 void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 
 //+ Unicode

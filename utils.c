@@ -664,6 +664,17 @@ SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T siz
 	return 0;
 }
 
+//++ VirtualMemoryReset
+void VirtualMemoryReset( _Inout_ VMEMO *pMem )
+{
+	if (pMem) {
+		if (pMem->pMem)
+			VirtualFree( (LPVOID)pMem->pMem, pMem->iReserved, MEM_DECOMMIT );
+		pMem->iCommitted = pMem->iSize = 0;
+	}
+}
+
+
 //++ VirtualMemoryDestroy
 void VirtualMemoryDestroy( _Inout_ VMEMO *pMem )
 {
