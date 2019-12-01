@@ -303,9 +303,9 @@ void QueueStatistics( _Out_ PQUEUE_STATS pStats )
 		else
 			assert( !"Unexpected request status" );
 
-		pStats->iDlXferred += p->Statistics.iDlXferred;
-		pStats->iUlXferred += p->Statistics.iUlXferred;
-		pStats->iSpeed     += p->Statistics.iSpeed;
+		pStats->iDlXferred += p->Runtime.iDlXferred;
+		pStats->iUlXferred += p->Runtime.iUlXferred;
+		pStats->iSpeed     += p->Runtime.iSpeed;
 
 		CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
 		if (!bOK)

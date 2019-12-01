@@ -47,13 +47,13 @@ typedef struct _CURL_REQUEST {
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
 		LONG		iServerPort;
 		LPCSTR		pszServerIP;		/// Can be IPv6
-	} Runtime;
-	struct {
+		curl_off_t	iTimeElapsed;		/// Microseconds
+		curl_off_t	iTimeRemaining;		/// Microseconds
 		ULONG64		iDlXferred, iDlTotal;
 		ULONG64		iUlXferred, iUlTotal;
 		ULONG		iSpeed;
 		short		iPercent;			/// -1 if the total size is unknown
-	} Statistics;
+	} Runtime;
 	struct {
 		ULONG		iWin32;
 		LPCTSTR		pszWin32;
@@ -68,6 +68,7 @@ typedef struct _CURL_REQUEST {
 //+ CurlRequestInit
 static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	ZeroMemory( pReq, sizeof( *pReq ) );
+	pReq->Runtime.iPercent = -1;		/// Unknown size
 }
 
 //+ CurlRequestDestroy

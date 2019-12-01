@@ -26,22 +26,22 @@ void CurlRequestSizes( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, 
 	assert( pReq );
 
 	// Uploading data goes first. Downloading server's response (remote content) goes second
-	if (pReq->Statistics.iDlXferred > 0 || pReq->Statistics.iDlTotal > 0) {
+	if (pReq->Runtime.iDlXferred > 0 || pReq->Runtime.iDlTotal > 0) {
 		// Downloading (phase 2)
 		if (pbDown)
 			*pbDown = TRUE;
 		if (piSizeTotal)
-			*piSizeTotal = pReq->Statistics.iDlTotal;
+			*piSizeTotal = pReq->Runtime.iDlTotal;
 		if (piSizeXferred)
-			*piSizeXferred = pReq->Statistics.iDlXferred;
+			*piSizeXferred = pReq->Runtime.iDlXferred;
 	} else {
 		// Uploading (phase 1)
 		if (pbDown)
 			*pbDown = FALSE;
 		if (piSizeTotal)
-			*piSizeTotal = pReq->Statistics.iUlTotal;
+			*piSizeTotal = pReq->Runtime.iUlTotal;
 		if (piSizeXferred)
-			*piSizeXferred = pReq->Statistics.iUlXferred;
+			*piSizeXferred = pReq->Runtime.iUlXferred;
 	}
 }
 
@@ -486,7 +486,7 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
-	curl_off_t iPercent, iSpeed;
+	curl_off_t iTotal, iXferred, iSpeed;
 
 	assert( pReq && pReq->Runtime.pCurl );
 
@@ -498,29 +498,35 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 
 //x	TRACE( _T( "%hs( DL:%I64u/%I64u, UL:%I64u/%I64u )\n" ), __FUNCTION__, dlnow, dltotal, ulnow, ultotal );
 
-	iPercent = 0, iSpeed = 0;
 	if (dlnow > 0) {
-		if (dltotal == 0) {
-			iPercent = -1;		/// Unknown size
-		} else {
-			iPercent = (dlnow * 100) / dltotal;
-		}
+		/// Downloading (phase 2)
+		iTotal = dltotal, iXferred = dlnow;
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_DOWNLOAD_T, &iSpeed );
-	} else if (ulnow > 0) {
-		if (ultotal == 0) {
-			iPercent = -1;		/// Unknown size
-		} else {
-			iPercent = (ulnow * 100) / ultotal;
-		}
+	} else {
+		/// Uploading (phase 1)
+		iTotal = ultotal, iXferred = ulnow;
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_UPLOAD_T, &iSpeed );
 	}
 
-	pReq->Statistics.iDlTotal = dltotal;
-	pReq->Statistics.iDlXferred = dlnow;
-	pReq->Statistics.iUlTotal = ultotal;
-	pReq->Statistics.iUlXferred = ulnow;
-	pReq->Statistics.iPercent = (short)iPercent;
-	pReq->Statistics.iSpeed = (ULONG)iSpeed;
+	curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_TOTAL_TIME_T, &pReq->Runtime.iTimeElapsed );
+	if (iTotal == 0) {
+		/// Unknown size. Unknown ETA
+		pReq->Runtime.iPercent = -1;
+		pReq->Runtime.iTimeRemaining = 0;
+	} else {
+		pReq->Runtime.iPercent = (short)((iXferred * 100) / iTotal);
+		if (pReq->Runtime.iPercent >= 1) {
+			pReq->Runtime.iTimeRemaining = (iTotal * pReq->Runtime.iTimeElapsed) / iXferred - pReq->Runtime.iTimeElapsed;
+		} else {
+			pReq->Runtime.iTimeRemaining = 0;
+		}
+	}
+
+	pReq->Runtime.iDlTotal = dltotal;
+	pReq->Runtime.iDlXferred = dlnow;
+	pReq->Runtime.iUlTotal = ultotal;
+	pReq->Runtime.iUlXferred = ulnow;
+	pReq->Runtime.iSpeed = (ULONG)iSpeed;
 	MemoryBarrier();
 
 	return CURLE_OK;
@@ -874,12 +880,32 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			CurlRequestSizes( pReq, NULL, &iXferred, NULL );
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), iXferred );
 		} else if (lstrcmpi( pszKeyword, _T( "@PERCENT@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), pReq->Statistics.iPercent );	/// Can be -1
+			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), pReq->Runtime.iPercent );	/// Can be -1
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED@" ) ) == 0) {
-			MyFormatBytes( pReq->Statistics.iSpeed, pszKeyword, iMaxLen );
-			_tcscat( pszKeyword, _T( "/s" ) );
+			if (pReq->Runtime.iSpeed > 0) {
+				MyFormatBytes( pReq->Runtime.iSpeed, pszKeyword, iMaxLen );
+				_tcscat( pszKeyword, _T( "/s" ) );
+			} else {
+				lstrcpyn( pszKeyword, _T( "-" ), iMaxLen );
+			}
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED_B@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), pReq->Statistics.iSpeed );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), pReq->Runtime.iSpeed );
+		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED@" ) ) == 0) {
+			if (pReq->Runtime.iTimeElapsed > 0) {
+				MyFormatMilliseconds( pReq->Runtime.iTimeElapsed / 1000, pszKeyword, iMaxLen );
+			} else {
+				lstrcpyn( pszKeyword, _T( "-" ), iMaxLen );
+			}
+		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED_MS@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeElapsed / 1000 );
+		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING@" ) ) == 0) {
+			if (pReq->Runtime.iTimeRemaining > 0) {
+				MyFormatMilliseconds( pReq->Runtime.iTimeRemaining / 1000, pszKeyword, iMaxLen );
+			} else {
+				lstrcpyn( pszKeyword, _T( "-" ), iMaxLen );
+			}
+		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING_MS@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeRemaining / 1000 );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
@@ -890,9 +916,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	}
 /*
 	{PROXY}
-	{TIMESTART}
-	{TIMEELAPSED}
-	{TIMEREMAINING}
 
 	/SENTHEADERS
 	/RECVHEADERS
