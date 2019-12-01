@@ -381,42 +381,53 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
 size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userdata )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
-	LPCSTR psz1, psz2;
+	LPSTR psz1, psz2;
 
 	assert( pReq && pReq->Runtime.pCurl );
 
-	// Collect connection info
-	if (!pReq->Runtime.pszServerIP) {
+	//x TRACE( _T( "%hs( \"%hs\" )\n" ), __FUNCTION__, buffer );
+
+	// NOTE: This callback function receives incoming headers one at a time
+	// Headers from multiple (redirected) connections are separated by an empty line ("\r\n")
+	// We only want to keep the headers from the last connection
+	if (pReq->Runtime.InHeaders.iSize == 0 ||	/// First connection
+		(
+		pReq->Runtime.InHeaders.iSize > 4 &&
+		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 4] == '\r' &&
+		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 3] == '\n' &&
+		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 2] == '\r' &&
+		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 1] == '\n')
+		)
+	{
+		// The last received header is an empty line ("\r\n")
+		// Discard existing headers and start collecting a new set
+		VirtualMemoryReset( &pReq->Runtime.InHeaders );
+
+		// Extract HTTP status text from header
+		// e.g. "HTTP/1.1 200 OK" -> "OK"
+		for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
+		for (psz1 = psz2; psz1 > buffer && psz1[-1] != ' '; psz1--);	/// Find the last whitespace
+		if (TRUE) {
+			CHAR ch = *psz2; *psz2 = '\0';
+			MyFree( pReq->Error.pszHttp );
+			pReq->Error.pszHttp = MyStrDupAA( psz1 );
+			*psz2 = ch;
+		}
+
+		// Collect HTTP connection info
 		/// Server IP address
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_IP, &psz1 );
+		MyFree( pReq->Runtime.pszServerIP );
 		pReq->Runtime.pszServerIP = MyStrDupAA( psz1 );
+
 		/// Server port
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_PORT, &pReq->Runtime.iServerPort );
 	}
 
-	// Collect status line
-	for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
-	if (psz2 > psz1) {
-		if (!pReq->Error.bStatusGrabbed) {
-			/// "HTTP/1.1 200 OK" -> "OK"
-			for (; (*psz1 != ANSI_NULL) && (*psz1 != ' '); psz1++);		/// Find space #1
-			for (; (*psz1 == ' '); psz1++);								/// Skip space #1
-			for (; (*psz1 != ANSI_NULL) && (*psz1 != ' '); psz1++);		/// Find space #2
-			for (; (*psz1 == ' '); psz1++);								/// Skip space #2
-			/// Collect
-			MyFree( pReq->Error.pszHttp );
-			if ((pReq->Error.pszHttp = (LPCSTR)MyAlloc( (ULONG)(psz2 - psz1) + 1 )) != NULL)
-				lstrcpynA( (LPSTR)pReq->Error.pszHttp, psz1, (int)(psz2 - psz1) + 1 );
-		}
-		pReq->Error.bStatusGrabbed = TRUE;
-	} else {
-		/// Empty header
-		/// A new header block may be received, in which case we'll collect its status line again
-		pReq->Error.bStatusGrabbed = FALSE;
 	}
 
-	// Collect headers
-	return nitems * size;
+	// Collect incoming headers
+	return VirtualMemoryAppend( &pReq->Runtime.InHeaders, buffer, size * nitems );
 }
 
 
@@ -539,7 +550,6 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size, void *userptr )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userptr;
-
 	assert( pReq && pReq->Runtime.pCurl == handle );
 
 	if (type == CURLINFO_HEADER_OUT) {
@@ -549,33 +559,13 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 		// A block of outgoing headers are sent for every (redirected) connection
 		// We'll collect only the last block
 		VirtualMemoryReset( &pReq->Runtime.OutHeaders );
-
 		VirtualMemoryAppend( &pReq->Runtime.OutHeaders, data, size );
-		//x TRACE( _T( "h>> %hs\n" ), pReq->Runtime.OutHeaders.pMem );
 
 	} else if (type == CURLINFO_HEADER_IN) {
 
 		// NOTE: This callback function receives incoming headers one at a time
-	#ifdef TRACE_ENABLED
-		//x CHAR ch = data[size];
-		//x data[size] = 0;
-		//x TRACE( _T( "<<< %hs\n" ), data );
-		//x data[size] = ch;
-	#endif
+		// NOTE: Incoming header are handled by CurlHeaderCallback(..)
 
-		// A block of incoming headers is received from every (redirected) connection
-		// We'll collect only the last block
-		// Check if the last received header is empty ("\r\n")
-		if (pReq->Runtime.InHeaders.iSize > 4 &&
-			pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 4] == '\r' &&
-			pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 3] == '\n' &&
-			pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 2] == '\r' &&
-			pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 1] == '\n')
-		{
-			VirtualMemoryReset( &pReq->Runtime.InHeaders );
-		}
-
-		VirtualMemoryAppend( &pReq->Runtime.InHeaders, data, size );
 	}
 
 	return 0;

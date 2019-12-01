@@ -62,7 +62,6 @@ typedef struct _CURL_REQUEST {
 		LPCSTR		pszCurl;
 		int			iHttp;
 		LPCSTR		pszHttp;
-		BOOLEAN		bStatusGrabbed : 1;
 	} Error;
 } CURL_REQUEST, *PCURL_REQUEST;
 
