@@ -134,6 +134,9 @@ BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );
 //+ MyFormatBytes
 void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen );
 
+//+ MyFormatMilliseconds
+void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen );
+
 //+ Virtual Memory
 typedef struct {
 	PCCH   pMem;		/// Memory buffer

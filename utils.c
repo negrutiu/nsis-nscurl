@@ -589,6 +589,37 @@ void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMax
 }
 
 
+//++ MyFormatMilliseconds
+void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen )
+{
+	if (pszStr && iStrMaxLen) {
+
+		ULONG iDays, iHours, iMins, iSecs;
+		pszStr[0] = 0;
+
+		iDays = (ULONG)(iMillis / 86400000);
+		iMillis %= 86400000;
+
+		iHours = (ULONG)(iMillis / 3600000);
+		iMillis %= 3600000;
+
+		iMins = (ULONG)(iMillis / 60000);
+		iMillis %= 60000;
+
+		iSecs = (ULONG)(iMillis / 1000);
+		iMillis %= 1000;
+
+		if (iDays > 0) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%u.%02u:%02u:%02u" ), iDays, iHours, iMins, iSecs );
+		} else if (iHours > 0) {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%02u:%02u:%02u" ), iHours, iMins, iSecs );
+		} else {
+			_sntprintf( pszStr, iStrMaxLen, _T( "%02u:%02u" ), iMins, iSecs );
+		}
+	}
+}
+
+
 //++ VirtualMemoryInitialize
 ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 {
