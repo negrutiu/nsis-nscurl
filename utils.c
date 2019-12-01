@@ -429,28 +429,39 @@ ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr,
 }
 
 
-//++ BinaryToString
-ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen )
+//++ MyBinaryToString
+ULONG MyBinaryToString( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOLEAN bEscape )
 {
-	ULONG iLen = 0;
-	if (pszStr && iStrLen) {
+	ULONG iStrLen = 0;
+	CHAR ch;
+	assert( pszStr && iStrMaxLen );
+	if (pszStr && iStrMaxLen) {
 		pszStr[0] = _T( '\0' );
-		if (pData) {
-			ULONG i, n;
-			CHAR ch;
-			for (i = 0, n = (ULONG)__min( iDataSize, iStrLen - 1 ); i < n; i++) {
-				ch = ((PCH)pData)[i];
-				if ((ch >= 32 /*&& ch < 127*/) || ch == '\r' || ch == '\n') {
-					pszStr[i] = ch;
+		if (pData && iDataSize) {
+			ULONG i;
+			for (i = 0, iStrLen = 0; i < iDataSize && iStrLen < iStrMaxLen - 1; i++) {
+				ch = ((PCCH)pData)[i];
+				if (ch >= 32) {
+					pszStr[iStrLen++] = ch;
+				} else if (ch == '\r' || ch == '\n' || ch == '\t') {
+					if (bEscape) {
+						pszStr[iStrLen++] = _T( '\\' );
+						switch (ch) {
+							case '\r': pszStr[iStrLen++] = _T( 'r' ); break;
+							case '\n': pszStr[iStrLen++] = _T( 'n' ); break;
+							case '\t': pszStr[iStrLen++] = _T( 't' ); break;
+						}
+					} else {
+						pszStr[iStrLen++] = ch;
+					}
 				} else {
-					pszStr[i] = _T( '.' );
+					pszStr[iStrLen++] = _T( '.' );
 				}
 			}
-			pszStr[i] = _T( '\0' );
-			iLen += i;		/// Not including NULL terminator
+			pszStr[iStrLen] = _T( '\0' );
 		}
 	}
-	return iLen;
+	return iStrLen;
 }
 
 

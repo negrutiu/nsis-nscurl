@@ -106,9 +106,9 @@ ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCT
 ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen );
 ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr, _In_ ULONG iStrLen );
 
-//+ BinaryToString
+//+ MyBinaryToString
 // Returns number of TCHAR-s written, not including the NULL terminator
-ULONG BinaryToString( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrLen );
+ULONG MyBinaryToString( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOLEAN bEscape );
 
 //+ ReplaceKeywordsA
 // Replaces "keywords" in a string

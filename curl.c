@@ -983,11 +983,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				pszKeyword[0] = 0;
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY@" ) ) == 0) {
-			// TODO
+			MyBinaryToString( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, TRUE );
 		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY_RAW@" ) ) == 0) {
-			// TODO
-		} else if (lstrcmpi( pszKeyword, _T( "@SENTDATA@" ) ) == 0) {
-			// TODO
+			MyBinaryToString( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
