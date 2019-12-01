@@ -68,14 +68,14 @@ void SetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 
 
 //++ MyStrDup
-LPVOID MyStrDup( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc )
+LPVOID MyStrDup( _In_ Encodings iEnc, _In_ LPCVOID pszSrc )
 {
 	return MyStrDupN( iEnc, pszSrc, -1 );
 }
 
 
 //++ MyStrDupN
-LPVOID MyStrDupN( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen )
+LPVOID MyStrDupN( _In_ Encodings iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen )
 {
 	LPVOID pszDest = NULL;
 	int l, l2;
@@ -158,7 +158,7 @@ LPVOID MyStrDupN( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc, _In_opt_ int i
 
 
 //++ MyStrCopy
-LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc )
+LPVOID MyStrCopy( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc )
 {
 	if (!pszDest)
 		return NULL;

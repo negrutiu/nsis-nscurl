@@ -50,6 +50,10 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 	LPVOID p = GlobalLock( GlobalAlloc( GMEM_FIXED, iSize ) );
 	g_MemStats.AllocBytes += iSize;
 	g_MemStats.AllocCalls++;
+#ifdef _DEBUG
+	if (p)
+		FillMemory( p, iSize, 0xcd );
+#endif
 	return p;
 }
 
@@ -63,16 +67,18 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 
 
 // ANSI (multi byte) <-> Unicode (wide char)
-typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } SrcDestEncoding;
+typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } Encodings;
 
 
 //+ MyStrDup
-LPVOID MyStrDup( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc );
-LPVOID MyStrDupN( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen );
+// If the input string is NULL, the function allocates and returns an empty string (length zero)
+//? The caller must MyFree(..) the string
+LPVOID MyStrDup ( _In_ Encodings iEnc, _In_ LPCVOID pszSrc );
+LPVOID MyStrDupN( _In_ Encodings iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen );		/// If iSrcMaxLen < 0 the string is assumed to be NULL terminated
 
 
 //+ MyStrCopy
-LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc );
+LPVOID MyStrCopy( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc );
 
 
 //? The caller must MyFree(..) the string
