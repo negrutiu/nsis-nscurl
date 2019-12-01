@@ -41,6 +41,7 @@ typedef struct _CURL_REQUEST {
 		CURL		*pCurl;
 		HANDLE		hInFile;			/// Upload file. iDataSize represents its size
 		curl_off_t	iDataPos;			/// Input data/file position
+		VMEMO		InHeaders;
 		VMEMO		OutHeaders;
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
@@ -91,6 +92,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 		CloseHandle( pReq->Runtime.hInFile );
 	if (VALID_HANDLE( pReq->Runtime.hOutFile ))
 		CloseHandle( pReq->Runtime.hOutFile );
+	VirtualMemoryDestroy( &pReq->Runtime.InHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutData );
 	MyFree( pReq->Runtime.pszServerIP );
