@@ -127,6 +127,14 @@ LONG ReplaceKeywordsW(
 	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam
 );
 
+//+ MyStrReplace
+// Returns the lstrlen(..) of the output string, or -1 if errors occurred
+LONG MyStrReplace(
+	_Inout_ LPTSTR pszStr, _In_ size_t iStrMaxLen,
+	_In_ LPCTSTR pszSubstr, _In_ LPCTSTR pszReplaceWith,
+	_In_ BOOL bMatchCase
+);
+
 //+ MyStrToInt64
 // Replacement for shlwapi!StrToInt64Ex introduced in "Update Rollup 1 for Windows 2000 SP4"
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum );

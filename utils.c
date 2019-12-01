@@ -544,6 +544,55 @@ LONG ReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKe
 }
 
 
+//++ MyStrReplace
+/// Replace all occurrences of the specified substring in a string
+/// Returns the final string length, not including \0
+LONG MyStrReplace(
+	_Inout_ LPTSTR pszStr,
+	_In_ size_t iStrMaxLen,
+	_In_ LPCTSTR pszSubstr,
+	_In_ LPCTSTR pszReplaceWith,
+	_In_ BOOL bMatchCase
+)
+{
+	LONG iStrLen = -1;
+	if (pszStr && iStrMaxLen && pszSubstr && *pszSubstr && pszReplaceWith) {
+
+		// Length
+		LPTSTR psz;
+		size_t iSubstrLen = lstrlen( pszSubstr ), iReplaceWithLen = (size_t)-1;
+
+		// Replace all
+		for (psz = pszStr; *psz; psz++) {
+			if (CompareString( LOCALE_USER_DEFAULT, (bMatchCase ? 0 : LINGUISTIC_IGNORECASE), psz, (int)iSubstrLen, pszSubstr, (int)iSubstrLen ) == CSTR_EQUAL) {
+
+				if (iStrLen == -1) {
+					iStrLen = lstrlen( psz );											/// Length from the current position onwards
+					iStrLen += PtrToUlong( psz ) - PtrToUlong( pszStr );				/// Length up to the current position
+				}
+
+				if (iReplaceWithLen == -1) {
+					iReplaceWithLen = lstrlen( pszReplaceWith );
+				}
+
+				if ((iStrLen + iReplaceWithLen - iSubstrLen) <= iStrMaxLen) {			/// Enough room?
+					size_t iSubstrIndex = psz - pszStr;
+					size_t iMoveSize = (iStrLen - iSubstrIndex - iSubstrLen + 1) * sizeof(TCHAR);
+					MoveMemory( psz + iReplaceWithLen, psz + iSubstrLen, iMoveSize );	/// Make room for the new substring
+					CopyMemory( psz, pszReplaceWith, iReplaceWithLen * sizeof(TCHAR) );	/// Copy the new substring
+					iStrLen += (iReplaceWithLen - iSubstrLen);							/// Update the overall string length
+					psz = psz + iReplaceWithLen;
+				} else {
+					iStrLen = -1;
+					break;
+				}
+			}
+		}		/// for
+	}
+	return iStrLen;
+}
+
+
 //++ MyStrToInt64
 BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
 {
