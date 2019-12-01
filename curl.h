@@ -15,7 +15,7 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszURL;
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
-	struct curl_slist	*pInHeaders;	/// can be NULL
+	struct curl_slist	*pOutHeaders;	/// can be NULL
 	struct curl_slist	*pPostVars;		/// can be NULL
 	LPVOID		pszData;				/// can be NULL. If iDataSize != 0, (LPSTR)pszData is treated as data string. If iDataSize == 0, (LPTSTR)pszData is treated as data file name
 	curl_off_t	iDataSize;				/// can be 0
@@ -77,7 +77,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszURL );
 	MyFree( pReq->pszPath );
 	MyFree( pReq->pszMethod );
-	curl_slist_free_all( pReq->pInHeaders );
+	curl_slist_free_all( pReq->pOutHeaders );
 	curl_slist_free_all( pReq->pPostVars );
 	MyFree( pReq->pszData );
 	MyFree( pReq->pszProxy );

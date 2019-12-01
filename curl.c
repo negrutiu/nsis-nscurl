@@ -181,11 +181,11 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 					ch = *psz2, *psz2 = _T( '\0' );
 				#ifdef _UNICODE
 					if ((pszA = MyStrDupAW( psz1 )) != NULL) {
-						pReq->pInHeaders = curl_slist_append( pReq->pInHeaders, pszA );
+						pReq->pOutHeaders = curl_slist_append( pReq->pOutHeaders, pszA );
 						MyFree( pszA );
 					}
 				#else
-					pReq->pInHeaders = curl_slist_append( pReq->pInHeaders, psz1 );
+					pReq->pOutHeaders = curl_slist_append( pReq->pOutHeaders, psz1 );
 				#endif
 					*psz2 = ch;
 					psz1 = psz2;
@@ -790,8 +790,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			/// Request Headers
-			if (pReq->pInHeaders)
-				curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pInHeaders );
+			if (pReq->pOutHeaders)
+				curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pOutHeaders );
 
 			// TODO: PROXY
 
