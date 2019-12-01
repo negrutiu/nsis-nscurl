@@ -319,7 +319,7 @@ void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t 
 	assert( psz );
 
 	if (popstring( psz ) == NOERROR) {
-		LPSTR pszA = MyStrDupA( psz );
+		LPSTR pszA = MyStrDup( eT2A, psz );
 		if (pszA) {
 			LPSTR pszOut = curl_easy_escape( NULL, pszA, 0 );
 			if (pszOut) {
@@ -349,7 +349,7 @@ void __cdecl UrlUnescape( HWND parent, int string_size, TCHAR *variables, stack_
 	assert( psz );
 
 	if (popstring( psz ) == NOERROR) {
-		LPSTR pszA = MyStrDupA( psz );
+		LPSTR pszA = MyStrDup( eT2A, psz );
 		if (pszA) {
 			LPSTR pszOut = curl_easy_unescape( NULL, pszA, 0, NULL );
 			if (pszOut) {

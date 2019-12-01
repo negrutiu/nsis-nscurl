@@ -62,14 +62,14 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 	}}
 
 
-LPSTR  MyStrDupAA( _In_ LPCSTR pStr );
-LPSTR  MyStrDupAW( _In_ LPCWSTR pStr );
-LPWSTR MyStrDupWA( _In_ LPCSTR pStr );
-LPWSTR MyStrDupWW( _In_ LPCWSTR pStr );
-
-
 // ANSI (multi byte) <-> Unicode (wide char)
-typedef enum { A2A, A2W, A2T, W2A, W2W, W2T, T2A, T2W, T2T } SrcDestEncoding;
+typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } SrcDestEncoding;
+
+
+//+ MyStrDup
+LPVOID MyStrDup( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc );
+LPVOID MyStrDupN( _In_ SrcDestEncoding iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen );
+
 
 //+ MyStrCopy
 LPVOID MyStrCopy( _In_ SrcDestEncoding iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc );
@@ -161,14 +161,10 @@ void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );
 	#define FileExists		FileExistsW
 	#define StrListAdd		StrListAddW
 	#define BinaryToHex		BinaryToHexW
-	#define MyStrDup		MyStrDupWW		/// LPTSTR -> LPTSTR
-	#define MyStrDupA		MyStrDupAW		/// LPTSTR -> LPSTR
 	#define ReplaceKeywords	ReplaceKeywordsW
 #else
 	#define FileExists		FileExistsA
 	#define StrListAdd		StrListAddA
 	#define BinaryToHex		BinaryToHexA
-	#define MyStrDup		MyStrDupAA		/// LPTSTR -> LPTSTR
-	#define MyStrDupA		MyStrDupAA		/// LPTSTR -> LPSTR
 	#define ReplaceKeywords	ReplaceKeywordsA
 #endif

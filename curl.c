@@ -96,7 +96,7 @@ ULONG CurlInitialize()
 		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
 		GetModuleFileName( g_hInst, szBuf, ARRAYSIZE( szBuf ) );
 		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
-		MyStrCopy( T2A, g_Curl.szVersion, ARRAYSIZE( g_Curl.szVersion ), szVer );
+		MyStrCopy( eT2A, g_Curl.szVersion, ARRAYSIZE( g_Curl.szVersion ), szVer );
 		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
 
@@ -149,13 +149,13 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 	if (lstrcmpi( pszParam, _T( "/URL" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszURL );
-			pReq->pszURL = MyStrDupA( pszParam );
+			pReq->pszURL = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/OUT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszPath );
 			if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)
-				pReq->pszPath = MyStrDup( pszParam );
+				pReq->pszPath = MyStrDup( eT2T, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/METHOD" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -165,31 +165,24 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		//x		lstrcmpi( pszParam, _T( "HEAD" ) ) == 0
 		//x	);
 			MyFree( pReq->pszMethod );
-			pReq->pszMethod = MyStrDupA( pszParam );
+			pReq->pszMethod = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			// The string may contain multiple headers delimited by \r\n
 			LPTSTR psz1, psz2;
-			TCHAR ch;
 			LPSTR pszA;
 			UNREFERENCED_PARAMETER( pszA );
 			for (psz1 = pszParam; *psz1; ) {
 				for (; (*psz1 == _T('\r')) || (*psz1 == _T('\n')); psz1++);			/// Skip \r\n
 				for (psz2 = psz1; (*psz2 != _T('\0')) && (*psz2 != _T('\r')) && (*psz2 != _T('\n')); psz2++);		/// Find next \r\n\0
 				if (psz2 > psz1) {
-					ch = *psz2, *psz2 = _T( '\0' );
-				#ifdef _UNICODE
-					if ((pszA = MyStrDupAW( psz1 )) != NULL) {
+					if ((pszA = MyStrDupN( eT2A, psz1, (int)(psz2 - psz1) )) != NULL) {
 						pReq->pOutHeaders = curl_slist_append( pReq->pOutHeaders, pszA );
 						MyFree( pszA );
 					}
-				#else
-					pReq->pOutHeaders = curl_slist_append( pReq->pOutHeaders, psz1 );
-				#endif
-					*psz2 = ch;
-					psz1 = psz2;
 				}
+				psz1 = psz2;
 			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/POSTVAR" ) ) == 0) {
@@ -199,9 +192,9 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		while (e == NOERROR) {
 			if ((e = popstring( pszParam )) == NOERROR) {
 				if (CompareString( CP_ACP, NORM_IGNORECASE, pszParam, 9, _T( "filename=" ), -1 ) == CSTR_EQUAL) {
-					pszFilename = MyStrDupA( pszParam + 9 );
+					pszFilename = MyStrDup( eT2A, pszParam + 9 );
 				} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszParam, 5, _T( "type=" ), -1 ) == CSTR_EQUAL) {
-					pszType = MyStrDupA( pszParam + 5 );
+					pszType = MyStrDup( eT2A, pszParam + 5 );
 				} else {
 					break;
 				}
@@ -209,9 +202,9 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		}
 		/// Extract mandatory parameters "name" and "data|@datafile"
 		if (e == NOERROR) {
-			pszName = MyStrDupA( pszParam );
+			pszName = MyStrDup( eT2A, pszParam );
 			if ((e = popstring( pszParam )) == NOERROR) {
-				pszData = MyStrDupA( pszParam );
+				pszData = MyStrDup( eT2A, pszParam );
 
 				// Store 4-tuple MIME form part
 				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
@@ -228,10 +221,10 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszData );
 			if (pszParam[0] == _T( '@' )) {
-				pReq->pszData = MyStrDup( pszParam + 1 );		/// Data file name
+				pReq->pszData = MyStrDup( eT2T, pszParam + 1 );	/// Data file name
 				pReq->iDataSize = 0;
 			} else {
-				pReq->pszData = MyStrDupA( pszParam );			/// Data string
+				pReq->pszData = MyStrDup( eT2A, pszParam );		/// Data string
 				pReq->iDataSize = lstrlenA( pReq->pszData );
 			}
 		}
@@ -244,27 +237,27 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 	} else if (lstrcmpi( pszParam, _T( "/PROXY" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszProxy );
-			pReq->pszProxy = MyStrDupA( pszParam );
+			pReq->pszProxy = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/PROXYUSER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszProxyUser );
-			pReq->pszProxyUser = MyStrDupA( pszParam );
+			pReq->pszProxyUser = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/PROXYPASS" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszProxyPass );
-			pReq->pszProxyPass = MyStrDupA( pszParam );
+			pReq->pszProxyPass = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/REFERER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszReferrer );
-			pReq->pszReferrer = MyStrDupA( pszParam );
+			pReq->pszReferrer = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/USERAGENT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszAgent );
-			pReq->pszAgent = MyStrDupA( pszParam );
+			pReq->pszAgent = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/NOREDIRECT" ) ) == 0) {
 		pReq->bNoRedirect = TRUE;
@@ -277,7 +270,7 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 				int i;
 				for (i = 0; isxdigit( pszParam[i] ); i++);
 				if (i == 40) {
-					LPSTR psz = MyStrDupA( pszParam );
+					LPSTR psz = MyStrDup( eT2A, pszParam );
 					if (psz) {
 						pReq->pCertList = curl_slist_append( pReq->pCertList, psz );
 						MyFree( psz );
@@ -288,7 +281,7 @@ BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ P
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszCacert );
-			pReq->pszCacert = MyStrDupA( pszParam );
+			pReq->pszCacert = MyStrDup( eT2A, pszParam );
 		}
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
@@ -407,18 +400,14 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
 		for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
 		for (psz1 = psz2; psz1 > buffer && psz1[-1] != ' '; psz1--);	/// Find the last whitespace
-		if (TRUE) {
-			CHAR ch = *psz2; *psz2 = '\0';
-			MyFree( pReq->Error.pszHttp );
-			pReq->Error.pszHttp = MyStrDupAA( psz1 );
-			*psz2 = ch;
-		}
+		MyFree( pReq->Error.pszHttp );
+		pReq->Error.pszHttp = MyStrDupN( eA2A, psz1, (int)(psz2 - psz1) );
 
 		// Collect HTTP connection info
 		/// Server IP address
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_IP, &psz1 );
 		MyFree( pReq->Runtime.pszServerIP );
-		pReq->Runtime.pszServerIP = MyStrDupAA( psz1 );
+		pReq->Runtime.pszServerIP = MyStrDup( eA2A, psz1 );
 
 		/// Server port
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_PRIMARY_PORT, &pReq->Runtime.iServerPort );
@@ -426,7 +415,7 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		// Collect last effective URL
 		MyFree( pReq->Runtime.pszFinalURL );
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_EFFECTIVE_URL, &psz1 );
-		pReq->Runtime.pszFinalURL = MyStrDupAA( psz1 );
+		pReq->Runtime.pszFinalURL = MyStrDup( eA2A, psz1 );
 	}
 
 	// Collect incoming headers
@@ -816,7 +805,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			pReq->Error.iCurl = curl_easy_perform( curl );
 
 			/// Error information
-			pReq->Error.pszCurl = MyStrDupAA( *szError ? szError : curl_easy_strerror( pReq->Error.iCurl ) );
+			pReq->Error.pszCurl = MyStrDup( eA2A, *szError ? szError : curl_easy_strerror( pReq->Error.iCurl ) );
 			curl_easy_getinfo( curl, CURLINFO_RESPONSE_CODE, (PLONG)&pReq->Error.iHttp );	/// ...might not be available
 
 			// Finalize
@@ -850,12 +839,12 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	assert( pszKeyword );
 
 	if (lstrcmpi( pszKeyword, _T( "@PLUGINNAME@" ) ) == 0) {
-		MyStrCopy( T2T, pszKeyword, iMaxLen, PLUGINNAME );
+		MyStrCopy( eT2T, pszKeyword, iMaxLen, PLUGINNAME );
 	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINVERSION@" ) ) == 0) {
-		MyStrCopy( A2T, pszKeyword, iMaxLen, g_Curl.szVersion );
+		MyStrCopy( eA2T, pszKeyword, iMaxLen, g_Curl.szVersion );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLVERSION@" ) ) == 0) {
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
-		MyStrCopy( A2T, pszKeyword, iMaxLen, ver->version );
+		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->version );
 	} else if (lstrcmpi( pszKeyword, _T( "@MBEDTLSVERSION@" ) ) == 0) {
 		//? "mbedTLS/x.y.z" -> "x.y.z"
 		LPCSTR psz;
@@ -863,9 +852,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		for (psz = ver->ssl_version; *psz && *psz != '/'; psz++);
 		if (*psz)
 			psz++;
-		MyStrCopy( A2T, pszKeyword, iMaxLen, psz );
+		MyStrCopy( eA2T, pszKeyword, iMaxLen, psz );
 	} else if (lstrcmpi( pszKeyword, _T( "@USERAGENT@" ) ) == 0) {
-		MyStrCopy( A2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
+		MyStrCopy( eA2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
 	} else if (pReq) {
 
 		if (lstrcmpi( pszKeyword, _T( "@ID@" ) ) == 0) {
@@ -878,13 +867,13 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				default: assert( !"Unexpected request status" );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@STATUS@" ) ) == 0) {
-			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszMethod ? pReq->pszMethod : "GET" );
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszMethod ? pReq->pszMethod : "GET" );
 		} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
-			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->pszURL );
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszURL );
 		} else if (lstrcmpi( pszKeyword, _T( "@FINALURL@" ) ) == 0) {
-			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.pszFinalURL ? pReq->Runtime.pszFinalURL : "" );
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.pszFinalURL ? pReq->Runtime.pszFinalURL : "" );
 		} else if (lstrcmpi( pszKeyword, _T( "@OUT@" ) ) == 0) {
-			MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath ? pReq->pszPath : _T( "Memory" ) );
+			MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath ? pReq->pszPath : _T( "Memory" ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@OUTFILE@" ) ) == 0) {
 			if (pReq->pszPath) {
 				LPCTSTR psz, pszLastSep = NULL;
@@ -892,12 +881,12 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					if (*psz == '\\')
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
-					MyStrCopy( T2T, pszKeyword, iMaxLen, pszLastSep + 1 );
+					MyStrCopy( eT2T, pszKeyword, iMaxLen, pszLastSep + 1 );
 				} else {
-					MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath );
+					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
 				}
 			} else {
-				MyStrCopy( T2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+				MyStrCopy( eT2T, pszKeyword, iMaxLen, _T( "Memory" ) );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@OUTDIR@" ) ) == 0) {
 			if (pReq->pszPath) {
@@ -909,13 +898,13 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					for (; pszLastSep > pReq->pszPath && *pszLastSep == '\\'; pszLastSep--);	/// Move before '\\'
 					lstrcpyn( pszKeyword, pReq->pszPath, (int)__min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
 				} else {
-					MyStrCopy( T2T, pszKeyword, iMaxLen, pReq->pszPath );
+					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
 				}
 			} else {
-				MyStrCopy( T2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+				MyStrCopy( eT2T, pszKeyword, iMaxLen, _T( "Memory" ) );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@SERVERIP@" ) ) == 0) {
-			MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.pszServerIP );
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.pszServerIP );
 		} else if (lstrcmpi( pszKeyword, _T( "@SERVERPORT@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%d" ), pReq->Runtime.iServerPort );
 		} else if (lstrcmpi( pszKeyword, _T( "@FILESIZE@" ) ) == 0) {
@@ -960,7 +949,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS@" ) ) == 0) {
 			int i;
 			if (pReq->Runtime.OutHeaders.iSize) {
-				MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
 			} else {
 				pszKeyword[0] = 0;
 			}
@@ -971,14 +960,14 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS_RAW@" ) ) == 0) {
 			if (pReq->Runtime.OutHeaders.iSize) {
-				MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
 			} else {
 				pszKeyword[0] = 0;
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS@" ) ) == 0) {
 			int i;
 			if (pReq->Runtime.InHeaders.iSize) {
-				MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
 			} else {
 				pszKeyword[0] = 0;
 			}
@@ -989,7 +978,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS_RAW@" ) ) == 0) {
 			if (pReq->Runtime.InHeaders.iSize) {
-				MyStrCopy( A2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
 			} else {
 				pszKeyword[0] = 0;
 			}
