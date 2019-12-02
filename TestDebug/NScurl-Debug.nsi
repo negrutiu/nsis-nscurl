@@ -1,4 +1,7 @@
 
+# NScurl demo
+# Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl#nsis-plugin-nscurl
+
 !ifdef AMD64
 	Target amd64-unicode
 !else ifdef ANSI
@@ -65,13 +68,11 @@ ShowInstDetails show
 ManifestDPIAware true
 
 !macro STACK_VERIFY_START
-	; This macro is optional. You don't have to use it in your script!
-	Push "MyStackTop"
+	Push "MyStackTop"			; Mark the top of the stack
 !macroend
 
 !macro STACK_VERIFY_END
-	; This macro is optional. You don't have to use it in your script!
-	Pop $R9
+	Pop $R9						; Validate our stack marker
 	StrCmp $R9 "MyStackTop" +2 +1
 		MessageBox MB_ICONSTOP "Stack is NOT OK"
 !macroend
@@ -132,34 +133,12 @@ done:
 SectionEnd
 
 
-Section About
-	SectionIn 1
-
-	; NScurl::Query
-	!insertmacro STACK_VERIFY_START
-	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
-	CallInstDLL "${NSCURL}" Query
-	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
-	!insertmacro STACK_VERIFY_END
-
-	!insertmacro STACK_VERIFY_START
-	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
-	CallInstDLL "${NSCURL}" Query
-	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
-	!insertmacro STACK_VERIFY_END
-SectionEnd
-
-
 Section Parallel
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
-	${For} $R0 1 10
+	${For} $R0 1 20
 		Push /END
 		Push "@$PLUGINSDIR\cacert.pem"
 		Push /DATA
@@ -176,64 +155,12 @@ Section Parallel
 		StrCpy $1 "$1$0"
 	${Next}
 	DetailPrint "IDs = {$1}"
-
-SectionEnd
-
-
-Section /o Hashes
-	SectionIn 1
-
-	; NScurl::md5
-	!insertmacro STACK_VERIFY_START
-	Push "$EXEPATH"
-	CallInstDLL "${NSCURL}" md5
-	Pop $0
-	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
-	!insertmacro STACK_VERIFY_END
-
-	; NScurl::sha1
-	!insertmacro STACK_VERIFY_START
-	Push "$EXEPATH"
-	CallInstDLL "${NSCURL}" sha1
-	Pop $0
-	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
-	!insertmacro STACK_VERIFY_END
-
-	; NScurl::sha256
-	!insertmacro STACK_VERIFY_START
-	Push "$EXEPATH"
-	CallInstDLL "${NSCURL}" sha256
-	Pop $0
-	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
-	!insertmacro STACK_VERIFY_END
-
-SectionEnd
-
-
-Section /o Test
-	SectionIn 1
-	
-	; NScurl::Echo
-	!insertmacro STACK_VERIFY_START
-	Push "/END"
-	Push 0x2
-	Push 1
-	Push bbb
-	Push "aaa"
-	CallInstDLL "${NSCURL}" Echo
-	Pop $0
-	DetailPrint 'NScurl::Echo(...) = "$0"'
-	!insertmacro STACK_VERIFY_END
-
 SectionEnd
 
 
 Section "httpbin.org/get"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
@@ -251,31 +178,27 @@ Section "httpbin.org/get"
 	Push "Header1: Value1$\r$\nHeader2: Value2"
 	Push "/HEADER"
 
-	; Push "${FILE}"
-	Push "Memory"
+	Push "${FILE}"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
-
 	Pop $0
-	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
+	DetailPrint "ID: $0"
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
 Section "httpbin.org/get (SysinternalsSuite.zip)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
 	Push "/END"
 	Push 30000
 	Push "/TIMEOUT"
@@ -284,18 +207,16 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
+
 	Pop $0
-	DetailPrint "Status: $0"
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
 Section "httpbin.org/post (multipart/form-data)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
@@ -344,18 +265,16 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
-	Pop $0
-	DetailPrint "Status: $0"
-	!insertmacro STACK_VERIFY_END
 
+	Pop $0
+	DetailPrint "ID: $0"
+	!insertmacro STACK_VERIFY_END
 SectionEnd
+
 
 Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
@@ -385,17 +304,14 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	CallInstDLL "${NSCURL}" Request
 
 	Pop $0
-	DetailPrint "Status: $0"
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
-
 SectionEnd
+
 
 Section "httpbin.org/post (application/json)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
@@ -423,17 +339,14 @@ Section "httpbin.org/post (application/json)"
 	CallInstDLL "${NSCURL}" Request
 
 	Pop $0
-	DetailPrint "Status: $0"
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
-
 SectionEnd
+
 
 Section "httpbin.org/put"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
@@ -466,18 +379,14 @@ Section "httpbin.org/put"
 	CallInstDLL "${NSCURL}" Request
 
 	Pop $0
-	DetailPrint "Status: $0"
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
-
 SectionEnd
 
 
 Section /o "Big file (100MB)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
@@ -497,18 +406,14 @@ Section /o "Big file (100MB)"
 	CallInstDLL "${NSCURL}" Request
 
 	Pop $0
-	DetailPrint "Status: $0"
-
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
 Section /o "Big file (10GB)"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
@@ -528,18 +433,14 @@ Section /o "Big file (10GB)"
 	CallInstDLL "${NSCURL}" Request
 
 	Pop $0
-	DetailPrint "Status: $0"
-
+	DetailPrint "ID: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
 Section "Wait for all"
 	SectionIn 1	2 ; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 _wait_loop:
 
@@ -634,12 +535,62 @@ _enum_end:
 FunctionEnd
 
 
+SectionGroup /e Extra
+
+
+Section /o Test
+	SectionIn 1
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	; NScurl::Echo
+	!insertmacro STACK_VERIFY_START
+	Push "/END"
+	Push 0x2
+	Push 1
+	Push bbb
+	Push "aaa"
+	CallInstDLL "${NSCURL}" Echo
+	Pop $0
+	DetailPrint 'NScurl::Echo(...) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
+Section /o Hashes
+	SectionIn 1
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	; NScurl::md5
+	!insertmacro STACK_VERIFY_START
+	Push $EXEPATH
+	CallInstDLL "${NSCURL}" md5
+	Pop $0
+	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::sha1
+	!insertmacro STACK_VERIFY_START
+	Push $EXEPATH
+	CallInstDLL "${NSCURL}" sha1
+	Pop $0
+	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::sha256
+	!insertmacro STACK_VERIFY_START
+	Push $EXEPATH
+	CallInstDLL "${NSCURL}" sha256
+	Pop $0
+	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+SectionEnd
+
+
 Section /o "Un/Escape"
 	SectionIn 1	; All
-
-	DetailPrint '-----------------------------------------------'
-	DetailPrint '${__SECTION__}'
-	DetailPrint '-----------------------------------------------'
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $R0 "aaa bbb ccc=ddd&eee"
 	DetailPrint "Original: $R0"
@@ -659,6 +610,30 @@ Section /o "Un/Escape"
 	!insertmacro STACK_VERIFY_END
 
 SectionEnd
+
+
+Section About
+	SectionIn 1
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	; NScurl::Query
+	!insertmacro STACK_VERIFY_START
+	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $0
+	DetailPrint 'NScurl::Query = "$0"'
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+SectionGroupEnd		; Extra
 
 
 /*

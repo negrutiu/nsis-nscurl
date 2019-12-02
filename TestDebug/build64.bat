@@ -5,10 +5,5 @@ if exist "%PROGRAMFILES(X86)%\NSIS" set NSIS_PATH=%PROGRAMFILES(X86)%\NSIS& goto
 echo ERROR: NSIS not found & pause & exit /B 2
 
 :build
-"%NSIS_PATH%\makensis.exe" /V4 "%~dp0\NScurl-Test.nsi"
+"%NSIS_PATH%\makensis.exe" /DAMD64 /V4 "%~dp0\NScurl-Debug.nsi"
 if %errorlevel% neq 0 pause & exit /B %errorlevel%
-
-echo ----------------------------------------------------------
-set exe=NScurl-Test-x86-unicode.exe
-set /P answer=Execute %exe% (y/N)? 
-if /I "%answer%" equ "y" "%~dp0\%exe%"

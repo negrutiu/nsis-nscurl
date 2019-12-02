@@ -1,7 +1,11 @@
 
 /nsis
+
 /Test/*.exe
 /Test/_*
+
+/TestDebug/*.exe
+/TestDebug/_*
 
 Debug-*
 Release-*
