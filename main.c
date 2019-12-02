@@ -18,7 +18,7 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 {
 	if (!g_hInst) {
 
-		TRACE( _T( "PluginInit\n" ) );
+		TRACE( _T( "%hs\n" ), __FUNCTION__ );
 
 		g_hInst = hInst;
 		g_hTerm = CreateEvent( NULL, TRUE, FALSE, NULL );
@@ -40,7 +40,7 @@ BOOL PluginUninit()
 {
 	if ( g_hInst ) {
 
-		TRACE( _T( "PluginUninit\n" ) );
+		TRACE( _T( "%hs\n" ), __FUNCTION__ );
 		
 		SetEvent( g_hTerm );
 
@@ -86,6 +86,8 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
 	psz[0] = 0;
@@ -112,6 +114,8 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
+
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
@@ -140,6 +144,8 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
 	psz[0] = 0;
@@ -166,6 +172,8 @@ void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
+
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	psz2 = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
@@ -201,7 +209,7 @@ void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!Request\n" ) );
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	// Lock the plugin in memory
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
@@ -270,7 +278,7 @@ void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!Query\n" ) );
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	// Working buffer
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
@@ -375,7 +383,7 @@ void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!EscapeURL\n" ) );
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
@@ -405,7 +413,7 @@ void __cdecl UrlUnescape( HWND parent, int string_size, TCHAR *variables, stack_
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
-	TRACE( _T( "NSxfer!UnescapeURL\n" ) );
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
