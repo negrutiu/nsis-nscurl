@@ -95,7 +95,7 @@ ULONG CurlInitialize()
 		// Default user agent
 		TCHAR szBuf[MAX_PATH] = _T( "" ), szVer[MAX_PATH];
 		GetModuleFileName( g_hInst, szBuf, ARRAYSIZE( szBuf ) );
-		ReadVersionInfoString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
+		MyReadVersionString( szBuf, _T( "FileVersion" ), szVer, ARRAYSIZE( szVer ) );
 		MyStrCopy( eT2A, g_Curl.szVersion, ARRAYSIZE( g_Curl.szVersion ), szVer );
 		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
@@ -125,12 +125,12 @@ ULONG CurlExtractCacert()
 	{
 		TCHAR szPem[MAX_PATH];
 		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
-		if (!FileExists( szPem )) {
+		if (!MyFileExists( szPem )) {
 
 			EnterCriticalSection( &g_Curl.csLock );
 			
-			if (!FileExists( szPem )) 		/// Verify again
-				e = ExtractResourceFile( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
+			if (!MyFileExists( szPem )) 		/// Verify again
+				e = MySaveResource( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
 			
 			LeaveCriticalSection( &g_Curl.csLock );
 		}
@@ -327,7 +327,7 @@ int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint
 		mbedtls_sha1_update( &sha1c, crt->raw.p, crt->raw.len );
 		mbedtls_sha1_finish( &sha1c, Thumbprint );
 		mbedtls_sha1_free( &sha1c );
-		BinaryToHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
+		MyFormatBinaryHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
 
 		// Verify against our list of accepted certificates
 		{
@@ -432,7 +432,7 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 	assert( pReq && pReq->Runtime.pCurl );
 
 	if (pReq->pszData) {	/// Either data buffer, or, file name
-		if (VALID_HANDLE( pReq->Runtime.hInFile )) {
+		if (MyValidHandle( pReq->Runtime.hInFile )) {
 			// Read from input file
 			ULONG iRead;
 			if (ReadFile( pReq->Runtime.hInFile, (LPVOID)buffer, size * nitems, &iRead, NULL )) {
@@ -460,14 +460,14 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
 	assert( pReq && pReq->Runtime.pCurl );
 
-	if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
+	if (MyValidHandle( pReq->Runtime.hOutFile )) {
 		// Write to output file
 		ULONG iWritten = 0;
 		if (WriteFile( pReq->Runtime.hOutFile, ptr, (ULONG)(size * nmemb), &iWritten, NULL )) {
 			return iWritten;
 		} else {
 			pReq->Error.iWin32 = GetLastError();
-			pReq->Error.pszWin32 = MyErrorStr( pReq->Error.iWin32 );
+			pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 		}
 	} else {
 		// Initialize output virtual memory (once)
@@ -576,7 +576,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		return;
 	if (!pReq->pszURL || !*pReq->pszURL) {
 		pReq->Error.iWin32 = ERROR_INVALID_PARAMETER;
-		pReq->Error.pszWin32 = MyErrorStr( pReq->Error.iWin32 );
+		pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 		return;
 	}
 
@@ -593,7 +593,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		if (pReq->iDataSize == 0 && pReq->pszData && *(LPCTSTR)pReq->pszData) {
 			ULONG e = ERROR_SUCCESS;
 			pReq->Runtime.hInFile = CreateFile( (LPCTSTR)pReq->pszData, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
-			if (VALID_HANDLE( pReq->Runtime.hInFile )) {
+			if (MyValidHandle( pReq->Runtime.hInFile )) {
 				// NOTE: kernel32!GetFileSizeEx is only available in XP+
 				LARGE_INTEGER l;
 				l.LowPart = GetFileSize( pReq->Runtime.hInFile, &l.HighPart );
@@ -608,7 +608,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 			if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 				pReq->Error.iWin32 = e;
-				pReq->Error.pszWin32 = MyErrorStr( e );
+				pReq->Error.pszWin32 = MyFormatError( e );
 				TRACE( _T( "[!] CreateFile( DataFile:%s ) = %s\n" ), (LPCTSTR)pReq->pszData, pReq->Error.pszWin32 );
 			}
 		}
@@ -618,7 +618,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	if (pReq->pszPath && *pReq->pszPath) {
 		ULONG e = ERROR_SUCCESS;
 		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, (pReq->bResume ? OPEN_ALWAYS : CREATE_ALWAYS), FILE_ATTRIBUTE_NORMAL, NULL );
-		if (VALID_HANDLE( pReq->Runtime.hOutFile )) {
+		if (MyValidHandle( pReq->Runtime.hOutFile )) {
 			/// Resume?
 			if (pReq->bResume) {
 				LARGE_INTEGER l;
@@ -637,7 +637,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		}
 		if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 			pReq->Error.iWin32 = e;
-			pReq->Error.pszWin32 = MyErrorStr( e );
+			pReq->Error.pszWin32 = MyFormatError( e );
 			TRACE( _T( "[!] CreateFile( OutFile:%s ) = %s\n" ), pReq->pszPath, pReq->Error.pszWin32 );
 		}
 	}
@@ -824,9 +824,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	}
 
 	// Cleanup
-	if (VALID_HANDLE( pReq->Runtime.hInFile ))
+	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
-	if (VALID_HANDLE( pReq->Runtime.hOutFile ))
+	if (MyValidHandle( pReq->Runtime.hOutFile ))
 		CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
 }
 
@@ -983,9 +983,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				pszKeyword[0] = 0;
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY@" ) ) == 0) {
-			MyBinaryToString( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, TRUE );
+			MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, TRUE );
 		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY_RAW@" ) ) == 0) {
-			MyBinaryToString( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, FALSE );
+			MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
@@ -1008,5 +1008,5 @@ LONG CurlQuery( _In_ PCURL_REQUEST pReq, _Inout_ LPTSTR pszStr, _In_ LONG iStrMa
 	if (!pszStr || !iStrMaxLen)
 		return -1;
 
-	return ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), CurlQueryKeywordCallback, pReq );
+	return MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), CurlQueryKeywordCallback, pReq );
 }

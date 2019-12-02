@@ -50,8 +50,8 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 #endif
 
 
-//++ SetThreadName
-void SetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
+//++ MySetThreadName
+void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 {
 	typedef HRESULT( WINAPI *TfnSetThreadDescription )(_In_ HANDLE hThread, _In_ PCWSTR lpThreadDescription);
 	#define NO_INIT (TfnSetThreadDescription)1
@@ -197,8 +197,8 @@ LPVOID MyStrCopy( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxL
 }
 
 
-//++ MyErrorStr
-LPCTSTR MyErrorStr( _In_ ULONG err )
+//++ MyFormatError
+LPCTSTR MyFormatError( _In_ ULONG err )
 {
 	TCHAR szError[512];
 	DWORD iLen, iFlags = 0;
@@ -224,8 +224,8 @@ LPCTSTR MyErrorStr( _In_ ULONG err )
 }
 
 
-//++ FileExistsA
-BOOL FileExistsA( _In_ LPCSTR pszFile )
+//++ MyFileExistsA
+BOOL MyFileExistsA( _In_ LPCSTR pszFile )
 {
 	if (pszFile && *pszFile) {
 		WIN32_FIND_DATAA fd;
@@ -239,8 +239,8 @@ BOOL FileExistsA( _In_ LPCSTR pszFile )
 }
 
 
-//++ FileExistsW
-BOOL FileExistsW( _In_ LPCWSTR pszFile )
+//++ MyFileExistsW
+BOOL MyFileExistsW( _In_ LPCWSTR pszFile )
 {
 	if (pszFile && *pszFile) {
 		WIN32_FIND_DATAW fd;
@@ -254,19 +254,8 @@ BOOL FileExistsW( _In_ LPCWSTR pszFile )
 }
 
 
-//++ MyTimeDiff
-ULONG MyTimeDiff( _In_ PFILETIME pEndTime, _In_ PFILETIME pStartTime )
-{
-	if (pStartTime && pEndTime) {
-		ULONGLONG iDiff = (((PULARGE_INTEGER)pEndTime)->QuadPart - ((PULARGE_INTEGER)pStartTime)->QuadPart) / 10000;
-		return (iDiff < UINT_MAX) ? (ULONG)iDiff : UINT_MAX;	/// UINT_MAX == ~49 days
-	}
-	return 0;
-}
-
-
-//++ ReadVersionInfoString
-ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen )
+//++ MyReadVersionString
+ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen )
 {
 	ULONG e = ERROR_SUCCESS;
 
@@ -339,8 +328,8 @@ ULONG ReadVersionInfoString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName,
 }
 
 
-//++ ExtractResourceFile
-ULONG ExtractResourceFile( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath )
+//++ MySaveResource
+ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath )
 {
 	ULONG e = ERROR_SUCCESS;
 	HRSRC hRes = NULL;
@@ -391,8 +380,8 @@ UCHAR Dec2Hex( _In_ UCHAR dec )
 }
 
 
-//++ BinaryToHexW
-ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr, _In_ ULONG iStrLen )
+//++ MyFormatBinaryHexW
+ULONG MyFormatBinaryHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr, _In_ ULONG iStrLen )
 {
 	ULONG i, j, n;
 
@@ -410,8 +399,8 @@ ULONG BinaryToHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR pszStr
 }
 
 
-//++ BinaryToHexA
-ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen )
+//++ MyFormatBinaryHexA
+ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen )
 {
 	ULONG i, j, n;
 
@@ -429,8 +418,8 @@ ULONG BinaryToHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr,
 }
 
 
-//++ MyBinaryToString
-ULONG MyBinaryToString( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOLEAN bEscape )
+//++ MyFormatBinaryPrintable
+ULONG MyFormatBinaryPrintable( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOLEAN bEscape )
 {
 	ULONG iStrLen = 0;
 	CHAR ch;
@@ -465,8 +454,8 @@ ULONG MyBinaryToString( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ LPTSTR p
 }
 
 
-//++ ReplaceKeywordsA
-LONG ReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam )
+//++ MyReplaceKeywordsA
+LONG MyReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam )
 {
 	LPSTR pszBuf = NULL, psz1, psz2;
 	LONG iStrLen;
@@ -525,8 +514,8 @@ LONG ReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeyw
 }
 
 
-//++ ReplaceKeywordsW
-LONG ReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam )
+//++ MyReplaceKeywordsW
+LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam )
 {
 	LPWSTR pszBuf = NULL, psz1, psz2;
 	LONG iStrLen;
@@ -631,31 +620,6 @@ LONG MyStrReplace(
 		}		/// for
 	}
 	return iStrLen;
-}
-
-
-//++ MyStrToInt64
-BOOL MyStrToInt64( _In_ LPCTSTR pszStr, _Out_ PUINT64 piNum )
-{
-	BOOL bRet = FALSE;
-	int ch, i;
-	UINT64 n;
-	if (pszStr && piNum) {
-		for (*piNum = 0;;) {
-
-			ch = *(pszStr++) - _T( '0' );
-			if (ch < 0 || ch > 9)
-				break;
-
-			/// *piNum *= 10;
-			for (i = 0, n = *piNum; i < 9; i++)
-				*piNum += n;
-
-			*piNum += ch;
-		}
-		bRet = TRUE;
-	}
-	return bRet;
 }
 
 

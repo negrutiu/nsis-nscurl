@@ -101,7 +101,7 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 			if (g_Queue.ThreadCount + 1 <= g_Queue.ThreadMax) {
 				if ((hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, CREATE_SUSPENDED, NULL )) != NULL) {
 					g_Queue.ThreadCount++;
-					SetThreadName( hThread, L"NScurl" );
+					MySetThreadName( hThread, L"NScurl" );
 				} else {
 					// TODO: GetLastError()
 				}
@@ -395,7 +395,7 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 
 		// Replace global queue keywords
 		if (iStrLen != -1) {
-			iStrLen = ReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, NULL );
+			iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, NULL );
 		}
 
 		QueueUnlock();

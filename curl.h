@@ -88,9 +88,9 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	curl_slist_free_all( pReq->pCertList );
 	MyFree( pReq->pszCacert );
 	pReq->Runtime.pCurl = NULL;
-	if (VALID_HANDLE( pReq->Runtime.hInFile ))
+	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile );
-	if (VALID_HANDLE( pReq->Runtime.hOutFile ))
+	if (MyValidHandle( pReq->Runtime.hOutFile ))
 		CloseHandle( pReq->Runtime.hOutFile );
 	VirtualMemoryDestroy( &pReq->Runtime.InHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
