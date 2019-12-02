@@ -520,7 +520,7 @@ _enum_loop:
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
-	Push 'Remote Content: @MEMORY@'
+	Push 'Remote Content: @RECVDATA@'
 	Push $0
 	Push "/ID"
 	CallInstDLL "${NSCURL}" Query

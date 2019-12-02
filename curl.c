@@ -982,10 +982,26 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			} else {
 				pszKeyword[0] = 0;
 			}
-		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY@" ) ) == 0) {
-			MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, TRUE );
-		} else if (lstrcmpi( pszKeyword, _T( "@MEMORY_RAW@" ) ) == 0) {
-			MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, FALSE );
+		} else if (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@RECVDATA_RAW@" ) ) == 0) {
+			BOOL bEscape = (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0) ? TRUE : FALSE;
+			pszKeyword[0] = 0;
+			if (pReq->pszPath) {
+				// Downloaded to file
+				LPSTR buf = (LPSTR)MyAlloc( iMaxLen );
+				if (buf) {
+					HANDLE h = CreateFile( pReq->pszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
+					if (MyValidHandle( h )) {
+						ULONG l;
+						if (ReadFile( h, buf, iMaxLen, &l, NULL ))
+							MyFormatBinaryPrintable( buf, l, pszKeyword, iMaxLen, bEscape );
+						CloseHandle( h );
+					}
+					MyFree( buf );
+				}
+			} else {
+				// Downloaded to memory
+				MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, bEscape );
+			}
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
