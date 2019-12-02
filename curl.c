@@ -866,7 +866,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				case STATUS_COMPLETE: lstrcpyn( pszKeyword, _T( "Complete" ), iMaxLen ); break;
 				default: assert( !"Unexpected request status" );
 			}
-		} else if (lstrcmpi( pszKeyword, _T( "@STATUS@" ) ) == 0) {
+		} else if (lstrcmpi( pszKeyword, _T( "@METHOD@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszMethod ? pReq->pszMethod : "GET" );
 		} else if (lstrcmpi( pszKeyword, _T( "@URL@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszURL );
