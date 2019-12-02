@@ -478,6 +478,7 @@ Function PrintAllRequests
 	
 _enum_loop:
 
+	StrCpy $0 ""
 	Pop $0
 	StrCmp $0 "" _enum_end
 
