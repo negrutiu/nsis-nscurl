@@ -258,32 +258,32 @@ Examples:
 	Pop $0
 _________________________________________________________________________________________________
 
-NScurl::Enumerate	[/STATUS waiting|downloading|completed]
+NScurl::Enumerate	[/STATUS Waiting|Running|Complete]...[/STATUS ...]
 					/END
 
 Remarks:
-	Enumerate transfer requests from the queue (by STATUS and/or PRIORITY).
-	Be aware that completed requests remain in queue. They can be filtered out using /STATUS
+	Enumerate requests from the queue.
 
 Parameters:
-	/STATUS						| Enumerate requests with specific status (Waiting, Downloading, Completed). If not specified, all requests will be enumerated
-	/END						| Must conclude the parameter list, otherwise the NSIS stack will be emptied...
+	/STATUS						| Filter requests by status. Multiple /STATUS parameters are accepted
+	/END						| Must conclude the parameter list
 
 Return:
-	[Stack] Request count (N)
 	[Stack] ID1
 	[Stack] ID2
 	[Stack] ...
 	[Stack] IDn
+	[Stack] ""					| An empty string marks the end of the enumeration
 
 Example:
-	; Enumerate all completed requests
-	NScurl::Enumerate /STATUS "Completed" /END
-	Pop $1 ; Count
-	${For} $0 1 $1
-		Pop $2
-		DetailPrint "[$0] Request ID = $2"
-	${Next}
+	; Enumerate Waiting + Running requests
+	NScurl::Enumerate /STATUS Waiting /STATUS Running /END
+_enum_loop:
+	Pop $0
+	StrCmp $0 "" _enum_end
+	DetailPrint "Request ID = $0"
+	Goto _enum_loop
+_enum_end:
 _________________________________________________________________________________________________
 
 NScurl::Query	/ID id

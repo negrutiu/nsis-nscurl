@@ -27,6 +27,12 @@ void  QueueRemove( _In_ ULONG iId );
 //? Returns the length of the output string, or -1 if errors occur
 LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen );		/// ID can be QUEUE_NO_ID
 
+//+ Enumerate
+//? The queue *must not* be locked
+// Returns a string-list of request ID-s
+// The caller must curl_slist_free_all(..) it
+struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning, _In_ BOOLEAN bComplete );
+
 //+ QueueStatistics
 //! The queue must be locked by the caller
 typedef struct {

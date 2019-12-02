@@ -304,6 +304,68 @@ void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 }
 
 
+//++ [exported] Enumerate
+EXTERN_C __declspec(dllexport)
+void __cdecl Enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz = NULL;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	if ((psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) )) != NULL) {
+
+		BOOLEAN bWaiting = FALSE, bRunning = FALSE, bComplete = FALSE;
+		struct curl_slist *sl = NULL;
+
+		for (;;)
+		{
+			if (popstring( psz ) != NOERROR)
+				break;
+			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
+				break;
+
+			if (lstrcmpi( psz, _T( "/STATUS" ) ) == 0) {
+				if (popstring( psz ) == NOERROR) {
+					if (lstrcmpi( psz, _T( "Waiting" ) ) == 0) {
+						bWaiting = TRUE;
+					} else if (lstrcmpi( psz, _T( "Running" ) ) == 0) {
+						bRunning = TRUE;
+					} else if (lstrcmpi( psz, _T( "Complete" ) ) == 0) {
+						bComplete = TRUE;
+					}
+				}
+			}
+		}
+
+		if (!bWaiting && !bRunning && !bComplete)
+			bWaiting = bRunning = bComplete = TRUE;		/// All by default
+
+		// Enumerate ID-s
+		sl = QueueEnumerate( bWaiting, bRunning, bComplete );
+
+		// Empty string marks the end of enumeration
+		pushstringEx( _T( "" ) );
+
+		// Push them on the stack in reversed order
+		{
+			int i, j, n;
+			struct curl_slist *s;
+			for (n = 0, s = sl; s; n++, s = s->next);	/// List length
+			for (i = n - 1; i >= 0; i--) {
+				for (j = 0, s = sl; j < i; j++, s = s->next);
+				PushStringA( s->data );
+			}
+		}
+
+		curl_slist_free_all( sl );
+		MyFree( psz );
+	}
+}
+
+
 //++ [exported] UrlEscape
 EXTERN_C __declspec(dllexport)
 void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )

@@ -402,3 +402,27 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 	}
 	return iStrLen;
 }
+
+
+//++ QueueEnumerate
+struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning, _In_ BOOLEAN bComplete )
+{
+	struct curl_slist *sl = NULL;
+	PCURL_REQUEST p;
+
+	QueueLock();
+
+	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
+		if ((bWaiting && p->Queue.iStatus == STATUS_WAITING) ||
+			(bRunning && p->Queue.iStatus == STATUS_RUNNING) ||
+			(bComplete && p->Queue.iStatus == STATUS_COMPLETE))
+		{
+			CHAR sz[16];
+			_snprintf( sz, ARRAYSIZE( sz ), "%u", p->Queue.iId );
+			sl = curl_slist_append( sl, sz );
+		}
+	}
+
+	QueueUnlock();
+	return sl;
+}

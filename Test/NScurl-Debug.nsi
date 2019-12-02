@@ -153,21 +153,30 @@ SectionEnd
 
 
 Section Parallel
-	${For} $R0 1 100
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	StrCpy $1 ""
+	${For} $R0 1 10
 		Push /END
 		Push "@$PLUGINSDIR\cacert.pem"
 		Push /DATA
 		Push "PUT"
 		Push /METHOD
-		Push "$EXEDIR\_test_$R0.json"
+		Push "Memory"
 		Push /Out
 		Push "https://httpbin.org/put"
 		Push /URL
 		CallInstDLL "${NSCURL}" Request
 		Pop $0
-		DetailPrint "Status[$R0] = $0"
-		; Sleep 200
+		IntCmp $R0 1 +2 +1 +1
+			StrCpy $1 "$1, "
+		StrCpy $1 "$1$0"
 	${Next}
+	DetailPrint "IDs = {$1}"
+
 SectionEnd
 
 
@@ -230,22 +239,25 @@ Section "httpbin.org/get"
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
 	Push 30000
 	Push "/CONNECTTIMEOUT"
+
 	Push "Header3: Value3"
 	Push "/HEADER"
 	Push "Header1: Value1$\r$\nHeader2: Value2"
 	Push "/HEADER"
-	Push "GET"
-	Push "/METHOD"
-	Push "${FILE}"
+
+	; Push "${FILE}"
+	Push "Memory"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
 	CallInstDLL "${NSCURL}" Request
+
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -537,28 +549,89 @@ _wait_loop:
 	Pop $R0	; Waiting + Running
 	!insertmacro STACK_VERIFY_END
 
-	${If} $R0 > 1
-		!insertmacro STACK_VERIFY_START
-		Push "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
-		CallInstDLL "${NSCURL}" Query
-		Pop $0
-		!insertmacro STACK_VERIFY_END
-		DetailPrint $0
-	${Else}
-		!insertmacro STACK_VERIFY_START
-		Push "[Wait] @OUTFILE@: @PERCENT@% @XFERSIZE@/@FILESIZE@ @@ @SPEED@ | {@ERRORCODE@} @ERROR@"
-		CallInstDLL "${NSCURL}" Query
-		Pop $0
-		!insertmacro STACK_VERIFY_END
-		DetailPrint $0
-	${EndIf}
+	!insertmacro STACK_VERIFY_START
+	Push "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
+	CallInstDLL "${NSCURL}" Query
+	Pop $0
+	!insertmacro STACK_VERIFY_END
+	DetailPrint $0
 
 	IntCmp $R0 0 _wait_end
 	Sleep 1000
 	Goto _wait_loop
+
 _wait_end:
 
+	; Print summary
+	Call PrintAllRequests
+
 SectionEnd
+
+
+Function PrintAllRequests
+
+	; NScurl::Enumerate
+	!insertmacro STACK_VERIFY_START
+	Push "/END"
+	CallInstDLL "${NSCURL}" Enumerate
+	
+_enum_loop:
+
+	Pop $0
+	StrCmp $0 "" _enum_end
+
+	DetailPrint '[ID: $0] -----------------------------------------------'
+
+	!insertmacro STACK_VERIFY_START
+	Push 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
+	Push $0
+	Push "/ID"
+	CallInstDLL "${NSCURL}" Query
+	Pop $1
+	DetailPrint "$1"
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push '@METHOD@ @URL@ -> @OUT@'
+	Push $0
+	Push "/ID"
+	CallInstDLL "${NSCURL}" Query
+	Pop $1
+	DetailPrint "$1"
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push 'Request Headers: @SENTHEADERS@'
+	Push $0
+	Push "/ID"
+	CallInstDLL "${NSCURL}" Query
+	Pop $1
+	DetailPrint "$1"
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push 'Reply Headers: @RECVHEADERS@'
+	Push $0
+	Push "/ID"
+	CallInstDLL "${NSCURL}" Query
+	Pop $1
+	DetailPrint "$1"
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push 'Remote Content: @MEMORY@'
+	Push $0
+	Push "/ID"
+	CallInstDLL "${NSCURL}" Query
+	Pop $1
+	DetailPrint "$1"
+	!insertmacro STACK_VERIFY_END
+
+	Goto _enum_loop
+_enum_end:
+	!insertmacro STACK_VERIFY_END
+
+FunctionEnd
 
 
 Section /o "Un/Escape"

@@ -63,18 +63,6 @@ RequestExecutionLevel user		; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 
-!macro STACK_VERIFY_START
-	; This macro is optional. You don't have to use it in your script!
-	Push "MyStackTop"
-!macroend
-
-!macro STACK_VERIFY_END
-	; This macro is optional. You don't have to use it in your script!
-	Pop $R9
-	StrCmp $R9 "MyStackTop" +2 +1
-		MessageBox MB_ICONSTOP "Stack is NOT OK"
-!macroend
-
 #---------------------------------------------------------------#
 # .onInit                                                       #
 #---------------------------------------------------------------#
@@ -126,11 +114,20 @@ SectionEnd
 
 
 Section Parallel
-	${For} $R0 1 100
-		NScurl::Request /URL "https://httpbin.org/put" /OUT "$EXEDIR\_test_$R0.json" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
+
+	DetailPrint '-----------------------------------------------'
+	DetailPrint '${__SECTION__}'
+	DetailPrint '-----------------------------------------------'
+
+	StrCpy $1 ""
+	${For} $R0 1 20
+		NScurl::Request /URL "https://httpbin.org/put" /OUT "Memory" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
 		Pop $0
-		DetailPrint "Status[$R0] = $0"
+		IntCmp $R0 1 +2 +1 +1
+			StrCpy $1 "$1, "
+		StrCpy $1 "$1$0"
 	${Next}
+	DetailPrint "IDs = {$1}"
 SectionEnd
 
 
@@ -364,22 +361,57 @@ _wait_loop:
 	NScurl::Query "@TOTALACTIVE@"
 	Pop $R0	; Waiting + Running
 
-	${If} $R0 > 1
-		NScurl::Query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
-		Pop $0
-		DetailPrint $0
-	${Else}
-		NScurl::Query "[Wait] @OUTFILE@: @PERCENT@% @XFERSIZE@/@FILESIZE@ @@ @SPEED@ | {@ERRORCODE@} @ERROR@"
-		Pop $0
-		DetailPrint $0
-	${EndIf}
+	NScurl::Query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
+	Pop $0
+	DetailPrint $0
 
 	IntCmp $R0 0 _wait_end
 	Sleep 1000
 	Goto _wait_loop
 _wait_end:
 
+	; Print summary
+	Call PrintAllRequests
+
 SectionEnd
+
+
+Function PrintAllRequests
+
+	; NScurl::Enumerate
+	NScurl::Enumerate /END
+	
+_enum_loop:
+
+	Pop $0
+	StrCmp $0 "" _enum_end
+
+	DetailPrint '[ID: $0] -----------------------------------------------'
+
+	NScurl::Query /ID $0 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
+	Pop $1
+	DetailPrint "$1"
+
+	NScurl::Query /ID $0  '@METHOD@ @URL@ -> @OUT@'
+	Pop $1
+	DetailPrint "$1"
+
+	NScurl::Query /ID $0  'Request Headers: @SENTHEADERS@'
+	Pop $1
+	DetailPrint "$1"
+
+	NScurl::Query /ID $0  'Reply Headers: @RECVHEADERS@'
+	Pop $1
+	DetailPrint "$1"
+
+	NScurl::Query /ID $0  'Remote Content: @MEMORY@'
+	Pop $1
+	DetailPrint "$1"
+
+	Goto _enum_loop
+_enum_end:
+
+FunctionEnd
 
 
 Section /o "Un/Escape"
