@@ -148,7 +148,7 @@ Section Parallel
 		Push /Out
 		Push "https://httpbin.org/put"
 		Push /URL
-		CallInstDLL "${NSCURL}" Request
+		CallInstDLL "${NSCURL}" http
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -165,7 +165,7 @@ Section "httpbin.org/get"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push "https://test.com"
@@ -182,7 +182,7 @@ Section "httpbin.org/get"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 	Pop $0
 
 	DetailPrint "ID: $0"
@@ -197,7 +197,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push 30000
@@ -206,7 +206,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -221,7 +221,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push "https://test.com"
@@ -264,7 +264,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -279,7 +279,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_postfields.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push "https://test.com"
@@ -301,7 +301,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -316,7 +316,7 @@ Section "httpbin.org/post (application/json)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_json.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push "https://test.com"
@@ -336,7 +336,7 @@ Section "httpbin.org/post (application/json)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -351,7 +351,7 @@ Section "httpbin.org/put"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_PUT_httpbin.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push "https://test.com"
@@ -376,7 +376,7 @@ Section "httpbin.org/put"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -391,7 +391,7 @@ Section /o "Big file (100MB)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push 30000
@@ -403,7 +403,7 @@ Section /o "Big file (100MB)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -418,7 +418,7 @@ Section /o "Big file (10GB)"
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
 	Push 30000
@@ -430,7 +430,7 @@ Section /o "Big file (10GB)"
 	Push "/OUT"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL "${NSCURL}" Request
+	CallInstDLL "${NSCURL}" http
 
 	Pop $0
 	DetailPrint "ID: $0"
@@ -446,13 +446,13 @@ _wait_loop:
 
 	!insertmacro STACK_VERIFY_START
 	Push "@TOTALACTIVE@"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $R0	; Waiting + Running
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
 	Push "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $0
 	!insertmacro STACK_VERIFY_END
 	DetailPrint $0
@@ -471,10 +471,10 @@ SectionEnd
 
 Function PrintAllRequests
 
-	; NScurl::Enumerate
+	; NScurl::enumerate
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
-	CallInstDLL "${NSCURL}" Enumerate
+	CallInstDLL "${NSCURL}" enumerate
 	
 _enum_loop:
 
@@ -488,7 +488,7 @@ _enum_loop:
 	Push 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
 	Push $0
 	Push "/ID"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -497,7 +497,7 @@ _enum_loop:
 	Push '@METHOD@ @URL@ -> @OUT@'
 	Push $0
 	Push "/ID"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -506,7 +506,7 @@ _enum_loop:
 	Push 'Request Headers: @SENTHEADERS@'
 	Push $0
 	Push "/ID"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -515,7 +515,7 @@ _enum_loop:
 	Push 'Reply Headers: @RECVHEADERS@'
 	Push $0
 	Push "/ID"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -524,7 +524,7 @@ _enum_loop:
 	Push 'Remote Content: @RECVDATA@'
 	Push $0
 	Push "/ID"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -543,16 +543,16 @@ Section /o Test
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	; NScurl::Echo
+	; NScurl::echo
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
 	Push 0x2
 	Push 1
 	Push bbb
 	Push "aaa"
-	CallInstDLL "${NSCURL}" Echo
+	CallInstDLL "${NSCURL}" echo
 	Pop $0
-	DetailPrint 'NScurl::Echo(...) = "$0"'
+	DetailPrint 'NScurl::echo(...) = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 SectionEnd
@@ -598,14 +598,14 @@ Section /o "Un/Escape"
 
 	!insertmacro STACK_VERIFY_START
 	Push $R0
-	CallInstDLL "${NSCURL}" UrlEscape
+	CallInstDLL "${NSCURL}" escape
 	Pop $1
 	DetailPrint "Escaped: $1"
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
 	Push $1
-	CallInstDLL "${NSCURL}" UrlUnescape
+	CallInstDLL "${NSCURL}" unescape
 	Pop $0
 	DetailPrint "Unescaped: $0"
 	!insertmacro STACK_VERIFY_END
@@ -617,19 +617,19 @@ Section About
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	; NScurl::Query
+	; NScurl::query
 	!insertmacro STACK_VERIFY_START
 	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
+	DetailPrint 'NScurl::query = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
 	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
-	CallInstDLL "${NSCURL}" Query
+	CallInstDLL "${NSCURL}" query
 	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
+	DetailPrint 'NScurl::query = "$0"'
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 

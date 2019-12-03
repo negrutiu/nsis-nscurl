@@ -164,9 +164,9 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 }
 
 
-//++ [exported] Echo (test)
+//++ [exported] echo
 EXTERN_C __declspec(dllexport)
-void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz, psz2;
 
@@ -198,9 +198,9 @@ void __cdecl Echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] Request
+//++ [exported] http
 EXTERN_C __declspec(dllexport)
-void __cdecl Request( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	ULONG iRequestID = 0;
 	LPTSTR psz = NULL;
@@ -268,9 +268,9 @@ void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG 
 }
 
 
-//++ [exported] Query
+//++ [exported] query
 EXTERN_C __declspec(dllexport)
-void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	ULONG iId = QUEUE_NO_ID;
 	LPTSTR psz = NULL;
@@ -312,9 +312,9 @@ void __cdecl Query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 }
 
 
-//++ [exported] Enumerate
+//++ [exported] enumerate
 EXTERN_C __declspec(dllexport)
-void __cdecl Enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz = NULL;
 
@@ -374,9 +374,9 @@ void __cdecl Enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 }
 
 
-//++ [exported] UrlEscape
+//++ [exported] escape
 EXTERN_C __declspec(dllexport)
-void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl escape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz = NULL;
 
@@ -404,9 +404,9 @@ void __cdecl UrlEscape( HWND parent, int string_size, TCHAR *variables, stack_t 
 }
 
 
-//++ [exported] UrlUnescape
+//++ [exported] unescape
 EXTERN_C __declspec(dllexport)
-void __cdecl UrlUnescape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+void __cdecl unescape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz = NULL;
 

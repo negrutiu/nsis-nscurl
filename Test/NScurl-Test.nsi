@@ -107,7 +107,7 @@ Section Parallel
 
 	StrCpy $1 ""
 	${For} $R0 1 20
-		NScurl::Request /URL "https://httpbin.org/put" /OUT "Memory" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
+		NScurl::http /URL "https://httpbin.org/put" /OUT "Memory" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -123,9 +123,9 @@ Section "httpbin.org/get"
 
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	NScurl::http /URL "${LINK}" /OUT "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 
 	DetailPrint "ID: $0"
@@ -139,8 +139,8 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
-	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /TIMEOUT 30000 /END
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http /URL "${LINK}" /OUT "${FILE}" /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 
@@ -153,9 +153,9 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request \
+	NScurl::http \
 		/URL "${LINK}" \
 		/OUT "${FILE}" \
 		/METHOD POST \
@@ -182,9 +182,9 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_postfields.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request \
+	NScurl::http \
 		/URL "${LINK}" \
 		/OUT "${FILE}" \
 		/METHOD POST \
@@ -207,9 +207,9 @@ Section "httpbin.org/post (application/json)"
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_json.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request \
+	NScurl::http \
 		/URL "${LINK}" \
 		/OUT "${FILE}" \
 		/METHOD POST \
@@ -231,9 +231,9 @@ Section "httpbin.org/put"
 
 	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_PUT_httpbin.json'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request \
+	NScurl::http \
 		/URL "${LINK}" \
 		/OUT "${FILE}" \
 		/METHOD PUT \
@@ -257,9 +257,9 @@ Section /o "Big file (100MB)"
 
 	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::http /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 
@@ -272,9 +272,9 @@ Section /o "Big file (10GB)"
 
 	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
-	DetailPrint 'NScurl::Request "${LINK}" "${FILE}"'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::Request /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::http /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 
@@ -287,10 +287,10 @@ Section "Wait for all"
 
 _wait_loop:
 
-	NScurl::Query "@TOTALACTIVE@"
+	NScurl::query "@TOTALACTIVE@"
 	Pop $R0	; Waiting + Running
 
-	NScurl::Query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
+	NScurl::query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
 	Pop $0
 	DetailPrint $0
 
@@ -308,8 +308,8 @@ SectionEnd
 
 Function PrintAllRequests
 
-	; NScurl::Enumerate
-	NScurl::Enumerate /END
+	; NScurl::enumerate
+	NScurl::enumerate /END
 	
 _enum_loop:
 
@@ -319,23 +319,23 @@ _enum_loop:
 
 	DetailPrint '[ID: $0] -----------------------------------------------'
 
-	NScurl::Query /ID $0 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
+	NScurl::query /ID $0 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::Query /ID $0  '@METHOD@ @URL@ -> @OUT@'
+	NScurl::query /ID $0  '@METHOD@ @URL@ -> @OUT@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::Query /ID $0  'Request Headers: @SENTHEADERS@'
+	NScurl::query /ID $0  'Request Headers: @SENTHEADERS@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::Query /ID $0  'Reply Headers: @RECVHEADERS@'
+	NScurl::query /ID $0  'Reply Headers: @RECVHEADERS@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::Query /ID $0  'Remote Content: @RECVDATA@'
+	NScurl::query /ID $0  'Remote Content: @RECVDATA@'
 	Pop $1
 	DetailPrint "$1"
 
@@ -352,10 +352,10 @@ Section /o Test
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	; NScurl::Echo
-	NScurl::Echo "aaa" bbb 1 0x2 /END
+	; NScurl::echo
+	NScurl::echo "aaa" bbb 1 0x2 /END
 	Pop $0
-	DetailPrint 'NScurl::Echo(...) = "$0"'
+	DetailPrint 'NScurl::echo(...) = "$0"'
 
 SectionEnd
 
@@ -389,11 +389,11 @@ Section /o "Un/Escape"
 	StrCpy $R0 "aaa bbb ccc=ddd&eee"
 	DetailPrint "Original: $R0"
 
-	NScurl::UrlEscape $R0
+	NScurl::escape $R0
 	Pop $1
 	DetailPrint "Escaped: $1"
 
-	NScurl::UrlUnescape $1
+	NScurl::unescape $1
 	Pop $0
 	DetailPrint "Unescaped: $0"
 
@@ -404,13 +404,13 @@ Section About
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	NScurl::Query "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	NScurl::query "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
 	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
+	DetailPrint 'NScurl::query = "$0"'
 
-	NScurl::Query "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	NScurl::query "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
 	Pop $0
-	DetailPrint 'NScurl::Query = "$0"'
+	DetailPrint 'NScurl::query = "$0"'
 SectionEnd
 
 
