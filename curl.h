@@ -119,6 +119,7 @@ ULONG CurlExtractCacert();		/// Called automatically
 
 //+ CurlParseRequestParam
 BOOL CurlParseRequestParam(
+	_In_ ULONG iParamIndex,
 	_In_ LPTSTR pszParam,		/// Working buffer with the current parameter
 	_In_ int iParamMaxLen,
 	_Out_ PCURL_REQUEST pReq

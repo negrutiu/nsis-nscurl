@@ -84,9 +84,9 @@ Return:
 	[Stack] "OK" for successful transfers, or an error string (HTTP or Win32) otherwise
 _________________________________________________________________________________________________
 
-NScurl::Request		/URL url
-					/OUT file|MEMORY
-					[/METHOD GET|POST|HEAD|PUT|...]
+NScurl::http		GET|POST|HEAD|PUT|...
+					URL
+					file|MEMORY
 					[/HEADER hdr1]...[/HEADER hdrN]
 					[/DATA data|@datafile]
 					[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
@@ -108,17 +108,17 @@ Remarks:
 	This command will not display any GUI.
 	
 Parameters:
-	/URL url					| HTTP or HTTPS...
-	/OUT file|MEMORY			| Remote content destination. Can be either a local file or a memory buffer
-	/METHOD GET|POST|HEAD|...	| HTTP Method (default: GET)
+	GET|POST|HEAD|...			| HTTP Method (default: GET)
+	URL							| HTTP or HTTPS...
+	path|MEMORY					| Destination file path or MEMORY. When downloading to memory the remote content can be retrieved with query( "@RECVDATA@" )
 	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF ($\r$\n). Multiple /HEADER parameters are accepted
-	/DATA data|@datafile		| Data/file to be uploaded. Used in the context of HTTP POST/PUT, ignored otherwise
-	/POSTVAR					| Multipart form part. Used only in the context of HTTP POST, ignored otherwise. Multiple /POSTVAR parameters are accepted
-		[FILENAME=file_name]	|	Optional. Remote file name (e.g. "data.json")
+	/DATA data|@datafile		| Data string/file to be uploaded. Valid for POST and PUT, ignored otherwise
+	/POSTVAR					| Multipart form part. Used only with POST, ignored otherwise. Multiple /POSTVAR parameters are accepted
+		[FILENAME=file_name]	|	Optional. Remote file name (e.g. "mydata.json")
 		[TYPE=mime_type]		|	Optional. MIME type (e.g. "application\json")
-		name					|	Part name (e.g. "Name")
-		data|@datafile			|	Part data/datafile
-	/RESUME						| Resume existing files. By default they are overwritten
+		name					|	Part name (e.g. "MyData")
+		data|@datafile			|	Part data string/file
+	/RESUME						| Resume existing file. By default they are overwritten
 	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
 	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
 	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT
@@ -127,10 +127,10 @@ Parameters:
 	/PROXYPASS pass				| Optional password for authenticated proxies
 	/REFERER url				| Optional referer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
-	/NOREDIRECT					| Don't follow HTTP redirections. They are by default
+	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
 	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
-	/CERT thumbprint			| Specify a TRUSTED certificate SHA1 thumbprint. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
-	/CACERT cacert.pem_path		| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
+	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
+	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
 	/END						| Must conclude the parameter list
 
 Return:
@@ -139,29 +139,29 @@ Return:
 Examples:
 
 	; Download to file
-	NScurl::Request /URL "http://live.sysinternals.com/Files/SysinternalsSuite.zip" /OUT "$EXEDIR\SysinternalsSuite.zip" /TIMEOUT 60000 /END
+	NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$EXEDIR\SysinternalsSuite.zip" /TIMEOUT 60000 /END
 	Pop $0	; Request ID
 
 	; Download to memory
-	NScurl::Request /URL "https://httpbin.org/get?param1=va1&param2=val2" /OUT MEMORY /END
+	NScurl::http GET "https://httpbin.org/get?param1=va1&param2=val2" MEMORY /END
 	Pop $0	; Request ID
 
-	; POST a form
-	NScurl::Request \
-		/METHOD POST \
-		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
-		/OUT "Post.json" \
+	; POST a form (multipart/form-data)
+	NScurl::HTTP \
+		POST \
+		"http://httpbin.org/post?param1=va1&param2=val2" \
+		"Post.json" \
 		/POSTVAR "User" "Your username here" \
 		/POSTVAR "Pass" "Your password here" \
 		/POSTVAR "filename=image.jpeg" type=image/jpeg "Photo" "@$DESKTOP\My photo.jpg" \
 		/END
 	Pop R0	; Request ID
 
-	; POST a json (as HTTP data)
-	NScurl::Request \
-		/METHOD POST \
-		/URL "http://httpbin.org/post?param1=va1&param2=val2" \
-		/OUT "Post.json" \
+	; POST a json (application/json)
+	NScurl::http \
+		POST \
+		"http://httpbin.org/post?param1=va1&param2=val2" \
+		"Post.json" \
 		/DATA "@$DESKTOP\My file.json" \
 		/HEADER "Content-Type: application/json" \
 		/END

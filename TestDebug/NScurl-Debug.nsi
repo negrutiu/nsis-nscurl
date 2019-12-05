@@ -142,12 +142,9 @@ Section Parallel
 		Push /END
 		Push "@$PLUGINSDIR\cacert.pem"
 		Push /DATA
-		Push "PUT"
-		Push /METHOD
 		Push "Memory"
-		Push /Out
 		Push "https://httpbin.org/put"
-		Push /URL
+		Push "PUT"
 		CallInstDLL "${NSCURL}" http
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
@@ -179,9 +176,8 @@ Section "httpbin.org/get"
 	Push "/HEADER"
 
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "GET"
 	CallInstDLL "${NSCURL}" http
 	Pop $0
 
@@ -203,9 +199,8 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	Push 30000
 	Push "/TIMEOUT"
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "GET"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -258,12 +253,9 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "Header1: Value1$\r$\nHeader2: Value2"
 	Push "/HEADER"
 
-	Push "POST"
-	Push "/METHOD"
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "POST"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -295,12 +287,9 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	Push "Header1: Value1$\r$\nHeader2: Value2"
 	Push "/HEADER"
 
-	Push "POST"
-	Push "/METHOD"
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "POST"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -330,12 +319,9 @@ Section "httpbin.org/post (application/json)"
 	Push "Content-Type: application/json"
 	Push "/HEADER"
 
-	Push "POST"
-	Push "/METHOD"
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "POST"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -370,12 +356,9 @@ Section "httpbin.org/put"
 	Push "Header1: Value1$\r$\nHeader2: Value2"
 	Push "/HEADER"
 
-	Push "PUT"
-	Push "/METHOD"
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "PUT"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -400,9 +383,8 @@ Section /o "Big file (100MB)"
 	Push "/RESUME"
 
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "GET"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
@@ -427,9 +409,8 @@ Section /o "Big file (10GB)"
 	Push "/RESUME"
 
 	Push "${FILE}"
-	Push "/OUT"
 	Push "${LINK}"
-	Push "/URL"
+	Push "GET"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0

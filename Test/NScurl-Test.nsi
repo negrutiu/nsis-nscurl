@@ -107,7 +107,7 @@ Section Parallel
 
 	StrCpy $1 ""
 	${For} $R0 1 20
-		NScurl::http /URL "https://httpbin.org/put" /OUT "Memory" /METHOD "PUT" /DATA "@$PLUGINSDIR\cacert.pem" /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA "@$PLUGINSDIR\cacert.pem" /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -125,7 +125,7 @@ Section "httpbin.org/get"
 	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http /URL "${LINK}" /OUT "${FILE}" /METHOD GET /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
+	NScurl::http get "${LINK}" "${FILE}" /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 
 	DetailPrint "ID: $0"
@@ -140,7 +140,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http /URL "${LINK}" /OUT "${FILE}" /TIMEOUT 30000 /END
+	NScurl::http get "${LINK}" "${FILE}" /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 
@@ -156,9 +156,9 @@ Section "httpbin.org/post (multipart/form-data)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
-		/URL "${LINK}" \
-		/OUT "${FILE}" \
-		/METHOD POST \
+		POST \
+		"${LINK}" \
+		"${FILE}" \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
 		/POSTVAR "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
@@ -185,9 +185,9 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
-		/URL "${LINK}" \
-		/OUT "${FILE}" \
-		/METHOD POST \
+		POST \
+		"${LINK}" \
+		"${FILE}" \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
 		/DATA 'User=Your+name+here&Password=Your+password+here' \
@@ -210,9 +210,9 @@ Section "httpbin.org/post (application/json)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
-		/URL "${LINK}" \
-		/OUT "${FILE}" \
-		/METHOD POST \
+		POST \
+		"${LINK}" \
+		"${FILE}" \
 		/HEADER "Content-Type: application/json" \
 		/DATA '{ "number_of_the_beast" : 666 }' \
 		/CONNECTTIMEOUT 30000 \
@@ -234,9 +234,9 @@ Section "httpbin.org/put"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
-		/URL "${LINK}" \
-		/OUT "${FILE}" \
-		/METHOD PUT \
+		PUT \
+		"${LINK}" \
+		"${FILE}" \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
 		/HEADER "Content-Type: application/json" \
@@ -259,7 +259,7 @@ Section /o "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 
@@ -274,7 +274,7 @@ Section /o "Big file (10GB)"
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http /URL "${LINK}" /OUT "${FILE}" /RESUME /TIMEOUT 30000 /END
+	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "ID: $0"
 

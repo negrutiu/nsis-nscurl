@@ -141,32 +141,29 @@ ULONG CurlExtractCacert()
 
 
 //++ CurlParseRequestParam
-BOOL CurlParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
+BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
 {
 	BOOL bRet = TRUE;
 	assert( iParamMaxLen && pszParam && pReq );
 
-	if (lstrcmpi( pszParam, _T( "/URL" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszURL );
-			pReq->pszURL = MyStrDup( eT2A, pszParam );
-		}
-	} else if (lstrcmpi( pszParam, _T( "/OUT" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszPath );
-			if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)
-				pReq->pszPath = MyStrDup( eT2T, pszParam );
-		}
-	} else if (lstrcmpi( pszParam, _T( "/METHOD" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
+	if (iParamIndex == 0) {
+		//? Params[0] is always the HTTP method
 		//x	assert(
 		//x		lstrcmpi( pszParam, _T( "GET" ) ) == 0 ||
 		//x		lstrcmpi( pszParam, _T( "POST" ) ) == 0 ||
 		//x		lstrcmpi( pszParam, _T( "HEAD" ) ) == 0
 		//x	);
-			MyFree( pReq->pszMethod );
-			pReq->pszMethod = MyStrDup( eT2A, pszParam );
-		}
+		MyFree( pReq->pszMethod );
+		pReq->pszMethod = MyStrDup( eT2A, pszParam );
+	} else if (iParamIndex == 1) {
+		//? Params[1] is always the URL
+		MyFree( pReq->pszURL );
+		pReq->pszURL = MyStrDup( eT2A, pszParam );
+	} else if (iParamIndex == 2) {
+		//? Params[2] is always the output file/memory
+		MyFree( pReq->pszPath );
+		if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)
+			pReq->pszPath = MyStrDup( eT2T, pszParam );
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			// The string may contain multiple headers delimited by \r\n

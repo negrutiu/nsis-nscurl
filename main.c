@@ -222,15 +222,16 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	pReq = (PCURL_REQUEST)MyAlloc( sizeof( *pReq ) );
 	if (pReq) {
 
+		ULONG i;
 		CurlRequestInit( pReq );
-		for (;;)
+		for (i = 0; ; i++)
 		{
 			if (popstring( psz ) != 0)
 				break;
 			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
 				break;
 
-			if (!CurlParseRequestParam( psz, string_size, pReq )) {
+			if (!CurlParseRequestParam( i, psz, string_size, pReq )) {
 				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
 			}
 		}
