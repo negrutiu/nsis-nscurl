@@ -426,3 +426,32 @@ struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning,
 	QueueUnlock();
 	return sl;
 }
+
+
+//++ QueueCount
+ULONG QueueCount( _In_ CHAR iStatus, _In_opt_ struct curl_slist* pIDs )
+{
+	ULONG n = 0;
+	PCURL_REQUEST p = NULL;
+	struct curl_slist *s;
+	CHAR szID[16];
+
+	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
+		if (p->Queue.iStatus == iStatus) {
+			if (!pIDs) {
+				// Any ID
+				n++;
+			} else {
+				// Specific IDs
+				_snprintf( szID, ARRAYSIZE( szID ), "%u", p->Queue.iId );
+				for (s = pIDs; s; s = s->next) {
+					if (lstrcmpA( s->data, szID ) == 0) {
+						n++;
+						break;
+					}
+				}
+			}
+		}
+	}
+	return n;
+}

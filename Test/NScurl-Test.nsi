@@ -285,20 +285,8 @@ Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-_wait_loop:
-
-	NScurl::query "@TOTALACTIVE@"
-	Pop $R0	; Waiting + Running
-
-	NScurl::query "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
-	Pop $0
-	DetailPrint $0
-
-	IntCmp $R0 0 _wait_end
-	Sleep 1000
-	Goto _wait_loop
-
-_wait_end:
+	DetailPrint 'Waiting...'
+	NScurl::wait /end
 
 	; Print summary
 	Call PrintAllRequests

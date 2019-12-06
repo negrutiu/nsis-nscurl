@@ -423,26 +423,11 @@ Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-_wait_loop:
-
+	DetailPrint 'Waiting...'
 	!insertmacro STACK_VERIFY_START
-	Push "@TOTALACTIVE@"
-	CallInstDLL "${NSCURL}" query
-	Pop $R0	; Waiting + Running
+	Push "/END"
+	CallInstDLL "${NSCURL}" wait
 	!insertmacro STACK_VERIFY_END
-
-	!insertmacro STACK_VERIFY_START
-	Push "[Wait] Waiting:@TOTALWAITING@, Running:@TOTALRUNNING@, Completed:@TOTALCOMPLETED@, @@@TOTALSPEED@, Size:@TOTALSIZE@, Errors:@TOTALERRORS@"
-	CallInstDLL "${NSCURL}" query
-	Pop $0
-	!insertmacro STACK_VERIFY_END
-	DetailPrint $0
-
-	IntCmp $R0 0 _wait_end
-	Sleep 1000
-	Goto _wait_loop
-
-_wait_end:
 
 	; Print summary
 	Call PrintAllRequests

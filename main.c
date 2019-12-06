@@ -253,6 +253,57 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
+//++ [exported] wait
+EXTERN_C __declspec(dllexport)
+void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	LPTSTR psz = NULL;
+	struct curl_slist *sl = NULL;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// Working buffer
+	if ((psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) )) != NULL) {
+
+		for (;;) {
+			if (popstring( psz ) != NOERROR)
+				break;
+			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
+				break;
+
+			if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
+				CHAR sz[16];
+				_snprintf( sz, ARRAYSIZE( sz ), "%u", (ULONG)popint() );
+				sl = curl_slist_append( sl, sz );
+			} else {
+				assert( !"Unknown parameter" );
+			}
+		}
+
+		// Wait
+		while (TRUE) {
+			ULONG n;
+			QueueLock();
+			n = QueueCount( STATUS_RUNNING, sl );
+			QueueUnlock();
+			TRACE( _T( "Waiting( Count:%u )\n" ), n );
+			if (n > 0) {
+				// TODO: Refresh the GUI
+				Sleep( 200 );
+			} else {
+				break;
+			}
+		}
+
+		curl_slist_free_all( sl );
+		MyFree( psz );
+	}
+}
+
+
 //+ [internal] GlobalQueryKeywordCallback
 void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
 {
