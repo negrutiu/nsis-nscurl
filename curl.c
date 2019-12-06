@@ -100,6 +100,7 @@ ULONG CurlInitialize()
 		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
 
+	curl_global_init( CURL_GLOBAL_ALL );
 	return ERROR_SUCCESS;
 }
 
@@ -108,7 +109,9 @@ ULONG CurlInitialize()
 void CurlDestroy()
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+
 	DeleteCriticalSection( &g_Curl.csLock );
+	curl_global_cleanup();
 }
 
 
