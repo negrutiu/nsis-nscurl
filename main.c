@@ -208,6 +208,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	ULONG iRequestID = 0;
 	LPTSTR psz = NULL;
 	PCURL_REQUEST pReq = NULL;
+	PGUI_REQUEST  pGui = NULL;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -217,41 +218,61 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	// Lock the plugin in memory
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
 
-	// Working buffer
+	// Working structures
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
-	assert( psz );
-
-	// Prepare a HTTP request
 	pReq = (PCURL_REQUEST)MyAlloc( sizeof( *pReq ) );
-	if (pReq) {
+	pGui = (PGUI_REQUEST)MyAlloc( sizeof( *pGui ) );
+	if (psz && pReq && pGui) {
 
 		ULONG i;
 		CurlRequestInit( pReq );
-		for (i = 0; ; i++)
-		{
+		GuiRequestInit( pGui );
+
+		// Parameters
+		for (i = 0; ; i++) {
+
 			if (popstring( psz ) != 0)
 				break;
 			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
 				break;
 
-			if (!CurlParseRequestParam( i, psz, string_size, pReq )) {
+			if (!CurlParseRequestParam( i, psz, string_size, pReq ) &&
+				!GuiParseRequestParam( psz, string_size, pGui ))
+			{
 				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
+				assert( !"Unknown parameter" );
 			}
 		}
 
 		// Append to the queue
 		if (QueueAdd( pReq ) == ERROR_SUCCESS) {
 
-			// Return value
-			iRequestID = pReq->Queue.iId;
+			// Wait for this particular ID
+			pGui->iId = pReq->Queue.iId;
 
+			// Wait
+			// In /background mode the call returns immediately
+			GuiWait( pGui, psz, string_size );
+			pushstringEx( psz );
+
+			// Don't destroy pReq
+			pReq = NULL;
+			
 		} else {
-			CurlRequestDestroy( pReq );
-			MyFree( pReq );
+			pushstringEx( _T( "Error" ) );
 		}
+	} else {
+		pushstringEx( _T( "Error" ) );
 	}
 
-	pushint( iRequestID );
+	if (pReq) {
+		CurlRequestDestroy( pReq );
+		MyFree( pReq );
+	}
+	if (pGui) {
+		GuiRequestDestroy( pGui );
+		MyFree( pGui );
+	}
 	MyFree( psz );
 }
 
@@ -261,49 +282,42 @@ EXTERN_C __declspec(dllexport)
 void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz = NULL;
-	struct curl_slist *sl = NULL;
+	PGUI_REQUEST pGui = NULL;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
-	// Working buffer
-	if ((psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) )) != NULL) {
+	// Working structures
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	pGui = (PGUI_REQUEST)MyAlloc( sizeof( *pGui ) );
+	if (psz && pGui) {
 
+		// Parameters
+		GuiRequestInit( pGui );
 		for (;;) {
+
 			if (popstring( psz ) != NOERROR)
 				break;
 			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
 				break;
 
 			if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
-				CHAR sz[16];
-				_snprintf( sz, ARRAYSIZE( sz ), "%u", (ULONG)popint() );
-				sl = curl_slist_append( sl, sz );
-			} else {
+				pGui->iId = popint();
+			} else if (!GuiParseRequestParam( psz, string_size, pGui )) {
+				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
 				assert( !"Unknown parameter" );
 			}
 		}
 
 		// Wait
-		while (TRUE) {
-			ULONG n;
-			QueueLock();
-			n = QueueCount( STATUS_RUNNING, sl );
-			QueueUnlock();
-			TRACE( _T( "Waiting( Count:%u )\n" ), n );
-			if (n > 0) {
-				// TODO: Refresh the GUI
-				Sleep( 200 );
-			} else {
-				break;
-			}
-		}
-
-		curl_slist_free_all( sl );
-		MyFree( psz );
+		GuiWait( pGui, psz, string_size );
 	}
+
+	GuiRequestDestroy( pGui );
+	MyFree( pGui );
+	MyFree( psz );
 }
 
 

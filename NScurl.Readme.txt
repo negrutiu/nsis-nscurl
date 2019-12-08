@@ -100,6 +100,8 @@ NScurl::http		GET|POST|HEAD|PUT|...
 					[/INSECURE]
 					[/CERT thumbprint1]...[/CERT thumbprintN]
 					[/CACERT cacert.pem_path]
+					[/BACKGROUND] [/SILENT] [/POPUP]
+					[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
 					/END
 
 Remarks:
@@ -131,20 +133,28 @@ Parameters:
 	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
 	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
 	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
+	/BACKGROUND					| Don't wait for the transfer to complete. The HTTP request is added to the queue and handled in the background. The call returns a unique transfer ID that your can use later to NScurl::wait() or NScurl::query() the status
+	/SILENT						| Wait silently for the transfer to complete. No visual progress is displayed
+	/POPUP						| Wait for the transfer to complete. Progress is displayed on a pop-up window
+	/TITLEWND hwnd				| Title window handle
+	/TEXTWND hwnd				| Text window handle
+	/PROGRESSWND hwnd			| Progress bar window handle
 	/END						| Must conclude the parameter list
 
 Return:
-	[Stack] An unique request ID. It's needed later for querying
+	[Stack] Returns two possible values
+	1. An error code (e.g. "OK", "Not Found", etc.) by default
+	2. An unique request ID if /BACKGROUND parameter was specified
 
 Examples:
 
 	; Download to file
 	NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$EXEDIR\SysinternalsSuite.zip" /TIMEOUT 60000 /END
-	Pop $0	; Request ID
+	Pop $0	; Transfer status ("OK" for success)
 
 	; Download to memory
 	NScurl::http GET "https://httpbin.org/get?param1=va1&param2=val2" MEMORY /END
-	Pop $0	; Request ID
+	Pop $0
 
 	; POST a form (multipart/form-data)
 	NScurl::HTTP \
@@ -155,7 +165,7 @@ Examples:
 		/POSTVAR "Pass" "Your password here" \
 		/POSTVAR "filename=image.jpeg" type=image/jpeg "Photo" "@$DESKTOP\My photo.jpg" \
 		/END
-	Pop R0	; Request ID
+	Pop $0
 
 	; POST a json (application/json)
 	NScurl::http \
@@ -165,7 +175,16 @@ Examples:
 		/DATA "@$DESKTOP\My file.json" \
 		/HEADER "Content-Type: application/json" \
 		/END
-	Pop R0	; Request ID
+	Pop $0
+
+	; Download in background
+	NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$EXEDIR\SysinternalsSuite.zip" /BACKGROUND /END
+	Pop $0	; Unique transfer ID
+	[...]
+	NScurl::wait /ID $0 /END
+	[...]
+	NScurl::query /ID $0 "@ERROR@"
+	Pop $1	; Transfer status ("OK" for success)
 _____________________________________________________________________________________________________
 
 NScurl::Wait		[/ID id]

@@ -140,6 +140,7 @@ Section Parallel
 	StrCpy $1 ""
 	${For} $R0 1 20
 		Push /END
+		Push /BACKGROUND
 		Push "@$PLUGINSDIR\cacert.pem"
 		Push /DATA
 		Push "Memory"
@@ -181,7 +182,7 @@ Section "httpbin.org/get"
 	CallInstDLL "${NSCURL}" http
 	Pop $0
 
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -204,7 +205,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -259,7 +260,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -293,7 +294,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -325,7 +326,7 @@ Section "httpbin.org/post (application/json)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -362,7 +363,7 @@ Section "httpbin.org/put"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -388,7 +389,7 @@ Section /o "Big file (100MB)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -414,7 +415,7 @@ Section /o "Big file (10GB)"
 	CallInstDLL "${NSCURL}" http
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 

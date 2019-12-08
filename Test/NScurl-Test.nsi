@@ -107,7 +107,7 @@ Section Parallel
 
 	StrCpy $1 ""
 	${For} $R0 1 20
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA "@$PLUGINSDIR\cacert.pem" /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA "@$PLUGINSDIR\cacert.pem" /BACKGROUND /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -128,7 +128,7 @@ Section "httpbin.org/get"
 	NScurl::http get "${LINK}" "${FILE}" /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /CONNECTTIMEOUT 30000 /REFERER "https://test.com" /END
 	Pop $0
 
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -142,7 +142,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /TIMEOUT 30000 /END
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -171,7 +171,7 @@ Section "httpbin.org/post (multipart/form-data)"
 		/END
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -196,7 +196,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 		/END
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -220,7 +220,7 @@ Section "httpbin.org/post (application/json)"
 		/END
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -246,7 +246,7 @@ Section "httpbin.org/put"
 		/END
 
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -261,7 +261,7 @@ Section /o "Big file (100MB)"
 
 	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 
@@ -276,7 +276,7 @@ Section /o "Big file (10GB)"
 
 	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TIMEOUT 30000 /END
 	Pop $0
-	DetailPrint "ID: $0"
+	DetailPrint "Status: $0"
 
 SectionEnd
 

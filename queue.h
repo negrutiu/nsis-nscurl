@@ -51,4 +51,4 @@ PCURL_REQUEST QueueFirstWaiting();
 
 //+ Count
 //! The queue must be locked by the caller
-ULONG QueueCount( _In_ CHAR iStatus, _In_opt_ struct curl_slist* pIDs );
+ULONG QueueCount( _In_ CHAR iStatus, _In_opt_ ULONG iID );

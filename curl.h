@@ -68,12 +68,14 @@ typedef struct _CURL_REQUEST {
 
 //+ CurlRequestInit
 static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
+	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
 	pReq->Runtime.iPercent = -1;		/// Unknown size
 }
 
 //+ CurlRequestDestroy
 static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
+	if (!pReq) return;
 	MyFree( pReq->pszURL );
 	MyFree( pReq->pszPath );
 	MyFree( pReq->pszMethod );
