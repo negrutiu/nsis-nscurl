@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="crypto.c" />
     <ClCompile Include="curl.c" />
+    <ClCompile Include="gui.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="nsis\pluginapi.c" />
     <ClCompile Include="queue.c" />
@@ -163,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="crypto.h" />
     <ClInclude Include="curl.h" />
+    <ClInclude Include="gui.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="nsis\api.h" />
     <ClInclude Include="nsis\nsis_tchar.h" />

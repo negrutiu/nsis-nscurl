@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "crypto.h"
 #include "queue.h"
+#include "gui.h"
 
 
 HINSTANCE	g_hInst = NULL;
@@ -27,6 +28,7 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 		UtilsInitialize();
 		CurlInitialize();
 		QueueInitialize();
+		GuiInitialize();
 
 		return TRUE;
 	}
@@ -44,6 +46,7 @@ BOOL PluginUninit()
 		
 		SetEvent( g_hTerm );
 
+		GuiDestroy();
 		QueueDestroy();
 		CurlDestroy();
 		UtilsDestroy();
