@@ -379,7 +379,7 @@ Section /o "Big file (100MB)"
 
 	Push "/END"
 	Push 30000
-	Push "/TTIMEOUT"
+	Push "/TIMEOUT"
 
 	Push "/RESUME"
 
@@ -405,7 +405,7 @@ Section /o "Big file (10GB)"
 
 	Push "/END"
 	Push 30000
-	Push "/TTIMEOUT"
+	Push "/TIMEOUT"
 
 	Push "/RESUME"
 
