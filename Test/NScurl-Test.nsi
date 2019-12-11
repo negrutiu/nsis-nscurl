@@ -259,7 +259,7 @@ Section /o "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TITLEWND $HWNDPARENT /TIMEOUT 30000 /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -274,7 +274,7 @@ Section /o "Big file (10GB)"
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /RESUME /TITLEWND $HWNDPARENT /TIMEOUT 30000 /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -286,7 +286,7 @@ Section "Wait for all"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	DetailPrint 'Waiting...'
-	NScurl::wait /TITLEWND $HWNDPARENT /end
+	NScurl::wait /CANCEL /TITLEWND $HWNDPARENT /end
 
 	; Print summary
 	Call PrintAllRequests

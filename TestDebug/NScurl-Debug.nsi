@@ -385,6 +385,7 @@ Section /o "Big file (100MB)"
 	Push "/TITLEWND"
 
 	Push "/RESUME"
+	Push "/CANCEL"
 
 	Push "${FILE}"
 	Push "${LINK}"
@@ -414,6 +415,7 @@ Section /o "Big file (10GB)"
 	Push "/TITLEWND"
 
 	Push "/RESUME"
+	Push "/CANCEL"
 
 	Push "${FILE}"
 	Push "${LINK}"
@@ -439,6 +441,7 @@ Section "Wait for all"
 	; Push "/TEXTWND"
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
+	Push "/CANCEL"
 	CallInstDLL "${NSCURL}" wait
 	!insertmacro STACK_VERIFY_END
 

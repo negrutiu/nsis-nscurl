@@ -9,8 +9,9 @@
 typedef struct {
 	ULONG iId;							/// Can be QUEUE_NO_ID
 	BOOLEAN bBackground : 1;			/// Background transfer, no waiting
-	BOOLEAN bSilent : 1;				/// Wait silently
-	BOOLEAN bPopup : 1;					/// Wait popuply
+	BOOLEAN bSilent : 1;				/// Wait in Silent-mode
+	BOOLEAN bPopup : 1;					/// Wait in Popup-mode
+	BOOLEAN bCancel : 1;				/// Enable Cancel button in Page-mode and Popup-mode
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
 	struct {
 		ULONG iId;						/// May be QUEUE_NO_ID

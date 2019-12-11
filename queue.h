@@ -21,6 +21,11 @@ void QueueUnlock();
 ULONG QueueAdd( _In_ PCURL_REQUEST pReq );		/// The queue takes ownership of pReq
 void  QueueRemove( _In_ ULONG iId );
 
+//+ Abort
+//? The queue *must not* be locked
+// Sets the "Abort" flag. Does not wait for abortion to complete
+void QueueAbort( _In_opt_ ULONG iId );			/// Can be QUEUE_NO_ID in which case all requests are aborted
+
 //+ Query
 //? The queue *must not* be locked
 //? Find and replace "keywords" in the specified string

@@ -136,6 +136,7 @@ Parameters:
 	/BACKGROUND					| Don't wait for the transfer to complete. The HTTP request is added to the queue and handled in the background. The call returns a unique transfer ID that your can use later to NScurl::wait() or NScurl::query() the status
 	/SILENT						| Wait silently for the transfer to complete. No visual progress is displayed
 	/POPUP						| Wait for the transfer to complete. Progress is displayed on a pop-up window
+	/CANCEL						| Enable Cancel button when waiting in Page-mode or Popup-mode
 	/TITLEWND hwnd				| Title window handle
 	/TEXTWND hwnd				| Text window handle
 	/PROGRESSWND hwnd			| Progress bar window handle

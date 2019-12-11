@@ -11,6 +11,8 @@
 #define MY_PBS_MARQUEE			0x08				/// XP+
 #define MY_PBM_SETMARQUEE		(WM_USER+10)
 
+#define PROP_NSIS_WNDPROC		_T( "NSCURL_WNDPROC" )
+#define PROP_NSIS_CONTEXT		_T( "NSCURL_CONTEXT" )
 
 //++ GuiInitialize
 void GuiInitialize()
@@ -38,6 +40,8 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 		pGui->bSilent = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/POPUP" ) ) == 0) {
 		pGui->bPopup = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/CANCEL" ) ) == 0) {
+		pGui->bCancel = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/TITLEWND" ) ) == 0) {
 		pGui->hTitle = (HWND)popintptr();
 	} else if (lstrcmpi( pszParam, _T( "/TEXTWND" ) ) == 0) {
@@ -172,6 +176,24 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 }
 
 
+//++ GuiNsisWindowProc
+LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
+{
+	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_NSIS_WNDPROC );
+	switch (uMsg) {
+		case WM_COMMAND:
+			if (LOWORD( wParam ) == IDCANCEL) {
+				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_NSIS_CONTEXT );
+				// TODO: Confirmation?
+				QueueAbort( pGui->Runtime.iId );
+				return 0;
+			}
+			break;
+	}
+	return CallWindowProc( fnWndProc, hwnd, uMsg, wParam, lParam );
+}
+
+
 //++ GuiPageWait
 BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 {
@@ -294,6 +316,26 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 	// Can we wait in Page-mode ?
 	if (pGui->Runtime.hText || pGui->Runtime.hProgress) {
 
+		BOOLEAN bCancelEnabled = FALSE;
+		HWND hCancelBtn = GetDlgItem( g_hwndparent, IDCANCEL );
+
+		// Cancel
+		if (hCancelBtn) {
+			bCancelEnabled = IsWindowEnabled( hCancelBtn );
+			if (pGui->bCancel) {
+				// Hook NSIS main window to intercept Cancel clicks
+				WNDPROC fnOriginalWndProc = (WNDPROC)SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)GuiNsisWindowProc );
+				if (fnOriginalWndProc) {
+					SetProp( g_hwndparent, PROP_NSIS_WNDPROC, (HANDLE)fnOriginalWndProc );
+					SetProp( g_hwndparent, PROP_NSIS_CONTEXT, (HANDLE)pGui );
+				}
+				// Enable it
+				EnableWindow( hCancelBtn, TRUE );
+			} else {
+				EnableWindow( hCancelBtn, FALSE );
+			}
+		}
+
 		// Wait
 		GuiWaitLoop( pGui );
 
@@ -322,6 +364,17 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 		if (hDetailsList) {
 			rcDetailsList.top -= iDetailsOffsetY;
 			SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+		}
+
+		if (hCancelBtn) {
+			WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_NSIS_WNDPROC );
+			EnableWindow( hCancelBtn, bCancelEnabled );
+			if (fnWndProc) {
+				// Unhook NSIS main window
+				SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)fnWndProc );
+				RemoveProp( g_hwndparent, PROP_NSIS_WNDPROC );
+				RemoveProp( g_hwndparent, PROP_NSIS_CONTEXT );
+			}
 		}
 
 		return TRUE;
