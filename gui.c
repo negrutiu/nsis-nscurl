@@ -38,6 +38,12 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 		pGui->bSilent = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/POPUP" ) ) == 0) {
 		pGui->bPopup = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/TITLEWND" ) ) == 0) {
+		pGui->hTitle = (HWND)popintptr();
+	} else if (lstrcmpi( pszParam, _T( "/TEXTWND" ) ) == 0) {
+		pGui->hText = (HWND)popintptr();
+	} else if (lstrcmpi( pszParam, _T( "/PROGRESSWND" ) ) == 0) {
+		pGui->hProgress = (HWND)popintptr();
 	} else {
 		bRet = FALSE;
 	}
@@ -53,6 +59,11 @@ void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	assert( pszKeyword );
 	assert( pGui );
 
+	if (lstrcmpi( pszKeyword, _T( "@TITLE0@" ) ) == 0) {
+		lstrcpyn( pszKeyword, pGui->Runtime.pszTitle0 ? pGui->Runtime.pszTitle0 : _T( "" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@TEXT0@" ) ) == 0) {
+		lstrcpyn( pszKeyword, pGui->Runtime.pszText0 ? pGui->Runtime.pszText0 : _T( "" ), iMaxLen );
+	}
 /*
 	{ANIMLINE}				| The classic \|/- animation
 	{ANIMDOTS}				| The classic ./../... animation
@@ -156,6 +167,20 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 	if (pGui->hProgress && !IsWindow( pGui->hProgress ))
 		pGui->hProgress = NULL;
 
+	// Original Title text
+	if (pGui->hTitle) {
+		ULONG l = GetWindowTextLength( pGui->hTitle ) + 1;
+		if ((pGui->Runtime.pszTitle0 = (LPTSTR)MyAlloc( l * sizeof(TCHAR) )) != NULL)
+			GetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0, l );
+	}
+
+	// Original Text text
+	if (pGui->hText) {
+		ULONG l = GetWindowTextLength( pGui->hText ) + 1;
+		if ((pGui->Runtime.pszText0 = (LPTSTR)MyAlloc( l * sizeof(TCHAR) )) != NULL)
+			GetWindowText( pGui->hText, pGui->Runtime.pszText0, l );
+	}
+
 	if (/*pGui->hTitle ||*/ pGui->hText || pGui->hProgress) {
 		
 		// Use caller-supplied controls, probably on a custom Page
@@ -246,6 +271,12 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 				GuiWaitLoop( pGui );
 
 				// Restore controls
+				if (pGui->Runtime.pszTitle0)
+					SetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0 );
+
+				if (pGui->Runtime.pszText0)
+					SetWindowText( pGui->hText, pGui->Runtime.pszText0 );
+
 				if (pGui->Runtime.hText) {
 					if (pGui->Runtime.hText != pGui->hText)
 						DestroyWindow( pGui->Runtime.hText );
@@ -348,9 +379,9 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 
 		if (pGui->Runtime.hTitle) {
 			if (iPercent == -1) {
-				lstrcpyn( pszBuf, _T( "@OUTFILE@%" ), iBufSize );
+				lstrcpyn( pszBuf, _T( "@TITLE0@" ), iBufSize );
 			} else {
-				lstrcpyn( pszBuf, _T( "@PERCENT@%" ), iBufSize );
+				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @TITLE0@" ), iBufSize );
 			}
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
@@ -371,7 +402,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 		iPercent = (qs.iComplete * 100) / (qs.iWaiting + qs.iRunning + qs.iComplete);
 
 		if (pGui->Runtime.hTitle) {
-			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@" ), iBufSize );
+			lstrcpyn( pszBuf, _T( "[@TOTALCOMPLETE@ / @TOTALCOUNT@] @TITLE0@" ), iBufSize );
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
 		}

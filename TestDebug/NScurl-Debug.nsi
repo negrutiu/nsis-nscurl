@@ -381,6 +381,9 @@ Section /o "Big file (100MB)"
 	Push 30000
 	Push "/TIMEOUT"
 
+	Push "$HWNDPARENT"
+	Push "/TITLEWND"
+
 	Push "/RESUME"
 
 	Push "${FILE}"
@@ -407,6 +410,9 @@ Section /o "Big file (10GB)"
 	Push 30000
 	Push "/TIMEOUT"
 
+	Push "$HWNDPARENT"
+	Push "/TITLEWND"
+
 	Push "/RESUME"
 
 	Push "${FILE}"
@@ -427,6 +433,12 @@ Section "Wait for all"
 	DetailPrint 'Waiting...'
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
+	; Push "$mui.InstFilesPage.ProgressBar"
+	; Push "/PROGRESSWND"
+	; Push "$mui.InstFilesPage.Text"
+	; Push "/TEXTWND"
+	Push "$HWNDPARENT"
+	Push "/TITLEWND"
 	CallInstDLL "${NSCURL}" wait
 	!insertmacro STACK_VERIFY_END
 

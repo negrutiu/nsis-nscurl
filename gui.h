@@ -15,6 +15,7 @@ typedef struct {
 	struct {
 		ULONG iId;						/// May be QUEUE_NO_ID
 		HWND hTitle, hText, hProgress;	/// Runtime controls
+		LPTSTR pszTitle0, pszText0;
 	} Runtime;
 } GUI_REQUEST, *PGUI_REQUEST;
 
@@ -28,6 +29,8 @@ static void GuiRequestInit( _Inout_ PGUI_REQUEST pGui ) {
 //+ GuiRequestDestroy
 static void GuiRequestDestroy( _Inout_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
+	MyFree( pGui->Runtime.pszTitle0 );
+	MyFree( pGui->Runtime.pszText0 );
 	ZeroMemory( pGui, sizeof( *pGui ) );
 }
 
