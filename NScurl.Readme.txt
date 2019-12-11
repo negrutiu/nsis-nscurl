@@ -211,7 +211,7 @@ Remarks:
 
 	Transfer-specific keywords:
 	{ID}						| The request ID returned by NScurl::Request
-	{STATUS}					| "Waiting", "Downloading" or "Completed" (English only)
+	{STATUS}					| "Waiting", "Downloading" or "Complete" (English only)
 	{WININETSTATUS}				| The last status reported by the InternetCallback (http://msdn.microsoft.com/EN-US/library/windows/desktop/aa385121(v=vs.85).aspx)
 	{METHOD}					| The HTTP method in use (GET, POST, HEAD, etc.)
 	{URL}						| Full URI
@@ -232,11 +232,11 @@ Remarks:
 	{TIMEREMAINING}				| Estimated amount of time until the transfer will complete (ex: 10 min, 35 sec)
 
 	Global keywords:
-	{TOTALCOUNT}				| The overall number of requests (waiting + downloading + completed)
+	{TOTALCOUNT}				| The overall number of requests (waiting + downloading + complete)
 	{TOTALWAITING}				| The number of waiting requests
-	{TOTALACTIVE}				| The number of downloading + completed requests
+	{TOTALACTIVE}				| The number of downloading + complete requests
 	{TOTALDOWNLOADING}			| The number of requests in progress
-	{TOTALCOMPLETED}			| The number of completed requests
+	{TOTALCOMPLETE}				| The number of complete requests
 	{TOTALRECVSIZE}				| The amount of bytes received, nicely formatted (ex: "1,3 GB")
 	{TOTALRECVSIZEBYTES}		| The amount of bytes received
 	{TOTALSPEED}				| The combined speed of transfers in progress (nicely formatted, ex: "1,4 MB/s")

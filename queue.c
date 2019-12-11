@@ -264,7 +264,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 		}
 	#endif
 
-		// Mark as Completed
+		// Mark as Complete
 		pReq->Queue.iStatus = STATUS_COMPLETE;
 		MemoryBarrier();
 
@@ -299,7 +299,7 @@ void QueueStatistics( _Out_ PQUEUE_STATS pStats )
 		else if (p->Queue.iStatus == STATUS_RUNNING)
 			pStats->iRunning++;
 		else if (p->Queue.iStatus == STATUS_COMPLETE)
-			pStats->iCompleted++;
+			pStats->iComplete++;
 		else
 			assert( !"Unexpected request status" );
 
@@ -325,17 +325,17 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 
 	assert( pszKeyword );
 	if (lstrcmpi( pszKeyword, _T( "@TOTALCOUNT@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning + qs.iCompleted );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning + qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALWAITING@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALRUNNING@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning );
-	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOMPLETED@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iCompleted );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOMPLETE@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALACTIVE@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSTARTED@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning + qs.iCompleted );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning + qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALERRORS@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iErrors );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSPEED@" ) ) == 0) {

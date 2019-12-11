@@ -36,7 +36,7 @@ struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning,
 //+ QueueStatistics
 //! The queue must be locked by the caller
 typedef struct {
-	ULONG iWaiting, iRunning, iCompleted, iErrors;
+	ULONG iWaiting, iRunning, iComplete, iErrors;
 	ULONG iSpeed;
 	ULONG64 iDlXferred, iUlXferred;
 } QUEUE_STATS, *PQUEUE_STATS;

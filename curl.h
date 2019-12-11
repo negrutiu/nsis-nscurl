@@ -34,7 +34,7 @@ typedef struct _CURL_REQUEST {
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
-		CHAR			iStatus;		/// '\0' = Waiting, 'r' = Running, 'c' = Completed
+		CHAR			iStatus;		/// '\0' = Waiting, 'r' = Running, 'c' = Complete
 		volatile LONG	iFlagAbort;		/// If TRUE, the transfer will abort. iStatus will be set to 'c'
 	} Queue;
 	struct {
