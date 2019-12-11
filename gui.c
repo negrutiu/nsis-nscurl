@@ -70,7 +70,7 @@ void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	} else if (lstrcmpi( pszKeyword, _T( "@ANIMDOTS@" ) ) == 0) {
 		int i = (pGui->Runtime.iAnimIndex++ % 4);
 		if (i == 0) {
-			lstrcpyn( pszKeyword, _T( "" ), iMaxLen );
+			pszKeyword[0] = 0;
 		} else if (i == 1) {
 			lstrcpyn( pszKeyword, _T( "." ), iMaxLen );
 		} else if (i == 2) {
