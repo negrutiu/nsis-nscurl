@@ -13,6 +13,7 @@ typedef struct {
 	BOOLEAN bPopup : 1;					/// Wait popuply
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
 	struct {
+		ULONG iId;						/// May be QUEUE_NO_ID
 		HWND hTitle, hText, hProgress;	/// Runtime controls
 	} Runtime;
 } GUI_REQUEST, *PGUI_REQUEST;

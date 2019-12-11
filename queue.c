@@ -285,34 +285,38 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 
 
 //++ QueueStatistics
-void QueueStatistics( _Out_ PQUEUE_STATS pStats )
+void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 {
 	PCURL_REQUEST p;
 	BOOLEAN bOK;
 	assert( pStats );
 	ZeroMemory( pStats, sizeof( *pStats ) );
+	pStats->iSingleID = QUEUE_NO_ID;
 	MemoryBarrier();
 	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
 
-		if (p->Queue.iStatus == STATUS_WAITING)
-			pStats->iWaiting++;
-		else if (p->Queue.iStatus == STATUS_RUNNING)
-			pStats->iRunning++, pStats->iRunningID = p->Queue.iId;
-		else if (p->Queue.iStatus == STATUS_COMPLETE)
-			pStats->iComplete++;
-		else
-			assert( !"Unexpected request status" );
+		if (iId == QUEUE_NO_ID || p->Queue.iId == iId) {
 
-		pStats->iDlXferred += p->Runtime.iDlXferred;
-		pStats->iUlXferred += p->Runtime.iUlXferred;
-		pStats->iSpeed     += p->Runtime.iSpeed;
+			if (p->Queue.iStatus == STATUS_WAITING)
+				pStats->iWaiting++;
+			else if (p->Queue.iStatus == STATUS_RUNNING)
+				pStats->iRunning++, pStats->iSingleID = p->Queue.iId;
+			else if (p->Queue.iStatus == STATUS_COMPLETE)
+				pStats->iComplete++;
+			else
+				assert( !"Unexpected request status" );
 
-		CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
-		if (!bOK)
-			pStats->iErrors++;
+			pStats->iDlXferred += p->Runtime.iDlXferred;
+			pStats->iUlXferred += p->Runtime.iUlXferred;
+			pStats->iSpeed     += p->Runtime.iSpeed;
+
+			CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
+			if (!bOK)
+				pStats->iErrors++;
+		}
 	}
 	if (pStats->iRunning != 1)
-		pStats->iRunningID = QUEUE_NO_ID;
+		pStats->iSingleID = QUEUE_NO_ID;
 }
 
 
@@ -322,7 +326,7 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 	QUEUE_STATS qs;
 
 	QueueLock();
-	QueueStatistics( &qs );
+	QueueStatistics( QUEUE_NO_ID, &qs );
 	QueueUnlock();
 
 	assert( pszKeyword );

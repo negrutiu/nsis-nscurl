@@ -46,12 +46,42 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 }
 
 
+//+ [internal] GuiQueryKeywordCallback
+void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+{
+	PGUI_REQUEST pGui = (PGUI_REQUEST)pParam;
+	assert( pszKeyword );
+	assert( pGui );
+
+/*
+	{ANIMLINE}				| The classic \|/- animation
+	{ANIMDOTS}				| The classic ./../... animation
+*/
+}
+
+
+//++ GuiQuery
+LONG GuiQuery( _Inout_ PGUI_REQUEST pGui, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+{
+	LONG iStrLen = -1;
+	if (pszStr && iStrMaxLen) {
+
+		// Replace queue keywords
+		MainQuery( pGui->Runtime.iId, pszStr, iStrMaxLen );
+
+		// Replace global keywords
+		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GuiQueryKeywordCallback, pGui );
+	}
+	return iStrLen;
+}
+
+
 //++ GuiWaitLoop
 void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 {
 	MSG msg;
 	HANDLE hDummyEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
-	ULONG n, t0 = 0;
+	ULONG t0 = 0;
 	QUEUE_STATS qs;
 
 	// First paint
@@ -73,14 +103,11 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 		if (GetTickCount() - t0 >= HEARTBEAT) {
 
 			QueueLock();
-			QueueStatistics( &qs );
+			QueueStatistics( pGui->iId, &qs );
 			QueueUnlock();
 
-			n = qs.iWaiting + qs.iRunning;
-			pGui->iId = qs.iRunningID;
-
-			TRACE( _T( "Waiting( Count:%u )\n" ), n );
-			if (n > 0) {
+			TRACE( _T( "Waiting( Count:%u )\n" ), qs.iWaiting + qs.iRunning );
+			if (qs.iWaiting + qs.iRunning > 0) {
 
 				// Display latest info
 				GuiRefresh( pGui );
@@ -276,7 +303,7 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 		if (pGui->iId != QUEUE_NO_ID) {
 			//? Wait for ID: Return status
 			lstrcpyn( pszResult, _T( "@ERROR@" ), iResultMaxLen );
-			MainQuery( pGui->iId, pszResult, iResultMaxLen );
+			GuiQuery( pGui, pszResult, iResultMaxLen );
 		} else {
 			//? Wait for all: Return OK
 			lstrcpyn( pszResult, _T( "OK" ), iResultMaxLen );
@@ -307,13 +334,15 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 		return;
 
 	QueueLock();
-	QueueStatistics( &qs );
+	QueueStatistics( pGui->iId, &qs );
 
 	if (qs.iRunning == 1 && qs.iWaiting == 0) {
 
+		pGui->Runtime.iId = qs.iSingleID;
+
 		// Single Running transfer
 		lstrcpyn( pszBuf, _T( "@PERCENT@" ), iBufSize );
-		MainQuery( qs.iRunningID, pszBuf, iBufSize );
+		GuiQuery( pGui, pszBuf, iBufSize );
 		iPercent = myatoi( pszBuf );
 		assert( iPercent >= -1 && iPercent <= 100 );
 
@@ -323,7 +352,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 			} else {
 				lstrcpyn( pszBuf, _T( "@PERCENT@%" ), iBufSize );
 			}
-			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
 		}
 		if (pGui->Runtime.hText) {
@@ -332,7 +361,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 			} else {
 				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@" ), iBufSize );
 			}
-			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hText, pszBuf );
 		}
 
@@ -343,12 +372,12 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 
 		if (pGui->Runtime.hTitle) {
 			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@" ), iBufSize );
-			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
 		}
 		if (pGui->Runtime.hText) {
 			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@, @TOTALSIZE@ @ @TOTALSPEED@" ), iBufSize );
-			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hText, pszBuf );
 		}
 	}

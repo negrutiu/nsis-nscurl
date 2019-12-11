@@ -39,9 +39,9 @@ typedef struct {
 	ULONG iWaiting, iRunning, iComplete, iErrors;
 	ULONG iSpeed;
 	ULONG64 iDlXferred, iUlXferred;
-	ULONG iRunningID;							/// Single Running transfer ID. -1 otherwise
+	ULONG iSingleID;							/// Single Running transfer ID. -1 otherwise
 } QUEUE_STATS, *PQUEUE_STATS;
-void QueueStatistics( _Out_ PQUEUE_STATS pStats );
+void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats );
 
 //+ Find
 //! The queue must be locked by the caller

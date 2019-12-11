@@ -324,19 +324,13 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//+ [internal] GlobalQueryKeywordCallback
-void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+//+ [internal] MainQueryKeywordCallback
+void CALLBACK MainQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
 {
 	assert( pszKeyword );
 	if (lstrcmpi( pszKeyword, _T( "@@" ) ) == 0) {
 		lstrcpyn( pszKeyword, _T( "@" ), iMaxLen );		// @@ -> @
 	}
-/*
-	{ORIGINALTITLE}			| The original title text
-	{ORIGINALSTATUS}		| The original status text
-	{ANIMLINE}				| The classic \|/- animation
-	{ANIMDOTS}				| The classic ./../... animation
-*/
 }
 
 
@@ -350,7 +344,7 @@ LONG MainQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen 
 		QueueQuery( iId, pszStr, iStrMaxLen );
 
 		// Replace global keywords
-		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
+		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), MainQueryKeywordCallback, NULL );
 	}
 	return iStrLen;
 }
