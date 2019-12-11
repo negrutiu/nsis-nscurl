@@ -340,6 +340,22 @@ void CALLBACK GlobalQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG 
 }
 
 
+//++ MainQuery
+LONG MainQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+{
+	LONG iStrLen = -1;
+	if (pszStr && iStrMaxLen) {
+
+		// Replace queue keywords
+		QueueQuery( iId, pszStr, iStrMaxLen );
+
+		// Replace global keywords
+		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
+	}
+	return iStrLen;
+}
+
+
 //++ [exported] query
 EXTERN_C __declspec(dllexport)
 void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
@@ -369,13 +385,7 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 			}
 		}
 		if (e == NOERROR) {
-
-			// Replace queue keywords
-			QueueQuery( iId, psz, string_size );
-
-			// Replace global keywords
-			MyReplaceKeywords( psz, string_size, _T( '@' ), _T( '@' ), GlobalQueryKeywordCallback, NULL );
-
+			MainQuery( iId, psz, string_size );
 			pushstringEx( psz );
 		}
 	}
