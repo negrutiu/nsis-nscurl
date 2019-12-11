@@ -5,6 +5,11 @@
 #include "main.h"
 #include "gui.h"
 #include "utils.h"
+#include <CommCtrl.h>
+
+
+#define MY_PBS_MARQUEE			0x08				/// XP+
+#define MY_PBM_SETMARQUEE		(WM_USER+10)
 
 
 //++ GuiInitialize
@@ -41,6 +46,208 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 }
 
 
+//++ GuiWaitLoop
+void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
+{
+	MSG msg;
+	HANDLE hDummyEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+	ULONG n, t0 = 0;
+	QUEUE_STATS qs;
+
+	// First paint
+	GuiRefresh( pGui );
+
+	#define HEARTBEAT 200
+	while (TRUE) {
+
+		ResetEvent( hDummyEvent );
+		MsgWaitForMultipleObjects( 1, &hDummyEvent, FALSE, HEARTBEAT + 10, QS_ALLEVENTS );
+
+		while (PeekMessage( &msg, NULL, 0, 0, PM_REMOVE )) {
+			if (!IsDialogMessage( g_hwndparent, &msg )) {
+				TranslateMessage( &msg );
+				DispatchMessage( &msg );
+			}
+		}
+
+		if (GetTickCount() - t0 >= HEARTBEAT) {
+
+			QueueLock();
+			QueueStatistics( &qs );
+			QueueUnlock();
+
+			n = qs.iWaiting + qs.iRunning;
+			pGui->iId = qs.iRunningID;
+
+			TRACE( _T( "Waiting( Count:%u )\n" ), n );
+			if (n > 0) {
+
+				// Display latest info
+				GuiRefresh( pGui );
+
+			} else {
+				break;
+			}
+
+			t0 = GetTickCount();
+		}
+
+	}	/// while
+	#undef HEARTBEAT
+
+	CloseHandle( hDummyEvent );
+}
+
+
+//++ GuiSilentWait
+BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
+{
+	TRACE( _T( "%hs\n" ), __FUNCTION__ );
+	GuiWaitLoop( pGui );
+	return TRUE;
+}
+
+
+//++ GuiPopupWait
+BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
+{
+	TRACE( _T( "%hs\n" ), __FUNCTION__ );
+	return FALSE;
+}
+
+
+//++ GuiPageWait
+BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
+{
+	TRACE( _T( "%hs\n" ), __FUNCTION__ );
+
+	// Reset invalid parameters
+	if (pGui->hTitle && !IsWindow( pGui->hTitle ))
+		pGui->hTitle = NULL;
+	if (pGui->hText && !IsWindow( pGui->hText ))
+		pGui->hText = NULL;
+	if (pGui->hProgress && !IsWindow( pGui->hProgress ))
+		pGui->hProgress = NULL;
+
+	if (/*pGui->hTitle ||*/ pGui->hText || pGui->hProgress) {
+		
+		// Use caller-supplied controls, probably on a custom Page
+		pGui->Runtime.hTitle = pGui->hTitle;
+		pGui->Runtime.hText = pGui->hText;
+		pGui->Runtime.hProgress = pGui->hProgress;
+
+	} else {
+
+		// Check if we're on InstFiles built-in page
+		HWND hInstFilesPage = g_hwndparent ? FindWindowEx( g_hwndparent, NULL, _T( "#32770" ), NULL ) : NULL;
+		if (hInstFilesPage) {
+
+			// Status and Progress controls must exist
+			HWND hNsisText = GetDlgItem( hInstFilesPage, 1006 );
+			HWND hNsisProgress = GetDlgItem( hInstFilesPage, 1004 );
+			if (hNsisText && hNsisProgress) {
+
+				HWND hNewText = NULL, hNewProgress = NULL, hDetailsBtn, hDetailsList;
+				RECT rcText, rcProgress, rcDetailsBtn, rcDetailsList, rcNewText, rcNewProgress;
+				LONG iTextStyle, iTextStyleEx;
+				LONG iProgressStyle, iProgressStyleEx;
+				int iDetailsOffsetY;
+				#define LTWH( rc ) (rc).left, (rc).top, (rc).right - (rc).left, (rc).bottom - (rc).top
+
+				/// InstFiles page text control
+				GetWindowRect( hNsisText, &rcText );
+				ScreenToClient( hInstFilesPage, (LPPOINT)&rcText.left );
+				ScreenToClient( hInstFilesPage, (LPPOINT)&rcText.right );
+				iTextStyle = (LONG)GetWindowLongPtr( hNsisText, GWL_STYLE );
+				iTextStyleEx = (LONG)GetWindowLongPtr( hNsisText, GWL_EXSTYLE );
+
+				/// InstFiles page progress bar
+				GetWindowRect( hNsisProgress, &rcProgress );
+				ScreenToClient( hInstFilesPage, (LPPOINT)&rcProgress.left );
+				ScreenToClient( hInstFilesPage, (LPPOINT)&rcProgress.right );
+				iProgressStyle = (LONG)GetWindowLongPtr( hNsisProgress, GWL_STYLE );
+				iProgressStyleEx = (LONG)GetWindowLongPtr( hNsisProgress, GWL_EXSTYLE );
+
+				/// InstFiles page details button
+				hDetailsBtn = GetDlgItem( hInstFilesPage, 1027 );
+				if (hDetailsBtn) {
+					GetWindowRect( hDetailsBtn, &rcDetailsBtn );
+					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsBtn.left );
+					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsBtn.right );
+				}
+
+				/// InstFiles page details list
+				hDetailsList = GetDlgItem( hInstFilesPage, 1016 );
+				if (hDetailsList) {
+					GetWindowRect( hDetailsList, &rcDetailsList );
+					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsList.left );
+					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsList.right );
+				}
+
+				/// New text control
+				CopyRect( &rcNewText, &rcText );
+				OffsetRect( &rcNewText, 0, rcProgress.bottom + rcProgress.top - rcNewText.top );
+				hNewText = CreateWindowEx( iTextStyleEx, WC_STATIC, _T( "" ), iTextStyle, LTWH( rcNewText ), hInstFilesPage, NULL, NULL, NULL );
+				SendMessage( hNewText, WM_SETFONT, (WPARAM)SendMessage( hNsisText, WM_GETFONT, 0, 0 ), MAKELPARAM( FALSE, 0 ) );
+
+				/// New progress bar
+				CopyRect( &rcNewProgress, &rcProgress );
+				OffsetRect( &rcNewProgress, 0, rcNewText.bottom + (rcText.bottom - rcProgress.top) - rcNewProgress.top );
+				iProgressStyle |= MY_PBS_MARQUEE;		/// Marquee capability
+				hNewProgress = CreateWindowEx( iProgressStyleEx, PROGRESS_CLASS, _T( "" ), iProgressStyle, LTWH( rcNewProgress ), hInstFilesPage, NULL, NULL, NULL );
+
+				iDetailsOffsetY = rcNewProgress.bottom + (rcDetailsList.top - rcProgress.bottom) - rcDetailsList.top;
+
+				/// Move details button
+				if (hDetailsBtn) {
+					OffsetRect( &rcDetailsBtn, 0, iDetailsOffsetY );
+					SetWindowPos( hDetailsBtn, NULL, LTWH( rcDetailsBtn ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+				}
+
+				/// Move details list
+				if (hDetailsList) {
+					rcDetailsList.top += iDetailsOffsetY;
+					SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+				}
+
+				/// Use the new controls
+				pGui->Runtime.hTitle = pGui->hTitle;
+				pGui->Runtime.hText = hNewText;
+				pGui->Runtime.hProgress = hNewProgress;
+
+				// Wait
+				GuiWaitLoop( pGui );
+
+				// Restore controls
+				if (pGui->Runtime.hText) {
+					if (pGui->Runtime.hText != pGui->hText)
+						DestroyWindow( pGui->Runtime.hText );
+					pGui->Runtime.hText = NULL;
+				}
+				if (pGui->Runtime.hProgress) {
+					if (pGui->Runtime.hProgress != pGui->hProgress)
+						DestroyWindow( pGui->Runtime.hProgress );
+					pGui->Runtime.hProgress = NULL;
+				}
+
+				if (hDetailsBtn) {
+					OffsetRect( &rcDetailsBtn, 0, -iDetailsOffsetY );
+					SetWindowPos( hDetailsBtn, NULL, LTWH( rcDetailsBtn ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+				}
+				if (hDetailsList) {
+					rcDetailsList.top -= iDetailsOffsetY;
+					SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+				}
+
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+
 //++ GuiWait
 void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResultMaxLen )
 {
@@ -48,24 +255,28 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 
 	if (!pGui->bBackground) {
 
-		while (TRUE) {
-			ULONG n;
-			QueueLock();
-			n = QueueCount( STATUS_RUNNING, pGui->iId );
-			QueueUnlock();
-			TRACE( _T( "Waiting( Count:%u )\n" ), n );
-			if (n > 0) {
-				// TODO: Refresh( pGui )
-				Sleep( 200 );
-			} else {
-				break;
+		// Initialize controls
+		if (pGui->bSilent) {
+			/// Silent
+			GuiSilentWait( pGui );
+		} else if (pGui->bPopup) {
+			/// Try Popup
+			if (!GuiPopupWait( pGui )) {
+				/// Silent
+				GuiSilentWait( pGui );
+			}
+		} else {
+			/// Try Page
+			if (!GuiPageWait( pGui )) {
+				/// Silent
+				GuiSilentWait( pGui );
 			}
 		}
 
 		if (pGui->iId != QUEUE_NO_ID) {
 			//? Wait for ID: Return status
 			lstrcpyn( pszResult, _T( "@ERROR@" ), iResultMaxLen );
-			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
+			MainQuery( pGui->iId, pszResult, iResultMaxLen );
 		} else {
 			//? Wait for all: Return OK
 			lstrcpyn( pszResult, _T( "OK" ), iResultMaxLen );
@@ -76,4 +287,90 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 		assert( pGui->iId != QUEUE_NO_ID );
 		_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->iId );
 	}
+}
+
+
+//++ GuiRefresh
+void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
+{
+	ULONG iBufSize = 2048;
+	LPTSTR pszBuf = NULL;
+	QUEUE_STATS qs;
+	LONG iPercent;
+
+	assert( pGui );
+	if (!pGui->Runtime.hTitle && !pGui->Runtime.hProgress && !pGui->Runtime.hText)
+		return;
+
+	pszBuf = (LPTSTR)MyAlloc( iBufSize * sizeof( TCHAR ) );
+	if (!pszBuf)
+		return;
+
+	QueueLock();
+	QueueStatistics( &qs );
+
+	if (qs.iRunning == 1 && qs.iWaiting == 0) {
+
+		// Single Running transfer
+		lstrcpyn( pszBuf, _T( "@PERCENT@" ), iBufSize );
+		MainQuery( qs.iRunningID, pszBuf, iBufSize );
+		iPercent = myatoi( pszBuf );
+		assert( iPercent >= -1 && iPercent <= 100 );
+
+		if (pGui->Runtime.hTitle) {
+			if (iPercent == -1) {
+				lstrcpyn( pszBuf, _T( "@OUTFILE@%" ), iBufSize );
+			} else {
+				lstrcpyn( pszBuf, _T( "@PERCENT@%" ), iBufSize );
+			}
+			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			SetWindowText( pGui->Runtime.hTitle, pszBuf );
+		}
+		if (pGui->Runtime.hText) {
+			if (iPercent == -1) {
+				lstrcpyn( pszBuf, _T( "@OUTFILE@, @XFERSIZE@ @ @SPEED@" ), iBufSize );
+			} else {
+				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@" ), iBufSize );
+			}
+			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			SetWindowText( pGui->Runtime.hText, pszBuf );
+		}
+
+	} else {
+
+		// Multiple or zero Running transfers
+		iPercent = (qs.iComplete * 100) / (qs.iWaiting + qs.iRunning + qs.iComplete);
+
+		if (pGui->Runtime.hTitle) {
+			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@" ), iBufSize );
+			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			SetWindowText( pGui->Runtime.hTitle, pszBuf );
+		}
+		if (pGui->Runtime.hText) {
+			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@, @TOTALSIZE@ @ @TOTALSPEED@" ), iBufSize );
+			MainQuery( qs.iRunningID, pszBuf, iBufSize );
+			SetWindowText( pGui->Runtime.hText, pszBuf );
+		}
+	}
+
+	if (pGui->Runtime.hProgress) {
+		LONG_PTR iStyle = GetWindowLongPtr( pGui->Runtime.hProgress, GWL_STYLE );
+		if (iPercent == -1) {
+			if (!(iStyle & MY_PBS_MARQUEE)) {
+				SetWindowLongPtr( pGui->Runtime.hProgress, GWL_STYLE, iStyle | MY_PBS_MARQUEE );
+				SendMessage( pGui->Runtime.hProgress, MY_PBM_SETMARQUEE, TRUE, 0 );
+			}
+		} else {
+			if (iStyle & MY_PBS_MARQUEE) {
+				SendMessage( pGui->Runtime.hProgress, MY_PBM_SETMARQUEE, FALSE, 0 );
+				SetWindowLongPtr( pGui->Runtime.hProgress, GWL_STYLE, iStyle & ~MY_PBS_MARQUEE );
+			}
+			SendMessage( pGui->Runtime.hProgress, PBM_SETRANGE, 0, MAKELONG( 0, 100 ) );
+			SendMessage( pGui->Runtime.hProgress, PBM_SETPOS, iPercent, 0 );
+		}
+	}
+
+	QueueUnlock();
+
+	MyFree( pszBuf );
 }

@@ -49,7 +49,3 @@ PCURL_REQUEST QueueHead();
 PCURL_REQUEST QueueTail();
 PCURL_REQUEST QueueFind( _In_ ULONG iId );
 PCURL_REQUEST QueueFirstWaiting();
-
-//+ Count
-//! The queue must be locked by the caller
-ULONG QueueCount( _In_ CHAR iStatus, _In_opt_ ULONG iID );

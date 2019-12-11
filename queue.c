@@ -428,18 +428,3 @@ struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning,
 	QueueUnlock();
 	return sl;
 }
-
-
-//++ QueueCount
-ULONG QueueCount( _In_ CHAR iStatus, _In_opt_ ULONG iID )
-{
-	ULONG n;
-	PCURL_REQUEST p;
-
-	for (n = 0, p = g_Queue.Head; p; p = p->Queue.pNext)
-		if (p->Queue.iStatus == iStatus)
-			if (iID == QUEUE_NO_ID || iID == p->Queue.iId)
-				n++;
-
-	return n;
-}

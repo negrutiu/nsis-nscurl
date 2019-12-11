@@ -13,7 +13,7 @@ typedef struct {
 	BOOLEAN bPopup : 1;					/// Wait popuply
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
 	struct {
-		LPCTSTR pszTitle0, pszText0;	/// Original texts
+		HWND hTitle, hText, hProgress;	/// Runtime controls
 	} Runtime;
 } GUI_REQUEST, *PGUI_REQUEST;
 
@@ -50,4 +50,10 @@ void GuiWait(
 	_Inout_ PGUI_REQUEST pGui,
 	_Out_ LPTSTR pszResult,
 	_In_ int iResultMaxLen
+);
+
+
+//+ GuiRefresh
+void GuiRefresh(
+	_Inout_ PGUI_REQUEST pGui
 );
