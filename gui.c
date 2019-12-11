@@ -175,6 +175,10 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 //++ GuiPageWait
 BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 {
+	HWND hDetailsBtn = NULL, hDetailsList = NULL;
+	RECT rcDetailsBtn, rcDetailsList;
+	int iDetailsOffsetY = 0;
+
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
 
 	// Reset invalid parameters
@@ -217,11 +221,10 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 			HWND hNsisProgress = GetDlgItem( hInstFilesPage, 1004 );
 			if (hNsisText && hNsisProgress) {
 
-				HWND hNewText = NULL, hNewProgress = NULL, hDetailsBtn, hDetailsList;
-				RECT rcText, rcProgress, rcDetailsBtn, rcDetailsList, rcNewText, rcNewProgress;
+				HWND hNewText = NULL, hNewProgress = NULL;
+				RECT rcText, rcProgress, rcNewText, rcNewProgress;
 				LONG iTextStyle, iTextStyleEx;
 				LONG iProgressStyle, iProgressStyleEx;
-				int iDetailsOffsetY;
 				#define LTWH( rc ) (rc).left, (rc).top, (rc).right - (rc).left, (rc).bottom - (rc).top
 
 				/// InstFiles page text control
@@ -284,40 +287,44 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 				pGui->Runtime.hTitle = pGui->hTitle;
 				pGui->Runtime.hText = hNewText;
 				pGui->Runtime.hProgress = hNewProgress;
-
-				// Wait
-				GuiWaitLoop( pGui );
-
-				// Restore controls
-				if (pGui->Runtime.pszTitle0)
-					SetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0 );
-
-				if (pGui->Runtime.pszText0)
-					SetWindowText( pGui->hText, pGui->Runtime.pszText0 );
-
-				if (pGui->Runtime.hText) {
-					if (pGui->Runtime.hText != pGui->hText)
-						DestroyWindow( pGui->Runtime.hText );
-					pGui->Runtime.hText = NULL;
-				}
-				if (pGui->Runtime.hProgress) {
-					if (pGui->Runtime.hProgress != pGui->hProgress)
-						DestroyWindow( pGui->Runtime.hProgress );
-					pGui->Runtime.hProgress = NULL;
-				}
-
-				if (hDetailsBtn) {
-					OffsetRect( &rcDetailsBtn, 0, -iDetailsOffsetY );
-					SetWindowPos( hDetailsBtn, NULL, LTWH( rcDetailsBtn ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
-				}
-				if (hDetailsList) {
-					rcDetailsList.top -= iDetailsOffsetY;
-					SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
-				}
-
-				return TRUE;
 			}
 		}
+	}
+
+	// Can we wait in Page-mode ?
+	if (pGui->Runtime.hText || pGui->Runtime.hProgress) {
+
+		// Wait
+		GuiWaitLoop( pGui );
+
+		// Restore controls
+		if (pGui->Runtime.pszTitle0)
+			SetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0 );
+
+		if (pGui->Runtime.pszText0)
+			SetWindowText( pGui->hText, pGui->Runtime.pszText0 );
+
+		if (pGui->Runtime.hText) {
+			if (pGui->Runtime.hText != pGui->hText)				/// Don't destroy caller-supplied Text control
+				DestroyWindow( pGui->Runtime.hText );
+			pGui->Runtime.hText = NULL;
+		}
+		if (pGui->Runtime.hProgress) {
+			if (pGui->Runtime.hProgress != pGui->hProgress)		/// Don't destroy caller-supplied Progress control
+				DestroyWindow( pGui->Runtime.hProgress );
+			pGui->Runtime.hProgress = NULL;
+		}
+
+		if (hDetailsBtn) {
+			OffsetRect( &rcDetailsBtn, 0, -iDetailsOffsetY );
+			SetWindowPos( hDetailsBtn, NULL, LTWH( rcDetailsBtn ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+		}
+		if (hDetailsList) {
+			rcDetailsList.top -= iDetailsOffsetY;
+			SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
+		}
+
+		return TRUE;
 	}
 
 	return FALSE;
