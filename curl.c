@@ -295,12 +295,12 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 //++ MbedtlsCertVerify
 int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint32_t *piVerifyFlags)
 {
-	//? This function gets called during SSL negotiation to analyze server's certificate chain
-	//? It'll be called sequentially for each certificate in the chain
-	//? That usually happens three times per connection: 2(root certificate), 1(intermediate certificate), 0(user certificate)
+	//? This function gets called to evaluate server's SSL certificates
+	//? The calls are made sequentially for each certificate in the chain
+	//? That usually happens three times per connection: #2(root certificate), #1(intermediate certificate), #0(user certificate)
 
 	//? Our logic:
-	//? * If all certificates in the chain are UNTRUSTED, we'll set the MBEDTLS_X509_BADCERT_NOT_TRUSTED verification flag when returning from the last call (index 0)
+	//? * If all certificates in the chain are UNTRUSTED, we'll set the MBEDTLS_X509_BADCERT_NOT_TRUSTED verification flag when returning from the last call (index #0)
 	//? * If we TRUST at least one certificate we simply do nothing (return all zeros)
 
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
@@ -314,7 +314,7 @@ int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint
 	// If the caller TRUSTs it, the connection is allowed to continue
 	*piVerifyFlags = 0;
 
-	// Don't verify any more certificates if we already found one that we TRUST
+	// Skip validation if we already found a TRUSTED certificate in the chain
 	if (!pReq->Runtime.bTrustedCert) {
 
 		UCHAR Thumbprint[20];
