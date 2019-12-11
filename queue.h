@@ -39,6 +39,7 @@ typedef struct {
 	ULONG iWaiting, iRunning, iComplete, iErrors;
 	ULONG iSpeed;
 	ULONG64 iDlXferred, iUlXferred;
+	ULONG iRunningID;							/// Single Running transfer ID. -1 otherwise
 } QUEUE_STATS, *PQUEUE_STATS;
 void QueueStatistics( _Out_ PQUEUE_STATS pStats );
 

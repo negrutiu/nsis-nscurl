@@ -297,7 +297,7 @@ void QueueStatistics( _Out_ PQUEUE_STATS pStats )
 		if (p->Queue.iStatus == STATUS_WAITING)
 			pStats->iWaiting++;
 		else if (p->Queue.iStatus == STATUS_RUNNING)
-			pStats->iRunning++;
+			pStats->iRunning++, pStats->iRunningID = p->Queue.iId;
 		else if (p->Queue.iStatus == STATUS_COMPLETE)
 			pStats->iComplete++;
 		else
@@ -311,6 +311,8 @@ void QueueStatistics( _Out_ PQUEUE_STATS pStats )
 		if (!bOK)
 			pStats->iErrors++;
 	}
+	if (pStats->iRunning != 1)
+		pStats->iRunningID = QUEUE_NO_ID;
 }
 
 
