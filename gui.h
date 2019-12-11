@@ -14,6 +14,7 @@ typedef struct {
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
 	struct {
 		ULONG iId;						/// May be QUEUE_NO_ID
+		ULONG iAnimIndex;				/// Auto increment
 		HWND hTitle, hText, hProgress;	/// Runtime controls
 		LPTSTR pszTitle0, pszText0;
 	} Runtime;

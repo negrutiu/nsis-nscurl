@@ -63,11 +63,29 @@ void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		lstrcpyn( pszKeyword, pGui->Runtime.pszTitle0 ? pGui->Runtime.pszTitle0 : _T( "" ), iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@TEXT0@" ) ) == 0) {
 		lstrcpyn( pszKeyword, pGui->Runtime.pszText0 ? pGui->Runtime.pszText0 : _T( "" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@ANIMDOTS@" ) ) == 0) {
+		int i = (pGui->Runtime.iAnimIndex++ % 4);
+		if (i == 0) {
+			lstrcpyn( pszKeyword, _T( "" ), iMaxLen );
+		} else if (i == 1) {
+			lstrcpyn( pszKeyword, _T( "." ), iMaxLen );
+		} else if (i == 2) {
+			lstrcpyn( pszKeyword, _T( ".." ), iMaxLen );
+		} else if (i == 3) {
+			lstrcpyn( pszKeyword, _T( "..." ), iMaxLen );
+		}
+	} else if (lstrcmpi( pszKeyword, _T( "@ANIMLINE@" ) ) == 0) {
+		int i = (pGui->Runtime.iAnimIndex++ % 4);
+		if (i == 0) {
+			lstrcpyn( pszKeyword, _T( "|" ), iMaxLen );
+		} else if (i == 1) {
+			lstrcpyn( pszKeyword, _T( "/" ), iMaxLen );
+		} else if (i == 2) {
+			lstrcpyn( pszKeyword, _T( "-" ), iMaxLen );
+		} else if (i == 3) {
+			lstrcpyn( pszKeyword, _T( "\\" ), iMaxLen );
+		}
 	}
-/*
-	{ANIMLINE}				| The classic \|/- animation
-	{ANIMDOTS}				| The classic ./../... animation
-*/
 }
 
 
@@ -388,9 +406,9 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 		}
 		if (pGui->Runtime.hText) {
 			if (iPercent == -1) {
-				lstrcpyn( pszBuf, _T( "@OUTFILE@, @XFERSIZE@ @ @SPEED@" ), iBufSize );
+				lstrcpyn( pszBuf, _T( "@OUTFILE@, @XFERSIZE@ @ @SPEED@ @ANIMDOTS@" ), iBufSize );
 			} else {
-				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@" ), iBufSize );
+				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@ @ANIMDOTS@" ), iBufSize );
 			}
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hText, pszBuf );
