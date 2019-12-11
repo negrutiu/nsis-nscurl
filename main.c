@@ -12,6 +12,9 @@
 HINSTANCE	g_hInst = NULL;
 HANDLE		g_hTerm = NULL;
 
+extra_parameters			*g_ep = NULL;
+HWND						g_hwndparent = NULL;
+
 
 //++ PluginInit
 //?  Called at DLL_PROCESS_ATTACH

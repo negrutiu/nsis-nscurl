@@ -58,7 +58,7 @@ static void NSISCALL pushstringEx( LPCTSTR str )
 }
 
 //+ Globals
-static extra_parameters			*g_ep = NULL;
-static HWND						g_hwndparent = NULL;
+extern extra_parameters			*g_ep;				/// main.c
+extern HWND						g_hwndparent;		/// main.c
 
 #endif	/// _PLUGINAPI_EX_H_
