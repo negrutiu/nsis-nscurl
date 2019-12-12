@@ -101,12 +101,12 @@ done:
 SectionEnd
 
 
-Section Parallel
+Section "Parallel (50 * put)"
 	SectionIn 1	; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
-	${For} $R0 1 20
+	${For} $R0 1 50
 		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA "@$PLUGINSDIR\cacert.pem" /BACKGROUND /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
@@ -311,19 +311,19 @@ _enum_loop:
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::query /ID $0  '@METHOD@ @URL@ -> @OUT@'
+	NScurl::query /ID $0 '@METHOD@ @URL@ -> @OUT@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::query /ID $0  'Request Headers: @SENTHEADERS@'
+	NScurl::query /ID $0 'Request Headers: @SENTHEADERS@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::query /ID $0  'Reply Headers: @RECVHEADERS@'
+	NScurl::query /ID $0 'Reply Headers: @RECVHEADERS@'
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::query /ID $0  'Remote Content: @RECVDATA@'
+	NScurl::query /ID $0 'Remote Content: @RECVDATA@'
 	Pop $1
 	DetailPrint "$1"
 

@@ -133,12 +133,12 @@ done:
 SectionEnd
 
 
-Section Parallel
+Section "Parallel (50 * put)"
 	SectionIn 1	; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
-	${For} $R0 1 20
+	${For} $R0 1 50
 		Push /END
 		Push /BACKGROUND
 		Push "@$PLUGINSDIR\cacert.pem"
