@@ -501,7 +501,7 @@ LONG MyReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKe
 		iStrLen++;
 	pszStr[iStrLen - 1] = 0;	/// Force \0
 
-	for (psz2 = pszStr + iStrLen; psz2 > pszStr; ) {
+	for (psz2 = pszStr + iStrLen - 1; psz2 > pszStr; ) {
 
 		for (; psz2 > pszStr && (*psz2 != chKeywordEnd); psz2--);						/// End marker
 		for (psz1 = psz2 - 1; psz1 > pszStr && (*psz1 != chKeywordStart); psz1--);		/// Start marker
@@ -552,7 +552,7 @@ LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR ch
 		iStrLen++;
 	pszStr[iStrLen - 1] = 0;	/// Force \0
 
-	for (psz2 = pszStr + iStrLen; psz2 > pszStr; ) {
+	for (psz2 = pszStr + iStrLen - 1; psz2 > pszStr; ) {
 
 		for (; psz2 > pszStr && (*psz2 != chKeywordEnd); psz2--);						/// End marker
 		for (psz1 = psz2 - 1; psz1 > pszStr && (*psz1 != chKeywordStart); psz1--);		/// Start marker
