@@ -185,21 +185,29 @@ void QueueRemove( _In_ ULONG iId )
 void QueueAbort( _In_opt_ ULONG iId )
 {
 	PCURL_REQUEST pReq;
+	TRACE( _T( "%hs( Id:%d )\n" ), __FUNCTION__, iId );
 	QueueLock();
 	for (pReq = g_Queue.Head; pReq; pReq = pReq->Queue.pNext) {
+
 		if ((iId == QUEUE_NO_ID) || (pReq->Queue.iId == iId)) {
+
 			if (pReq->Queue.iStatus == STATUS_WAITING) {
 
 				// Mark as Complete
 				pReq->Queue.iStatus = STATUS_COMPLETE;
+
 				// Set Win32 error
 				pReq->Error.iWin32 = ERROR_CANCELLED;
 				pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 
+				TRACE( _T( "%hs( Id:%u, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Waiting" );
+
 			} else if (pReq->Queue.iStatus == STATUS_RUNNING) {
 
-				// Set the Abort flag and the transfer will terminate itself
+				// Set the Abort flag and let the transfer terminate itself
 				InterlockedExchange( &pReq->Queue.iFlagAbort, TRUE );
+
+				TRACE( _T( "%hs( Id:%u, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Running" );
 			}
 		}
 	}

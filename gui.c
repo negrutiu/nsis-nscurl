@@ -445,9 +445,8 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	QueueLock();
 	QueueStatistics( pGui->iId, &qs );
 
+	pGui->Runtime.iId = qs.iSingleID;
 	if (qs.iRunning == 1 && qs.iWaiting == 0) {
-
-		pGui->Runtime.iId = qs.iSingleID;
 
 		// Single Running transfer
 		lstrcpyn( pszBuf, _T( "@PERCENT@" ), iBufSize );
