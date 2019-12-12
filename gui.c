@@ -444,6 +444,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 
 	QueueLock();
 	QueueStatistics( pGui->iId, &qs );
+	QueueUnlock();
 
 	pGui->Runtime.iId = qs.iSingleID;
 	if (qs.iRunning == 1 && qs.iWaiting == 0) {
@@ -506,8 +507,6 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 			SendMessage( pGui->Runtime.hProgress, PBM_SETPOS, iPercent, 0 );
 		}
 	}
-
-	QueueUnlock();
 
 	MyFree( pszBuf );
 }
