@@ -281,7 +281,7 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 
 				/// New text control
 				CopyRect( &rcNewText, &rcText );
-				OffsetRect( &rcNewText, 0, rcProgress.bottom + rcProgress.top - rcNewText.top );
+				OffsetRect( &rcNewText, 0, (rcProgress.bottom - rcText.top) + (rcDetailsList.top - rcProgress.bottom) );
 				hNewText = CreateWindowEx( iTextStyleEx, WC_STATIC, _T( "" ), iTextStyle, LTWH( rcNewText ), hInstFilesPage, NULL, NULL, NULL );
 				SendMessage( hNewText, WM_SETFONT, (WPARAM)SendMessage( hNsisText, WM_GETFONT, 0, 0 ), MAKELPARAM( FALSE, 0 ) );
 
@@ -292,6 +292,7 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 				hNewProgress = CreateWindowEx( iProgressStyleEx, PROGRESS_CLASS, _T( "" ), iProgressStyle, LTWH( rcNewProgress ), hInstFilesPage, NULL, NULL, NULL );
 
 				iDetailsOffsetY = rcNewProgress.bottom + (rcDetailsList.top - rcProgress.bottom) - rcDetailsList.top;
+				iDetailsOffsetY += iDetailsOffsetY / 8;
 
 				/// Move details button
 				if (hDetailsBtn) {
