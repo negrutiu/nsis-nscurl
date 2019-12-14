@@ -63,7 +63,7 @@ InstType "None"		; 2
 Name "NScurl-Debug"
 XPStyle on
 RequestExecutionLevel user		; Don't require UAC elevation
-; ShowInstDetails nevershow
+ShowInstDetails show
 ManifestDPIAware true
 
 !macro STACK_VERIFY_START
