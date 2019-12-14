@@ -102,7 +102,7 @@ LONG GuiQuery( _Inout_ PGUI_REQUEST pGui, _Inout_ LPTSTR pszStr, _In_ LONG iStrM
 	if (pszStr && iStrMaxLen) {
 
 		// Replace queue keywords
-		MainQuery( pGui->Runtime.iId, pszStr, iStrMaxLen );
+		QueueQuery( pGui->Runtime.iId, pszStr, iStrMaxLen );
 
 		// Replace global keywords
 		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GuiQueryKeywordCallback, pGui );
