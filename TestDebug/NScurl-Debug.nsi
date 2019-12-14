@@ -63,7 +63,7 @@ InstType "None"		; 2
 Name "NScurl-Debug"
 XPStyle on
 RequestExecutionLevel user		; Don't require UAC elevation
-ShowInstDetails show
+; ShowInstDetails nevershow
 ManifestDPIAware true
 
 !macro STACK_VERIFY_START
@@ -96,34 +96,22 @@ Function .onInit
 		Abort
 	${EndIf}
 
-/*	; .onInit download demo
+/*
+	; .onInit download demo
 	; NOTE: Transfers from .onInit can be either Silent or Popup (no Page!)
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'https://httpbin.org/post?param1=1&param2=2'
-	!define /redef FILE '$EXEDIR\_Post_onInit.json'
-	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_onInit.zip"
 	Push "/END"
-	Push "https://wikipedia.org"
-	Push "/REFERER"
-	Push 60000
-	Push "/TIMEOUTRECONNECT"
-	Push 15000
-	Push "/TIMEOUTCONNECT"
-	Push "Content-Type: application/x-www-form-urlencoded$\r$\nContent-Dummy: Dummy"
-	Push "/HEADERS"
-	Push 'User=My+User&Pass=My+Pass'
-	Push "/DATA"
+	Push "/POPUP"
+	Push "/CANCEL"
 	Push "${FILE}"
-	Push "/LOCAL"
 	Push "${LINK}"
-	Push "/URL"
-	Push "POPUP"
-	Push "/MODE"
-	Push "POST"
-	Push "/METHOD"
-	CallInstDLL $NSCURL Transfer
+	Push "GET"
+	CallInstDLL $NSCURL http
 	Pop $0
-	!insertmacro STACK_VERIFY_END */
+	!insertmacro STACK_VERIFY_END
+*/
 FunctionEnd
 
 
@@ -206,6 +194,57 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	Push "/END"
 	Push 30000
 	Push "/TIMEOUT"
+	Push "/CANCEL"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Popup.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "/POPUP"
+	Push "/CANCEL"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Silent.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "/SILENT"
+	Push "/CANCEL"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"

@@ -3,16 +3,18 @@
 //? User Interface
 
 #include "main.h"
+#include <CommCtrl.h>
 #include "gui.h"
 #include "utils.h"
-#include <CommCtrl.h>
+#include "resource.h"
 
 
 #define MY_PBS_MARQUEE			0x08				/// XP+
 #define MY_PBM_SETMARQUEE		(WM_USER+10)
 
-#define PROP_NSIS_WNDPROC		_T( "NSCURL_WNDPROC" )
-#define PROP_NSIS_CONTEXT		_T( "NSCURL_CONTEXT" )
+#define PROP_WNDPROC			_T( "NSCURL_WNDPROC" )
+#define PROP_CONTEXT			_T( "NSCURL_CONTEXT" )
+
 
 //++ GuiInitialize
 void GuiInitialize()
@@ -168,10 +170,119 @@ BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 }
 
 
+//++ GuiPopupDialogProc
+INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			PGUI_REQUEST pGui = (PGUI_REQUEST)lParam;			/// CreateDialogParam parameter
+			assert( pGui );
+
+			// Remember GUI request
+			SetProp( hDlg, PROP_CONTEXT, (HANDLE)pGui );
+
+			// Window handles
+			pGui->Runtime.hTitle = hDlg;
+			pGui->Runtime.hText = GetDlgItem( hDlg, IDC_POPUP_STATUS );
+			pGui->Runtime.hProgress = GetDlgItem( hDlg, IDC_POPUP_PROGRESS );
+
+			// Cancel
+			EnableMenuItem( GetSystemMenu( hDlg, FALSE ), SC_CLOSE, MF_BYCOMMAND | (pGui->bCancel ? MF_ENABLED : MF_DISABLED) );
+
+			// Title
+			if (GetParent( hDlg ) && (GetParent( hDlg ) != GetDesktopWindow())) {
+				/// Load installer's title text
+				/// Unavailable during .onInit
+				ULONG l = GetWindowTextLength( GetParent( hDlg ) ) + 1;
+				if ((pGui->Runtime.pszTitle0 = (LPTSTR)MyAlloc( l * sizeof( TCHAR ) )) != NULL) {
+					GetWindowText( GetParent( hDlg ), pGui->Runtime.pszTitle0, l );
+					SetWindowText( hDlg, pGui->Runtime.pszTitle0 );
+				}
+			} else {
+				/// Load installer's file name
+				pGui->Runtime.pszTitle0 = MyStrDup( eT2T, getuservariableEx( INST_EXEFILE ) );
+				if (pGui->Runtime.pszTitle0) {
+					LPTSTR psz;
+					for (psz = pGui->Runtime.pszTitle0 + lstrlen( pGui->Runtime.pszTitle0 ) - 1; psz > pGui->Runtime.pszTitle0; psz--) {
+						if (*psz == _T( '.' )) {
+							*psz = _T( '\0' );		/// Strip extension
+							break;
+						}
+					}
+					SetWindowText( hDlg, pGui->Runtime.pszTitle0 );
+				}
+			}
+
+			// Icon (load installer's main icon)
+			{
+				HICON hIco = LoadImage( GetModuleHandle( NULL ), MAKEINTRESOURCE( 103 ), IMAGE_ICON, GetSystemMetrics( SM_CXICON ), GetSystemMetrics( SM_CYICON ), 0 );
+				if (hIco)
+					SendDlgItemMessage( hDlg, IDC_POPUP_ICON, STM_SETICON, (WPARAM)hIco, 0 );
+			}
+
+			// Disable parent window (NSIS main window) for our modeless dialog to behave like a modal one
+			if (GetParent( hDlg ) != GetDesktopWindow() && IsWindowEnabled( GetParent( hDlg ) ))
+				EnableWindow( GetParent( hDlg ), FALSE );
+
+			return TRUE;	/// Focus (HWND)wParam
+		}
+
+		case WM_DESTROY:
+		{
+			PGUI_REQUEST pGui = GetProp( hDlg, PROP_CONTEXT );
+			assert( pGui );
+
+			// Icon
+			{
+				HICON hIco = (HICON)SendDlgItemMessage( hDlg, IDC_POPUP_ICON, STM_SETICON, (WPARAM)NULL, 0 );
+				if (hIco)
+					DestroyIcon( hIco );
+			}
+
+			// Parent
+			EnableWindow( GetParent( hDlg ), TRUE );
+			if (GetParent( hDlg ) && IsWindowVisible( GetParent( hDlg ) ) && (GetParent( hDlg ) != GetDesktopWindow())) {
+				SetForegroundWindow( GetParent( hDlg ) );
+				SetWindowPos( GetParent( hDlg ), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
+			}
+
+			// Cleanup
+			pGui->Runtime.hTitle = pGui->Runtime.hText = pGui->Runtime.hProgress = NULL;
+			RemoveProp( hDlg, PROP_CONTEXT );
+			break;
+		}
+
+		case WM_SYSCOMMAND:
+			if (wParam == SC_CLOSE) {
+				/// [X] button
+				PGUI_REQUEST pGui = GetProp( hDlg, PROP_CONTEXT );
+				assert( pGui );
+				// TODO: Confirmation?
+				QueueAbort( pGui->Runtime.iId );
+				return 0;
+			}
+			break;
+	}
+
+	return FALSE;	/// Default dialog procedure
+}
+
+
 //++ GuiPopupWait
 BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 {
+	HWND hDlg;
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
+	if ((hDlg = CreateDialogParam( g_hInst, MAKEINTRESOURCE( IDD_POPUP ), g_hwndparent, GuiPopupDialogProc, (LPARAM)pGui )) != NULL) {
+
+		GuiWaitLoop( pGui );
+		DestroyWindow( hDlg );
+
+	} else {
+		assert( !"CreateDialogParam" );
+	}
 	return FALSE;
 }
 
@@ -179,11 +290,12 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 //++ GuiNsisWindowProc
 LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
 {
-	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_NSIS_WNDPROC );
+	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_WNDPROC );
 	switch (uMsg) {
 		case WM_COMMAND:
 			if (LOWORD( wParam ) == IDCANCEL) {
-				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_NSIS_CONTEXT );
+				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_CONTEXT );
+				assert( pGui );
 				// TODO: Confirmation?
 				QueueAbort( pGui->Runtime.iId );
 				return 0;
@@ -327,8 +439,8 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 				// Hook NSIS main window to intercept Cancel clicks
 				WNDPROC fnOriginalWndProc = (WNDPROC)SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)GuiNsisWindowProc );
 				if (fnOriginalWndProc) {
-					SetProp( g_hwndparent, PROP_NSIS_WNDPROC, (HANDLE)fnOriginalWndProc );
-					SetProp( g_hwndparent, PROP_NSIS_CONTEXT, (HANDLE)pGui );
+					SetProp( g_hwndparent, PROP_WNDPROC, (HANDLE)fnOriginalWndProc );
+					SetProp( g_hwndparent, PROP_CONTEXT, (HANDLE)pGui );
 				}
 				// Enable it
 				EnableWindow( hCancelBtn, TRUE );
@@ -368,13 +480,13 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 		}
 
 		if (hCancelBtn) {
-			WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_NSIS_WNDPROC );
+			WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_WNDPROC );
 			EnableWindow( hCancelBtn, bCancelEnabled );
 			if (fnWndProc) {
 				// Unhook NSIS main window
 				SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)fnWndProc );
-				RemoveProp( g_hwndparent, PROP_NSIS_WNDPROC );
-				RemoveProp( g_hwndparent, PROP_NSIS_CONTEXT );
+				RemoveProp( g_hwndparent, PROP_WNDPROC );
+				RemoveProp( g_hwndparent, PROP_CONTEXT );
 			}
 		}
 

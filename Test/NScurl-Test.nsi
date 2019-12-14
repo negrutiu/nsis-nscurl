@@ -75,15 +75,14 @@ Function .onInit
 	!define MUI_LANGDLL_ALLLANGUAGES
 	!insertmacro MUI_LANGDLL_DISPLAY
 
-/*	; .onInit download demo
+/*
+	; .onInit download demo
 	; NOTE: Transfers from .onInit can be either Silent or Popup (no Page!)
-	!insertmacro STACK_VERIFY_START
-	!define /redef LINK 'https://httpbin.org/post?param1=1&param2=2'
-	!define /redef FILE '$EXEDIR\_Post_onInit.json'
-	DetailPrint 'NScurl::Transfer "${LINK}" "${FILE}"'
-	NScurl::Transfer /METHOD POST /MODE Popup /URL "${LINK}" /LOCAL "${FILE}" /DATA 'User=My+User&Pass=My+Pass' /HEADERS "Content-Type: application/x-www-form-urlencoded$\r$\nContent-Dummy: Dummy" /TIMEOUTCONNECT 15000 /TIMEOUTRECONNECT 60000 /REFERER "https://wikipedia.org" /END
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_onInit.zip"
+	NScurl::http GET "${LINK}" "${FILE}" /POPUP /CANCEL /END
 	Pop $0
-	!insertmacro STACK_VERIFY_END */
+*/
 FunctionEnd
 
 
@@ -140,7 +139,35 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http get "${LINK}" "${FILE}" /TIMEOUT 30000 /END
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+
+SectionEnd
+
+
+Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Popup.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /POPUP /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+
+SectionEnd
+
+
+Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Silent.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /SILENT /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 
