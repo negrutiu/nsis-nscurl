@@ -161,11 +161,63 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 }
 
 
+//++ GuiNsisWindowProc
+LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
+{
+	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_WNDPROC );
+	switch (uMsg) {
+		case WM_COMMAND:
+			if (LOWORD( wParam ) == IDCANCEL) {
+				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_CONTEXT );
+				assert( pGui );
+				// TODO: Confirmation?
+				QueueAbort( pGui->Runtime.iId );
+				return 0;
+			}
+			break;
+	}
+	return CallWindowProc( fnWndProc, hwnd, uMsg, wParam, lParam );
+}
+
+
 //++ GuiSilentWait
 BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 {
+	HWND hCancelBtn = NULL;
+	BOOLEAN bCancelEnabled = FALSE;
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
+
+	// Cancel
+	if (pGui->bCancel) {
+		hCancelBtn = g_hwndparent ? GetDlgItem( g_hwndparent, IDCANCEL ) : NULL;
+		if (hCancelBtn) {
+			// Hook NSIS main window to intercept Cancel clicks
+			WNDPROC fnOriginalWndProc = (WNDPROC)SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)GuiNsisWindowProc );
+			if (fnOriginalWndProc) {
+				SetProp( g_hwndparent, PROP_WNDPROC, (HANDLE)fnOriginalWndProc );
+				SetProp( g_hwndparent, PROP_CONTEXT, (HANDLE)pGui );
+			}
+			// Enable it
+			bCancelEnabled = IsWindowEnabled( hCancelBtn );
+			EnableWindow( hCancelBtn, TRUE );
+		}
+	}
+
+	// Wait
 	GuiWaitLoop( pGui );
+
+	// Cancel
+	if (hCancelBtn) {
+		WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_WNDPROC );
+		EnableWindow( hCancelBtn, bCancelEnabled );
+		if (fnWndProc) {
+			// Unhook NSIS main window
+			SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)fnWndProc );
+			RemoveProp( g_hwndparent, PROP_WNDPROC );
+			RemoveProp( g_hwndparent, PROP_CONTEXT );
+		}
+	}
+
 	return TRUE;
 }
 
@@ -284,25 +336,6 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 		assert( !"CreateDialogParam" );
 	}
 	return FALSE;
-}
-
-
-//++ GuiNsisWindowProc
-LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
-{
-	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_WNDPROC );
-	switch (uMsg) {
-		case WM_COMMAND:
-			if (LOWORD( wParam ) == IDCANCEL) {
-				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_CONTEXT );
-				assert( pGui );
-				// TODO: Confirmation?
-				QueueAbort( pGui->Runtime.iId );
-				return 0;
-			}
-			break;
-	}
-	return CallWindowProc( fnWndProc, hwnd, uMsg, wParam, lParam );
 }
 
 
@@ -548,6 +581,15 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	LONG iPercent;
 
 	assert( pGui );
+
+	// Statistics and running ID
+	QueueLock();
+	QueueStatistics( pGui->iId, &qs );
+	QueueUnlock();
+
+	pGui->Runtime.iId = qs.iSingleID;
+
+	// Anything to refresh?
 	if (!pGui->Runtime.hTitle && !pGui->Runtime.hProgress && !pGui->Runtime.hText)
 		return;
 
@@ -555,11 +597,6 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	if (!pszBuf)
 		return;
 
-	QueueLock();
-	QueueStatistics( pGui->iId, &qs );
-	QueueUnlock();
-
-	pGui->Runtime.iId = qs.iSingleID;
 	if (qs.iRunning == 1 && qs.iWaiting == 0) {
 
 		// Single Running transfer
