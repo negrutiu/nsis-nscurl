@@ -158,6 +158,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 	#undef HEARTBEAT
 
 	CloseHandle( hDummyEvent );
+	pGui->Runtime.iId = QUEUE_NO_ID;
 }
 
 
@@ -558,7 +559,7 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 		if (pGui->iId != QUEUE_NO_ID) {
 			//? Wait for ID: Return status
 			lstrcpyn( pszResult, _T( "@ERROR@" ), iResultMaxLen );
-			GuiQuery( pGui, pszResult, iResultMaxLen );
+			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
 		} else {
 			//? Wait for all: Return OK
 			lstrcpyn( pszResult, _T( "OK" ), iResultMaxLen );
