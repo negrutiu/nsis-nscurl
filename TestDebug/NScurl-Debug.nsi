@@ -474,6 +474,125 @@ Section /o "Big file (10GB)"
 SectionEnd
 
 
+SectionGroup /e "Authentication"
+
+Section "httpbin.org/basic-auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/basic-auth/MyUser/MyPass'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_basic-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/hidden-basic-auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/hidden-basic-auth/MyUser/MyPass'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_hidden-basic-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/bearer"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/bearer'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_bearer.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth-int"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth-int.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+SectionGroupEnd		; Authentication
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

@@ -845,6 +845,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 			// TODO: PROXY
 
+			/// Authentication
+			// /AUTH [type:*|basic|digest|bearer] user pass
+			curl_easy_setopt( curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY );
+			curl_easy_setopt( curl, CURLOPT_USERNAME, "MyUser" );
+			curl_easy_setopt( curl, CURLOPT_PASSWORD, "MyPass" );
+		//	curl_easy_setopt( curl, CURLOPT_XOAUTH2_BEARER, "MyToken" );
+
 			/// Resume
 			if (iResumeFrom > 0)
 				curl_easy_setopt( curl, CURLOPT_RESUME_FROM_LARGE, iResumeFrom );
