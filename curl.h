@@ -29,6 +29,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bInsecure     : 1;
 	struct curl_slist *pCertList;		/// can be NULL. Ignored if bInsecure is TRUE
 	LPCSTR		pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
+	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
 	struct {
@@ -46,6 +47,7 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
+		HANDLE		hDebugFile;			/// Debug connection
 		LPCSTR		pszFinalURL;		/// The final URL, after following all redirections
 		LONG		iServerPort;
 		LPCSTR		pszServerIP;		/// Can be IPv6
@@ -89,11 +91,14 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszReferrer );
 	curl_slist_free_all( pReq->pCertList );
 	MyFree( pReq->pszCacert );
+	MyFree( pReq->pszDebugFile );
 	pReq->Runtime.pCurl = NULL;
 	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile );
 	if (MyValidHandle( pReq->Runtime.hOutFile ))
 		CloseHandle( pReq->Runtime.hOutFile );
+	if (MyValidHandle( pReq->Runtime.hDebugFile ))
+		CloseHandle( pReq->Runtime.hDebugFile );
 	VirtualMemoryDestroy( &pReq->Runtime.InHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
 	VirtualMemoryDestroy( &pReq->Runtime.OutData );

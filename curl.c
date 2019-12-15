@@ -283,6 +283,11 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			MyFree( pReq->pszCacert );
 			pReq->pszCacert = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/DEBUG" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			MyFree( pReq->pszDebugFile );
+			pReq->pszDebugFile = MyStrDup( eT2T, pszParam );
+		}
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}
@@ -560,6 +565,52 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 
 	}
 
+	// Debug file
+	if (MyValidHandle( pReq->Runtime.hDebugFile )) {
+	
+		ULONG iBytes;
+		LPSTR pszPrefix;
+		const size_t iMaxLen = 1024 * 128;
+		const size_t iLineLen = 512;
+		LPSTR pszLine;
+
+		// Prefix
+		switch (type) {
+			case CURLINFO_TEXT:			pszPrefix = "[-] "; break;
+			case CURLINFO_HEADER_IN:	pszPrefix = "[<h] "; break;
+			case CURLINFO_HEADER_OUT:	pszPrefix = "[>h] "; break;
+			case CURLINFO_DATA_IN:		pszPrefix = "[<d] "; break;
+			case CURLINFO_DATA_OUT:		pszPrefix = "[>d] "; break;
+			case CURLINFO_SSL_DATA_IN:	pszPrefix = "[<s] "; break;
+			case CURLINFO_SSL_DATA_OUT:	pszPrefix = "[>s] "; break;
+			default:					pszPrefix = "[?] ";
+		}
+		WriteFile( pReq->Runtime.hDebugFile, pszPrefix, lstrlenA( pszPrefix ), &iBytes, NULL );
+
+		// Data
+		if ((pszLine = (LPSTR)malloc( iLineLen )) != NULL) {
+			for (size_t iOutLen = 0; iOutLen < iMaxLen; ) {
+				size_t i, n = __min( iLineLen, size - iOutLen );
+				if (n == 0)
+					break;
+				for (i = 0; i < n; i++) {
+					pszLine[i] = data[iOutLen + i];
+					if (pszLine[i] == '\n') {
+						i++;
+						break;
+					} else if ((pszLine[i] < 32 || pszLine[i] > 126) && pszLine[i] != '\r' && pszLine[i] != '\t') {
+						pszLine[i] = '.';
+					}
+				}
+				WriteFile( pReq->Runtime.hDebugFile, pszLine, (ULONG)i, &iBytes, NULL );
+				if (i < 1 || pszLine[i - 1] != '\n')
+					WriteFile( pReq->Runtime.hDebugFile, "\n", 1, &iBytes, NULL );
+				iOutLen += i;
+			}
+			free( pszLine );
+		}
+	}
+
 	return 0;
 }
 
@@ -639,6 +690,16 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			pReq->Error.iWin32 = e;
 			pReq->Error.pszWin32 = MyFormatError( e );
 			TRACE( _T( "[!] CreateFile( OutFile:%s ) = %s\n" ), pReq->pszPath, pReq->Error.pszWin32 );
+		}
+	}
+
+	// Debug file
+	if (pReq->pszDebugFile && *pReq->pszDebugFile) {
+		ULONG e = ERROR_SUCCESS;
+		pReq->Runtime.hDebugFile = CreateFile( pReq->pszDebugFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+		if (!MyValidHandle( pReq->Runtime.hOutFile )) {
+			e = GetLastError();
+			TRACE( _T( "[!] CreateFile( DebugFile:%s ) = 0x%x\n" ), pReq->pszDebugFile, e );
 		}
 	}
 
@@ -829,6 +890,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		CloseHandle( pReq->Runtime.hInFile ), pReq->Runtime.hInFile = NULL;
 	if (MyValidHandle( pReq->Runtime.hOutFile ))
 		CloseHandle( pReq->Runtime.hOutFile ), pReq->Runtime.hOutFile = NULL;
+	if (MyValidHandle( pReq->Runtime.hDebugFile ))
+		CloseHandle( pReq->Runtime.hDebugFile ), pReq->Runtime.hDebugFile = NULL;
 }
 
 

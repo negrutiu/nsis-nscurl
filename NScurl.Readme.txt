@@ -99,9 +99,10 @@ NScurl::http		GET|POST|HEAD|PUT|...
 					[/NOREDIRECT]
 					[/INSECURE]
 					[/CERT thumbprint1]...[/CERT thumbprintN]
-					[/CACERT cacert.pem_path]
+					[/CACERT dir\cacert.pem]
 					[/BACKGROUND] [/SILENT] [/POPUP]
 					[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
+					[/DEBUG debugfile]
 					/END
 
 Remarks:
@@ -140,12 +141,13 @@ Parameters:
 	/TITLEWND hwnd				| Title window handle
 	/TEXTWND hwnd				| Text window handle
 	/PROGRESSWND hwnd			| Progress bar window handle
+	/DEBUG debugfile			| Write transfer HTTP/SSL details to a debugging file. None by default
 	/END						| Must conclude the parameter list
 
 Return:
 	[Stack] Returns two possible values
-	1. An error code (e.g. "OK", "Not Found", etc.) by default
-	2. An unique request ID if /BACKGROUND parameter was specified
+	1. An error string (e.g. "OK", "Not Found", etc.) by default
+	2. An unique request ID if /BACKGROUND parameter is specified
 
 Examples:
 
