@@ -404,9 +404,9 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		// Extract HTTP status text from header
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
 		// e.g. "HTTP/1.1 404 NOT FOUND" -> "NOT FOUND"
-		for (psz1 = buffer; (*psz1 != ' ') && (psz1 != '\0'); psz1++);		/// Find first whitespace
+		for (psz1 = buffer; (*psz1 != ' ') && (*psz1 != '\0'); psz1++);		/// Find first whitespace
 		if (*psz1++ == ' ') {
-			for (; (*psz1 != ' ') && (psz1 != '\0'); psz1++);				/// Find second whitespace
+			for (; (*psz1 != ' ') && (*psz1 != '\0'); psz1++);				/// Find second whitespace
 			if (*psz1++ == ' ') {
 				for (psz2 = psz1; (*psz2 != '\r') && (*psz2 != '\n') && (*psz2 != '\0'); psz2++);	/// Find trailing \r\n
 				MyFree( pReq->Error.pszHttp );
