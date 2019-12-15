@@ -403,10 +403,16 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 
 		// Extract HTTP status text from header
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
-		for (psz1 = psz2 = buffer; (*psz2 != '\0') && (*psz2 != '\r') && (*psz2 != '\n'); psz2++);
-		for (psz1 = psz2; psz1 > buffer && psz1[-1] != ' '; psz1--);	/// Find the last whitespace
-		MyFree( pReq->Error.pszHttp );
-		pReq->Error.pszHttp = MyStrDupN( eA2A, psz1, (int)(psz2 - psz1) );
+		// e.g. "HTTP/1.1 404 NOT FOUND" -> "NOT FOUND"
+		for (psz1 = buffer; (*psz1 != ' ') && (psz1 != '\0'); psz1++);		/// Find first whitespace
+		if (*psz1++ == ' ') {
+			for (; (*psz1 != ' ') && (psz1 != '\0'); psz1++);				/// Find second whitespace
+			if (*psz1++ == ' ') {
+				for (psz2 = psz1; (*psz2 != '\r') && (*psz2 != '\n') && (*psz2 != '\0'); psz2++);	/// Find trailing \r\n
+				MyFree( pReq->Error.pszHttp );
+				pReq->Error.pszHttp = MyStrDupN( eA2A, psz1, (int)(psz2 - psz1) );
+			}
+		}
 
 		// Collect HTTP connection info
 		/// Server IP address
