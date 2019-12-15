@@ -672,6 +672,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->bInsecure) {
 				// Don't validate server certificate
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
+				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, FALSE );
 			} else {
 				if (pReq->pCertList) {
 					// Verify against /CERT thumbprints
