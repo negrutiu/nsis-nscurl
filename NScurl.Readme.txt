@@ -128,7 +128,7 @@ Parameters:
 	/PROXY server				| CERN type proxies (ex: "http=http://my_proxy:my_port"). SOCKS proxies are supported if Internet Explorer is installed
 	/PROXYUSER user				| Optional username for authenticated proxies
 	/PROXYPASS pass				| Optional password for authenticated proxies
-	/REFERER url				| Optional referer URL, passed to InternetOpenRequest
+	/REFERER url				| Optional referrer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
 	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
 	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)

@@ -170,7 +170,7 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 }
 
 
-//++ [exported] echo
+//++ [exported] echo [param1]..[paramN]
 EXTERN_C __declspec(dllexport)
 void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -204,7 +204,7 @@ void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] http
+//++ [exported] http <parameters> /END
 EXTERN_C __declspec(dllexport)
 void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -280,7 +280,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] wait
+//++ [exported] wait [/ID id] parameters /END
 EXTERN_C __declspec(dllexport)
 void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -324,11 +324,11 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] query
+//++ [exported] query [/ID id] parameters
 EXTERN_C __declspec(dllexport)
 void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
-	ULONG iId = QUEUE_NO_ID;
+	ULONG e, iId = QUEUE_NO_ID;
 	LPTSTR psz = NULL;
 
 	EXDLL_INIT();
@@ -341,20 +341,17 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 	assert( psz );
 	if (psz) {
 
-		const ULONG OPTIONAL_PARAMS = 1;
-		ULONG i, e = NOERROR;
-		for (i = 0; (i <= OPTIONAL_PARAMS) && (e == NOERROR); i++) {
-			if ((e = popstring( psz )) == NOERROR) {
-				if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
-					iId = (ULONG)popintptr();
-				} else {
-					break;		/// Done reading optional parameters. Continue reading mandatory parameters
-				}
-			}
+		e = popstring( psz );
+		if ( e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
+			iId = (ULONG)popintptr();
+			e = popstring( psz );
 		}
+
 		if (e == NOERROR) {
 			QueueQuery( iId, psz, string_size );
 			pushstringEx( psz );
+		} else {
+			pushstringEx( _T( "" ) );
 		}
 	}
 
@@ -362,7 +359,7 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 }
 
 
-//++ [exported] enumerate
+//++ [exported] enumerate [/STATUS s1]..[/STATUS sN] /END
 EXTERN_C __declspec(dllexport)
 void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -424,7 +421,7 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 }
 
 
-//++ [exported] escape
+//++ [exported] escape <string>
 EXTERN_C __declspec(dllexport)
 void __cdecl escape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -454,7 +451,7 @@ void __cdecl escape( HWND parent, int string_size, TCHAR *variables, stack_t **s
 }
 
 
-//++ [exported] unescape
+//++ [exported] unescape <string>
 EXTERN_C __declspec(dllexport)
 void __cdecl unescape( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
