@@ -97,6 +97,8 @@ NScurl::http		GET|POST|HEAD|PUT|...
 					[/REFERER url]
 					[/USERAGENT agent]
 					[/NOREDIRECT]
+					[/AUTH [TYPE=basic|digest|digestie] user pass]
+					[/AUTH TYPE=bearer token]
 					[/INSECURE]
 					[/CERT thumbprint1]...[/CERT thumbprintN]
 					[/CACERT dir\cacert.pem]
@@ -131,6 +133,8 @@ Parameters:
 	/REFERER url				| Optional referrer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
 	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
+	/AUTH [TYPE=basic|digest|digestie] user pass	| HTTP authentication. Type is determined automatically by default. However, an explicit type must be specified when connecting to servers with "hidden" authentication. Username and password must be cleartext, unescaped.
+	/AUTH TYPE=bearer token							| HTTP bearer authentication. OAuth 2.0 token is mandatory
 	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
 	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
 	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used

@@ -308,6 +308,75 @@ Section /o "Big file (10GB)"
 SectionEnd
 
 
+SectionGroup /e "Authentication"
+
+Section "httpbin.org/basic-auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/basic-auth/MyUser/MyPass'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_basic-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "httpbin.org/hidden-basic-auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/hidden-basic-auth/MyUser/MyPass'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_hidden-basic-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=basic" "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "httpbin.org/bearer"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/bearer'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_bearer.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=bearer" "MyOauth2Token" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=digest" "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth-int"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth-int.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+SectionGroupEnd		; Authentication
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

@@ -261,6 +261,32 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/NOREDIRECT" ) ) == 0) {
 		pReq->bNoRedirect = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/AUTH" ) ) == 0) {
+		int e;
+		pReq->iAuthType = CURLAUTH_ANY;
+		if ((e = popstring( pszParam )) == NOERROR) {
+			if (CompareString( CP_ACP, NORM_IGNORECASE, pszParam, 5, _T( "type=" ), -1 ) == CSTR_EQUAL) {
+				LPCTSTR pszType = pszParam + 5;
+				if (lstrcmpi( pszType, _T( "basic" ) ) == 0)
+					pReq->iAuthType = CURLAUTH_BASIC;
+				else if (lstrcmpi( pszType, _T( "digest" ) ) == 0)
+					pReq->iAuthType = CURLAUTH_DIGEST;
+				else if (lstrcmpi( pszType, _T( "digestie" ) ) == 0)
+					pReq->iAuthType = CURLAUTH_DIGEST_IE;
+				else if (lstrcmpi( pszType, _T( "bearer" ) ) == 0)
+					pReq->iAuthType = CURLAUTH_BEARER;
+				e = popstring( pszParam );
+			}
+			if (e == NOERROR) {
+				if (pReq->iAuthType == CURLAUTH_BEARER) {
+					pReq->pszPass = MyStrDup( eT2A, pszParam );		/// OAuth 2.0 token (stored as password)
+				} else {
+					pReq->pszUser = MyStrDup( eT2A, pszParam );
+					if ((e = popstring( pszParam )) == NOERROR)
+						pReq->pszPass = MyStrDup( eT2A, pszParam );
+				}
+			}
+		}
 	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
 		pReq->bInsecure = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
@@ -846,11 +872,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			// TODO: PROXY
 
 			/// Authentication
-			// /AUTH [type:*|basic|digest|bearer] user pass
-			curl_easy_setopt( curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY );
-			curl_easy_setopt( curl, CURLOPT_USERNAME, "MyUser" );
-			curl_easy_setopt( curl, CURLOPT_PASSWORD, "MyPass" );
-		//	curl_easy_setopt( curl, CURLOPT_XOAUTH2_BEARER, "MyToken" );
+			if (pReq->iAuthType == CURLAUTH_ANY || pReq->iAuthType == CURLAUTH_BASIC || pReq->iAuthType == CURLAUTH_DIGEST || pReq->iAuthType == CURLAUTH_DIGEST_IE) {
+				curl_easy_setopt( curl, CURLOPT_HTTPAUTH, pReq->iAuthType );
+				curl_easy_setopt( curl, CURLOPT_USERNAME, pReq->pszUser );		// TODO: Store it encrypted
+				curl_easy_setopt( curl, CURLOPT_PASSWORD, pReq->pszPass );		// TODO: Store it encrypted
+			} else if (pReq->iAuthType == CURLAUTH_BEARER) {
+				curl_easy_setopt( curl, CURLOPT_HTTPAUTH, pReq->iAuthType );
+				curl_easy_setopt( curl, CURLOPT_XOAUTH2_BEARER, pReq->pszPass );
+			}
 
 			/// Resume
 			if (iResumeFrom > 0)
@@ -1090,7 +1119,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 /*
 	{PROXY}
 	{SSL/TLS info}
-	{HTTPAuth available}
 */
 }
 
