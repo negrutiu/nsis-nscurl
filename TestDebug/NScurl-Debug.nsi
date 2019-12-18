@@ -610,6 +610,63 @@ SectionEnd
 SectionGroupEnd		; Authentication
 
 
+SectionGroup /e "Proxy"
+
+Section "httpbin.org/get"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "http://136.243.47.220:3128"		; Germany
+	Push "/PROXY"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth-int"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}.md"
+	Push "/DEBUG"
+	Push "http://136.243.47.220:3128"		; Germany
+	Push "/PROXY"
+	Push "MyPass"
+	Push "MyUser"
+	Push "/AUTH"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $NSCURL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+SectionGroupEnd		; Proxy
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

@@ -377,6 +377,36 @@ SectionEnd
 SectionGroupEnd		; Authentication
 
 
+SectionGroup /e "Proxy"
+
+Section "httpbin.org/get"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END		; Germany
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+
+Section "httpbin.org/digest-auth/auth-int"
+	SectionIn 1	; All
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+SectionGroupEnd		; Proxy
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

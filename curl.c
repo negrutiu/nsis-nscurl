@@ -217,6 +217,11 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		MyFree( pszType );
 		MyFree( pszName );
 		MyFree( pszData );
+	} else if (lstrcmpi( pszParam, _T( "/PROXY" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			MyFree( pReq->pszProxy );
+			pReq->pszProxy = MyStrDup( eT2A, pszParam );
+		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszData );
@@ -234,21 +239,6 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
 		pReq->iCompleteTimeout = popint();
-	} else if (lstrcmpi( pszParam, _T( "/PROXY" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszProxy );
-			pReq->pszProxy = MyStrDup( eT2A, pszParam );
-		}
-	} else if (lstrcmpi( pszParam, _T( "/PROXYUSER" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszProxyUser );
-			pReq->pszProxyUser = MyStrDup( eT2A, pszParam );
-		}
-	} else if (lstrcmpi( pszParam, _T( "/PROXYPASS" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszProxyPass );
-			pReq->pszProxyPass = MyStrDup( eT2A, pszParam );
-		}
 	} else if (lstrcmpi( pszParam, _T( "/REFERER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			MyFree( pReq->pszReferrer );
@@ -877,7 +867,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pOutHeaders)
 				curl_easy_setopt( curl, CURLOPT_HTTPHEADER, pReq->pOutHeaders );
 
-			// TODO: PROXY
+			/// Proxy Server
+			if (pReq->pszProxy)
+				curl_easy_setopt( curl, CURLOPT_PROXY, pReq->pszProxy );
 
 			/// TLS Authentication
 			if (pReq->pszTlsUser && pReq->pszTlsPass) {
@@ -1132,7 +1124,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		}
 	}
 /*
-	{PROXY}
 	{SSL/TLS info}
 */
 }

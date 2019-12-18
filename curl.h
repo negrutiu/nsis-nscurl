@@ -15,6 +15,7 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszURL;
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
+	LPCSTR		pszProxy;				/// can be NULL
 	int			iAuthType;				/// can be 0
 	LPCSTR		pszUser;				/// can be NULL
 	LPCSTR		pszPass;				/// can be NULL. Represents OAuth 2.0 token if iAuthType is CURLAUTH_BEARER
@@ -24,9 +25,6 @@ typedef struct _CURL_REQUEST {
 	struct curl_slist	*pPostVars;		/// can be NULL
 	LPVOID		pszData;				/// can be NULL. If iDataSize != 0, (LPSTR)pszData is treated as data string. If iDataSize == 0, (LPTSTR)pszData is treated as data file name
 	curl_off_t	iDataSize;				/// can be 0
-	LPCSTR		pszProxy;				/// can be NULL
-	LPCSTR		pszProxyUser;			/// can be NULL
-	LPCSTR		pszProxyPass;			/// can be NULL
 	LPCSTR		pszAgent;				/// can be NULL
 	LPCSTR		pszReferrer;			/// can be NULL
 	BOOLEAN		bResume       : 1;
@@ -86,6 +84,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszURL );
 	MyFree( pReq->pszPath );
 	MyFree( pReq->pszMethod );
+	MyFree( pReq->pszProxy );
 	MyFree( pReq->pszUser );
 	MyFree( pReq->pszPass );
 	MyFree( pReq->pszTlsUser );
@@ -93,9 +92,6 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	curl_slist_free_all( pReq->pOutHeaders );
 	curl_slist_free_all( pReq->pPostVars );
 	MyFree( pReq->pszData );
-	MyFree( pReq->pszProxy );
-	MyFree( pReq->pszProxyUser );
-	MyFree( pReq->pszProxyPass );
 	MyFree( pReq->pszAgent );
 	MyFree( pReq->pszReferrer );
 	curl_slist_free_all( pReq->pCertList );

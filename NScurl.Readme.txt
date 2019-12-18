@@ -93,7 +93,7 @@ NScurl::http		GET|POST|HEAD|PUT|...
 					[/RESUME]
 					[/TIMEOUT | /CONNECTTIMEOUT msec]
 					[/COMPLETETIMEOUT msec]
-					[/PROXY server] [/PROXYUSER user] [/PROXYPASS pass]
+					[/PROXY proxy]
 					[/REFERER url]
 					[/USERAGENT agent]
 					[/NOREDIRECT]
@@ -127,9 +127,7 @@ Parameters:
 	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
 	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
 	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT
-	/PROXY server				| CERN type proxies (ex: "http=http://my_proxy:my_port"). SOCKS proxies are supported if Internet Explorer is installed
-	/PROXYUSER user				| Optional username for authenticated proxies
-	/PROXYPASS pass				| Optional password for authenticated proxies
+	/PROXY proxy				| scheme://address.domain[:port]. Supported schemes: http, https, socks4, socks4a, socks5, socks5a
 	/REFERER url				| Optional referrer URL, passed to InternetOpenRequest
 	/USERAGENT agent			| Optional user agent
 	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
