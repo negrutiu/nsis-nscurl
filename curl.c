@@ -278,6 +278,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 				e = popstring( pszParam );
 			}
 			if (e == NOERROR) {
+				// TODO: Encrypt user/pass/token in memory
 				if (pReq->iAuthType == CURLAUTH_BEARER) {
 					pReq->pszPass = MyStrDup( eT2A, pszParam );		/// OAuth 2.0 token (stored as password)
 				} else {
@@ -286,6 +287,13 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 						pReq->pszPass = MyStrDup( eT2A, pszParam );
 				}
 			}
+		}
+	} else if (lstrcmpi( pszParam, _T( "/TLSAUTH" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			// TODO: Encrypt user/pass/token in memory
+			pReq->pszTlsUser = MyStrDup( eT2A, pszParam );
+			if (popstring( pszParam ) == NOERROR)
+				pReq->pszTlsPass = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/INSECURE" ) ) == 0) {
 		pReq->bInsecure = TRUE;
@@ -871,7 +879,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 			// TODO: PROXY
 
-			/// Authentication
+			/// TLS Authentication
+			if (pReq->pszTlsUser && pReq->pszTlsPass) {
+				curl_easy_setopt( curl, CURLOPT_TLSAUTH_TYPE, "SRP" );
+				curl_easy_setopt( curl, CURLOPT_TLSAUTH_USERNAME, pReq->pszTlsUser );		// TODO: Store it encrypted
+				curl_easy_setopt( curl, CURLOPT_TLSAUTH_PASSWORD, pReq->pszTlsPass );		// TODO: Store it encrypted
+			}
+
+			/// HTTP Authentication
 			if (pReq->iAuthType == CURLAUTH_ANY || pReq->iAuthType == CURLAUTH_BASIC || pReq->iAuthType == CURLAUTH_DIGEST || pReq->iAuthType == CURLAUTH_DIGEST_IE) {
 				curl_easy_setopt( curl, CURLOPT_HTTPAUTH, pReq->iAuthType );
 				curl_easy_setopt( curl, CURLOPT_USERNAME, pReq->pszUser );		// TODO: Store it encrypted
