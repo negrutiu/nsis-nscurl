@@ -258,6 +258,7 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 	{
 		case WM_INITDIALOG:
 		{
+			HWND hParent = GetWindow( hDlg, GW_OWNER );
 			PGUI_REQUEST pGui = (PGUI_REQUEST)lParam;			/// CreateDialogParam parameter
 			assert( pGui );
 
@@ -273,12 +274,12 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 			EnableMenuItem( GetSystemMenu( hDlg, FALSE ), SC_CLOSE, MF_BYCOMMAND | (pGui->bCancel ? MF_ENABLED : MF_DISABLED) );
 
 			// Title
-			if (GetParent( hDlg ) && (GetParent( hDlg ) != GetDesktopWindow())) {
+			if (hParent && (hParent != GetDesktopWindow())) {
 				/// Load installer's title text
 				/// Unavailable during .onInit
-				ULONG l = GetWindowTextLength( GetParent( hDlg ) ) + 1;
+				ULONG l = GetWindowTextLength( hParent ) + 1;
 				if ((pGui->Runtime.pszTitle0 = (LPTSTR)MyAlloc( l * sizeof( TCHAR ) )) != NULL) {
-					GetWindowText( GetParent( hDlg ), pGui->Runtime.pszTitle0, l );
+					GetWindowText( hParent, pGui->Runtime.pszTitle0, l );
 					SetWindowText( hDlg, pGui->Runtime.pszTitle0 );
 				}
 			} else {
@@ -304,14 +305,15 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 			}
 
 			// Disable parent window (NSIS main window) for our modeless dialog to behave like a modal one
-			if (GetParent( hDlg ) != GetDesktopWindow() && IsWindowEnabled( GetParent( hDlg ) ))
-				EnableWindow( GetParent( hDlg ), FALSE );
+			if (IsWindowEnabled( hParent ) && (hParent != GetDesktopWindow()))
+				EnableWindow( hParent, FALSE );
 
 			return TRUE;	/// Focus (HWND)wParam
 		}
 
 		case WM_DESTROY:
 		{
+			HWND hParent = GetWindow( hDlg, GW_OWNER );
 			PGUI_REQUEST pGui = GetProp( hDlg, PROP_CONTEXT );
 			assert( pGui );
 
@@ -323,11 +325,8 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 			}
 
 			// Parent
-			EnableWindow( GetParent( hDlg ), TRUE );
-			if (GetParent( hDlg ) && IsWindowVisible( GetParent( hDlg ) ) && (GetParent( hDlg ) != GetDesktopWindow())) {
-				SetForegroundWindow( GetParent( hDlg ) );
-				SetWindowPos( GetParent( hDlg ), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE );
-			}
+			if (hParent && (hParent != GetDesktopWindow()))
+				EnableWindow( hParent, TRUE );
 
 			// Cleanup
 			pGui->Runtime.hTitle = pGui->Runtime.hText = pGui->Runtime.hProgress = NULL;
@@ -360,6 +359,9 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 
 		GuiWaitLoop( pGui );
 		DestroyWindow( hDlg );
+
+		if (IsWindowVisible( g_hwndparent ))
+			SetForegroundWindow( g_hwndparent );
 
 	} else {
 		assert( !"CreateDialogParam" );
@@ -408,7 +410,7 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 
 	} else {
 
-		// Check if we're on InstFiles built-in page
+		// Check if InstFiles (built-in) page exists
 		HWND hInstFilesPage = g_hwndparent ? FindWindowEx( g_hwndparent, NULL, _T( "#32770" ), NULL ) : NULL;
 		if (hInstFilesPage) {
 
