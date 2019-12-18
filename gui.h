@@ -13,6 +13,12 @@ typedef struct {
 	BOOLEAN bPopup : 1;					/// Wait in Popup-mode
 	BOOLEAN bCancel : 1;				/// Enable Cancel button in Page-mode and Popup-mode
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
+	LPTSTR pszTitle;
+	LPTSTR pszTitleNoSize;
+	LPTSTR pszTitleMulti;
+	LPTSTR pszText;
+	LPTSTR pszTextNoSize;
+	LPTSTR pszTextMulti;
 	struct {
 		ULONG iId;						/// May be QUEUE_NO_ID
 		ULONG iAnimIndex;				/// Auto increment
@@ -31,6 +37,12 @@ static void GuiRequestInit( _Inout_ PGUI_REQUEST pGui ) {
 //+ GuiRequestDestroy
 static void GuiRequestDestroy( _Inout_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
+	MyFree( pGui->pszTitle );
+	MyFree( pGui->pszTitleNoSize );
+	MyFree( pGui->pszTitleMulti );
+	MyFree( pGui->pszText );
+	MyFree( pGui->pszTextNoSize );
+	MyFree( pGui->pszTextMulti );
 	MyFree( pGui->Runtime.pszTitle0 );
 	MyFree( pGui->Runtime.pszText0 );
 	ZeroMemory( pGui, sizeof( *pGui ) );

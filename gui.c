@@ -9,11 +9,19 @@
 #include "resource.h"
 
 
-#define MY_PBS_MARQUEE			0x08				/// XP+
-#define MY_PBM_SETMARQUEE		(WM_USER+10)
+#define MY_PBS_MARQUEE						0x08				/// XP+
+#define MY_PBM_SETMARQUEE					(WM_USER+10)
 
-#define PROP_WNDPROC			_T( "NSCURL_WNDPROC" )
-#define PROP_CONTEXT			_T( "NSCURL_CONTEXT" )
+#define PROP_WNDPROC						_T( "NSCURL_WNDPROC" )
+#define PROP_CONTEXT						_T( "NSCURL_CONTEXT" )
+
+#define DEFAULT_TITLE						_T( "[@PERCENT@%] @TITLE0@" )
+#define DEFAULT_TITLE_NOSIZE				_T( "@TITLE0@" )
+#define DEFAULT_TITLE_MULTI					_T( "[@TOTALCOMPLETE@ / @TOTALCOUNT@] @TITLE0@" )
+
+#define DEFAULT_TEXT						_T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@ @ANIMDOTS@" )
+#define DEFAULT_TEXT_NOSIZE					_T( "@OUTFILE@, @XFERSIZE@ @ @SPEED@ @ANIMDOTS@" )
+#define DEFAULT_TEXT_MULTI					_T( "@TOTALCOMPLETE@ / @TOTALCOUNT@, @TOTALSIZE@ @ @TOTALSPEED@ @ANIMDOTS@" )
 
 
 //++ GuiInitialize
@@ -50,6 +58,26 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 		pGui->hText = (HWND)popintptr();
 	} else if (lstrcmpi( pszParam, _T( "/PROGRESSWND" ) ) == 0) {
 		pGui->hProgress = (HWND)popintptr();
+	} else if (lstrcmpi( pszParam, _T( "/STRING" ) ) == 0) {
+		if (popstring( pszParam ) == NO_ERROR) {
+			TCHAR szName[64];
+			lstrcpyn( szName, pszParam, ARRAYSIZE( szName ) );
+			if (popstring( pszParam ) == NO_ERROR) {
+				if (lstrcmpi( szName, _T( "title" ) ) == 0) {
+					pGui->pszTitle = MyStrDup( eT2T, pszParam );
+				} else if (lstrcmpi( szName, _T( "title_nosize" ) ) == 0) {
+					pGui->pszTitleNoSize = MyStrDup( eT2T, pszParam );
+				} else if (lstrcmpi( szName, _T( "title_multi" ) ) == 0) {
+					pGui->pszTitleMulti = MyStrDup( eT2T, pszParam );
+				} else if (lstrcmpi( szName, _T( "text" ) ) == 0) {
+					pGui->pszText = MyStrDup( eT2T, pszParam );
+				} else if (lstrcmpi( szName, _T( "text_nosize" ) ) == 0) {
+					pGui->pszTextNoSize = MyStrDup( eT2T, pszParam );
+				} else if (lstrcmpi( szName, _T( "text_multi" ) ) == 0) {
+					pGui->pszTextMulti = MyStrDup( eT2T, pszParam );
+				}
+			}
+		}
 	} else {
 		bRet = FALSE;
 	}
@@ -608,18 +636,18 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 
 		if (pGui->Runtime.hTitle) {
 			if (iPercent == -1) {
-				lstrcpyn( pszBuf, _T( "@TITLE0@" ), iBufSize );
+				lstrcpyn( pszBuf, pGui->pszTitleNoSize ? pGui->pszTitleNoSize : DEFAULT_TITLE_NOSIZE, iBufSize );
 			} else {
-				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @TITLE0@" ), iBufSize );
+				lstrcpyn( pszBuf, pGui->pszTitle ? pGui->pszTitle : DEFAULT_TITLE, iBufSize );
 			}
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
 		}
 		if (pGui->Runtime.hText) {
 			if (iPercent == -1) {
-				lstrcpyn( pszBuf, _T( "@OUTFILE@, @XFERSIZE@ @ @SPEED@ @ANIMDOTS@" ), iBufSize );
+				lstrcpyn( pszBuf, pGui->pszTextNoSize ? pGui->pszTextNoSize : DEFAULT_TEXT_NOSIZE, iBufSize );
 			} else {
-				lstrcpyn( pszBuf, _T( "[@PERCENT@%] @OUTFILE@, @XFERSIZE@ / @FILESIZE@ @ @SPEED@ @ANIMDOTS@" ), iBufSize );
+				lstrcpyn( pszBuf, pGui->pszText ? pGui->pszText : DEFAULT_TEXT, iBufSize );
 			}
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hText, pszBuf );
@@ -631,12 +659,12 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 		iPercent = (qs.iComplete * 100) / (qs.iWaiting + qs.iRunning + qs.iComplete);
 
 		if (pGui->Runtime.hTitle) {
-			lstrcpyn( pszBuf, _T( "[@TOTALCOMPLETE@ / @TOTALCOUNT@] @TITLE0@" ), iBufSize );
+			lstrcpyn( pszBuf, pGui->pszTitleMulti ? pGui->pszTitleMulti : DEFAULT_TITLE_MULTI, iBufSize );
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hTitle, pszBuf );
 		}
 		if (pGui->Runtime.hText) {
-			lstrcpyn( pszBuf, _T( "@TOTALCOMPLETE@ / @TOTALCOUNT@, @TOTALSIZE@ @ @TOTALSPEED@" ), iBufSize );
+			lstrcpyn( pszBuf, pGui->pszTextMulti ? pGui->pszTextMulti : DEFAULT_TEXT_MULTI, iBufSize );
 			GuiQuery( pGui, pszBuf, iBufSize );
 			SetWindowText( pGui->Runtime.hText, pszBuf );
 		}

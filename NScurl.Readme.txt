@@ -114,6 +114,8 @@ NScurl::http
 	[/BACKGROUND] [/SILENT] [/POPUP]
 	[/CANCEL]
 	[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
+	[/STRING TITLE string] [/STRING TITLE_NOSIZE string] [/STRING TITLE_MULTI string]
+	[/STRING TEXT  string] [/STRING TEXT_NOSIZE  string] [/STRING TEXT_MULTI  string]
 	/END
 
 Remarks:
@@ -159,6 +161,13 @@ Parameters:
 	/TITLEWND hwnd				| Title window handle (HWND)
 	/TEXTWND hwnd				| Text window handle (HWND)
 	/PROGRESSWND hwnd			| Progress bar window handle (HWND)
+
+	/STRING TITLE string		| Custom title string (Single active download)
+	/STRING TITLE_NOSIZE string	| Custom title string (Single active download, size/percent unknown)
+	/STRING TITLE_MULTI string	| Custom title string (Multiple active downloads)
+	/STRING TEXT string			| Custom text string (Single active download)
+	/STRING TEXT_NOSIZE string	| Custom text string (Single active download, size/percent unknown)
+	/STRING TEXT_MULTI string	| Custom text string (Multiple active downloads)
 
 	/END						| Must conclude the parameter list
 
@@ -206,6 +215,17 @@ Examples:
 	[...]
 	NScurl::query /ID $0 "@ERROR@"
 	Pop $1	; Transfer status ("OK" for success)
+
+	; Customize (localize) strings
+	NScurl::http \
+		GET \
+		"${MY_URL}" \
+		"${MY_FILE}" \
+		/STRING TEXT        "[@PERCENT@%] Downloading @ANIMDOTS@" \
+		/STRING TEXT_NOSIZE "Downloading @ANIMDOTS@" \
+		/STRING TEXT_MULTI  "Downloading @TOTALCOMPLETE@ / @TOTALCOUNT@ @ANIMDOTS@" \
+		/END
+	Pop $0
 _____________________________________________________________________________________________________
 
 NScurl::Wait		[/ID id]
