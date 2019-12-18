@@ -628,7 +628,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	if (!pszBuf)
 		return;
 
-	if (qs.iRunning == 1 && qs.iWaiting == 0) {
+	if (pGui->Runtime.iId != QUEUE_NO_ID) {
 
 		// Single Running transfer
 		lstrcpyn( pszBuf, _T( "@PERCENT@" ), iBufSize );

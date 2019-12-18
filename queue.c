@@ -235,7 +235,7 @@ PCURL_REQUEST QueueTail()
 //++ QueueFind
 PCURL_REQUEST QueueFind( _In_ ULONG iId )
 {
-	if (iId) {
+	if (iId != 0 && iId != QUEUE_NO_ID) {
 		PCURL_REQUEST p;
 		for (p = g_Queue.Head; p && (p->Queue.iId != iId); p = p->Queue.pNext);
 		return p;
@@ -323,10 +323,14 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 {
 	PCURL_REQUEST p;
 	BOOLEAN bOK;
+	ULONG iLastRunningId = QUEUE_NO_ID;
+
 	assert( pStats );
+
 	ZeroMemory( pStats, sizeof( *pStats ) );
 	pStats->iSingleID = QUEUE_NO_ID;
 	MemoryBarrier();
+
 	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
 
 		if (iId == QUEUE_NO_ID || p->Queue.iId == iId) {
@@ -334,7 +338,7 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 			if (p->Queue.iStatus == STATUS_WAITING)
 				pStats->iWaiting++;
 			else if (p->Queue.iStatus == STATUS_RUNNING)
-				pStats->iRunning++, pStats->iSingleID = p->Queue.iId;
+				pStats->iRunning++, iLastRunningId = p->Queue.iId;
 			else if (p->Queue.iStatus == STATUS_COMPLETE)
 				pStats->iComplete++;
 			else
@@ -349,8 +353,16 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 				pStats->iErrors++;
 		}
 	}
-	if (pStats->iRunning != 1)
+
+	if (iId != QUEUE_NO_ID) {
+		pStats->iSingleID = iId;
+	} else if (pStats->iWaiting == 0 && pStats->iRunning == 1) {
+		pStats->iSingleID = iLastRunningId;
+	} else {
 		pStats->iSingleID = QUEUE_NO_ID;
+	}
+
+	//x TRACE( _T( "ID:%d, SingleID:%d, Waiting:%u, Running:%u\n" ), iId, pStats->iSingleID, pStats->iWaiting, pStats->iRunning );
 }
 
 
@@ -405,38 +417,14 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 	LONG iStrLen = -1;
 	if (pszStr && iStrMaxLen) {
 
-		PCURL_REQUEST pReq = NULL;
 		QueueLock();
 
 		// Replace request-specific keywords
-		if (iId != QUEUE_NO_ID) {
-			pReq = QueueFind( iId );
-		} else {
-			// If a single request is running, use it for querying
-			if (!pReq) {
-				PCURL_REQUEST p;
-				for (p = QueueHead(); p; p = p->Queue.pNext) {
-					if (pReq == NULL && p->Queue.iStatus == STATUS_RUNNING) {
-						pReq = p;		/// First running
-					} else if (pReq != NULL && (p->Queue.iStatus == STATUS_RUNNING || p->Queue.iStatus == STATUS_WAITING)) {
-						pReq = NULL;	/// Others are running/waiting as well
-						break;
-					}
-				}
-			}
-			// If there's a single request, use it for querying
-			if (!pReq) {
-				if (QueueHead() && !QueueHead()->Queue.pNext) {
-					pReq = QueueHead();
-				}
-			}
-		}
-		iStrLen = CurlQuery( pReq, pszStr, iStrMaxLen );		//? pReq can be NULL
+		iStrLen = CurlQuery( QueueFind( iId ), pszStr, iStrMaxLen );		//? pReq can be NULL
 
 		// Replace global queue keywords
-		if (iStrLen != -1) {
+		if (iStrLen != -1)
 			iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, NULL );
-		}
 
 		QueueUnlock();
 	}
