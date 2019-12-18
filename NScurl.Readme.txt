@@ -84,28 +84,37 @@ Return:
 	[Stack] "OK" for successful transfers, or an error string (HTTP or Win32) otherwise
 _________________________________________________________________________________________________
 
-NScurl::http		GET|POST|HEAD|PUT|...
-					URL
-					file|MEMORY
-					[/HEADER hdr1]...[/HEADER hdrN]
-					[/DATA data|@datafile]
-					[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
-					[/RESUME]
-					[/TIMEOUT | /CONNECTTIMEOUT msec]
-					[/COMPLETETIMEOUT msec]
-					[/PROXY proxy]
-					[/REFERER url]
-					[/USERAGENT agent]
-					[/NOREDIRECT]
-					[/AUTH [TYPE=basic|digest|digestie] user pass]
-					[/AUTH TYPE=bearer token]
-					[/INSECURE]
-					[/CERT thumbprint1]...[/CERT thumbprintN]
-					[/CACERT dir\cacert.pem]
-					[/BACKGROUND] [/SILENT] [/POPUP]
-					[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
-					[/DEBUG debugfile]
-					/END
+NScurl::http		
+
+	GET|POST|HEAD|PUT|...
+	URL
+	file|MEMORY
+
+	[/PROXY proxy]
+	[/TIMEOUT | /CONNECTTIMEOUT msec]
+	[/COMPLETETIMEOUT msec]
+	[/NOREDIRECT]
+	[/RESUME]
+	[/USERAGENT agent]
+	[/REFERER url]
+	[/DEBUG debugfile]
+
+	[/AUTH [TYPE=basic|digest|digestie] user pass]
+	[/AUTH TYPE=bearer token]
+	[/TLSAUTH user pass]
+
+	[/HEADER hdr1]...[/HEADER hdrN]
+	[/DATA data|@datafile]
+	[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
+
+	[/INSECURE]
+	[/CERT thumbprint1]...[/CERT thumbprintN]
+	[/CACERT dir\cacert.pem]
+
+	[/BACKGROUND] [/SILENT] [/POPUP]
+	[/CANCEL]
+	[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
+	/END
 
 Remarks:
 	Add a transfer request to the queue.
@@ -116,6 +125,21 @@ Parameters:
 	GET|POST|HEAD|...			| HTTP Method (default: GET)
 	URL							| HTTP or HTTPS...
 	path|MEMORY					| Destination file path or MEMORY. When downloading to memory the remote content can be retrieved with query( "@RECVDATA@" )
+
+	/PROXY proxy				| scheme://address.domain[:port]. Supported schemes: http, https, socks4, socks4a, socks5, socks5a
+	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
+	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
+	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT
+	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
+	/RESUME						| Resume existing file. By default they are overwritten
+	/USERAGENT agent			| Optional user agent
+	/REFERER url				| Optional referrer URL
+	/DEBUG debugfile			| Write transfer HTTP/SSL details to a debugging file. None by default
+
+	/AUTH [TYPE=basic|digest|digestie] user pass	| HTTP authentication. Type is determined automatically by default. However, an explicit type must be specified when connecting to servers with "hidden" authentication. Username and password must be cleartext, unescaped.
+	/AUTH TYPE=bearer token							| HTTP bearer authentication. OAuth 2.0 token is mandatory
+	/TLSAUTH user pass			| TLS-SRP (Secure Remote Password) authentication
+
 	/HEADER hdr					| Additional HTTP request header(s), delimited by CRLF ($\r$\n). Multiple /HEADER parameters are accepted
 	/DATA data|@datafile		| Data string/file to be uploaded. Valid for POST and PUT, ignored otherwise
 	/POSTVAR					| Multipart form part. Used only with POST, ignored otherwise. Multiple /POSTVAR parameters are accepted
@@ -123,28 +147,19 @@ Parameters:
 		[TYPE=mime_type]		|	Optional. MIME type (e.g. "application\json")
 		name					|	Part name (e.g. "MyData")
 		data|@datafile			|	Part data string/file
-	/RESUME						| Resume existing file. By default they are overwritten
-	/CONNECTTIMEOUT msec		| Connect timeout (default: infinite)
-	/COMPLETETIMEOUT msec		| Connect + Transfer timeout (default: infinite)
-	/TIMEOUT msec				| Identical to /CONNECTTIMEOUT
-	/PROXY proxy				| scheme://address.domain[:port]. Supported schemes: http, https, socks4, socks4a, socks5, socks5a
-	/REFERER url				| Optional referrer URL, passed to InternetOpenRequest
-	/USERAGENT agent			| Optional user agent
-	/NOREDIRECT					| Don't follow HTTP redirections. They are followed by default
-	/AUTH [TYPE=basic|digest|digestie] user pass	| HTTP authentication. Type is determined automatically by default. However, an explicit type must be specified when connecting to servers with "hidden" authentication. Username and password must be cleartext, unescaped.
-	/AUTH TYPE=bearer token							| HTTP bearer authentication. OAuth 2.0 token is mandatory
-	/TLSAUTH user pass			| TLS-SRP (Secure Remote Password) authentication
+
 	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
 	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
 	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
-	/BACKGROUND					| Don't wait for the transfer to complete. The HTTP request is added to the queue and handled in the background. The call returns a unique transfer ID that your can use later to NScurl::wait() or NScurl::query() the status
+
+	/BACKGROUND					| Don't wait for the transfer to complete. The HTTP request is added to the queue and handled in the background. The call returns a transfer ID that you can pass to NScurl::wait() or NScurl::query()
 	/SILENT						| Wait silently for the transfer to complete. No visual progress is displayed
 	/POPUP						| Wait for the transfer to complete. Progress is displayed on a pop-up window
 	/CANCEL						| Enable Cancel button when waiting in Page-mode or Popup-mode
-	/TITLEWND hwnd				| Title window handle
-	/TEXTWND hwnd				| Text window handle
-	/PROGRESSWND hwnd			| Progress bar window handle
-	/DEBUG debugfile			| Write transfer HTTP/SSL details to a debugging file. None by default
+	/TITLEWND hwnd				| Title window handle (HWND)
+	/TEXTWND hwnd				| Text window handle (HWND)
+	/PROGRESSWND hwnd			| Progress bar window handle (HWND)
+
 	/END						| Must conclude the parameter list
 
 Return:
