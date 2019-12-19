@@ -111,11 +111,14 @@ NScurl::http
 	[/CERT thumbprint1]...[/CERT thumbprintN]
 	[/CACERT dir\cacert.pem]
 
-	[/BACKGROUND] [/SILENT] [/POPUP]
+	[/BACKGROUND]
+	
+	[/PAGE] [/POPUP] [/SILENT]
 	[/CANCEL]
 	[/TITLEWND hwnd] [/TEXTWND hwnd] [/PROGRESSWND hwnd]
 	[/STRING TITLE string] [/STRING TITLE_NOSIZE string] [/STRING TITLE_MULTI string]
 	[/STRING TEXT  string] [/STRING TEXT_NOSIZE  string] [/STRING TEXT_MULTI  string]
+
 	/END
 
 Remarks:
@@ -154,13 +157,17 @@ Parameters:
 	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
 	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
 
-	/BACKGROUND					| Don't wait for the transfer to complete. The HTTP request is added to the queue and handled in the background. The call returns a transfer ID that you can pass to NScurl::wait() or NScurl::query()
-	/SILENT						| Wait silently for the transfer to complete. No visual progress is displayed
+	/BACKGROUND					| Don't wait for the transfer to complete. No visual progress is displayed.
+								| The HTTP request is added to the queue and handled in the background.
+								| The call returns a transfer ID that you can pass to NScurl::wait() or NScurl::query()
+
+	/PAGE						| Wait for the transfer to complete. If waiting in (built-in) InstFiles page, the progress is displayed on a dedicated progress bar/text. This is the default mode
 	/POPUP						| Wait for the transfer to complete. Progress is displayed on a pop-up window
+	/SILENT						| Wait silently for the transfer to complete. No visual progress is displayed
 	/CANCEL						| Enable Cancel button when waiting in Page-mode or Popup-mode
-	/TITLEWND hwnd				| Title window handle (HWND)
-	/TEXTWND hwnd				| Text window handle (HWND)
-	/PROGRESSWND hwnd			| Progress bar window handle (HWND)
+	/TITLEWND hwnd				| Title window handle
+	/TEXTWND hwnd				| Text window handle
+	/PROGRESSWND hwnd			| Progress bar window handle
 
 	/STRING TITLE string		| Custom title string (Single active download)
 	/STRING TITLE_NOSIZE string	| Custom title string (Single active download, size/percent unknown)

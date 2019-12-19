@@ -46,10 +46,15 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 
 	if (lstrcmpi( pszParam, _T( "/BACKGROUND" ) ) == 0) {
 		pGui->bBackground = TRUE;
-	} else if (lstrcmpi( pszParam, _T( "/SILENT" ) ) == 0) {
-		pGui->bSilent = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/PAGE" ) ) == 0) {
+		pGui->bPopup = FALSE;
+		pGui->bSilent = FALSE;
 	} else if (lstrcmpi( pszParam, _T( "/POPUP" ) ) == 0) {
 		pGui->bPopup = TRUE;
+		pGui->bSilent = FALSE;
+	} else if (lstrcmpi( pszParam, _T( "/SILENT" ) ) == 0) {
+		pGui->bPopup = FALSE;
+		pGui->bSilent = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CANCEL" ) ) == 0) {
 		pGui->bCancel = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/TITLEWND" ) ) == 0) {
