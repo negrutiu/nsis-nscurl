@@ -185,6 +185,9 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 	}	/// while
 	#undef HEARTBEAT
 
+	// Final paint
+	GuiRefresh( pGui );
+
 	CloseHandle( hDummyEvent );
 	pGui->Runtime.iId = QUEUE_NO_ID;
 }
