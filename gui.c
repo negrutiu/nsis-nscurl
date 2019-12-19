@@ -520,11 +520,11 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 		GuiWaitLoop( pGui );
 
 		// Restore controls
-		if (pGui->Runtime.pszTitle0)
-			SetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0 );
+	//x	if (pGui->Runtime.pszTitle0)
+	//x		SetWindowText( pGui->hTitle, pGui->Runtime.pszTitle0 );
 
-		if (pGui->Runtime.pszText0)
-			SetWindowText( pGui->hText, pGui->Runtime.pszText0 );
+	//x	if (pGui->Runtime.pszText0)
+	//x		SetWindowText( pGui->hText, pGui->Runtime.pszText0 );
 
 		if (pGui->Runtime.hText) {
 			if (pGui->Runtime.hText != pGui->hText)				/// Don't destroy caller-supplied Text control
