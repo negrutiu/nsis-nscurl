@@ -101,6 +101,10 @@ BOOL MyFileExistsW( _In_ LPCWSTR pszFile );
 BOOL MyFileExistsA( _In_ LPCSTR pszFile );
 
 
+//+ MyCreateDirectory
+ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename );
+
+
 //+ MySetThreadName
 // Available in Win10+
 void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName );

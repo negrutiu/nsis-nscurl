@@ -698,6 +698,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// Output file
 	if (pReq->pszPath && *pReq->pszPath) {
 		ULONG e = ERROR_SUCCESS;
+		MyCreateDirectory( pReq->pszPath, TRUE );	// Create intermediate directories
 		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, (pReq->bResume ? OPEN_ALWAYS : CREATE_ALWAYS), FILE_ATTRIBUTE_NORMAL, NULL );
 		if (MyValidHandle( pReq->Runtime.hOutFile )) {
 			/// Resume?
@@ -726,6 +727,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// Debug file
 	if (pReq->pszDebugFile && *pReq->pszDebugFile) {
 		ULONG e = ERROR_SUCCESS;
+		MyCreateDirectory( pReq->pszDebugFile, TRUE );		// Create intermediate directories
 		pReq->Runtime.hDebugFile = CreateFile( pReq->pszDebugFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 		if (!MyValidHandle( pReq->Runtime.hOutFile )) {
 			e = GetLastError();

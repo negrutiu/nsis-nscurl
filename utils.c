@@ -67,6 +67,66 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 }
 
 
+//++ MyCreateDirectory
+ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
+{
+	ULONG e = ERROR_SUCCESS;
+	LPTSTR pszBuf;
+
+	if (!pszPath || !*pszPath)
+		return ERROR_INVALID_PARAMETER;
+
+	// Work with a copy of the string
+	if ((pszBuf = MyStrDup( eT2T, pszPath )) != NULL) {
+
+		TCHAR *psz, ch;
+		ULONG len = lstrlen( pszBuf );
+		// Strip trailing backslashes
+		for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+			*psz = _T( '\0' ), len--;
+		if (bHasFilename) {
+			// Strip filename
+			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz != _T( '\\' )) && (*psz != _T( '/' )); psz--)
+				*psz = _T( '\0' ), len--;
+			// Strip trailing backslashes
+			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+				*psz = _T( '\0' ), len--;
+		}
+		psz = pszBuf;
+		// Skip UNC server name (\\?\UNC\SERVER)
+		if (CompareString( CP_ACP, NORM_IGNORECASE, psz, 8, _T( "\\\\?\\UNC\\" ), -1 ) == CSTR_EQUAL) {
+			psz += 8;
+			for (; *psz != _T( '\\' ) && *psz != _T( '\0' ); psz++);
+		}
+		// Skip \\?\ prefix
+		if (CompareString( CP_ACP, NORM_IGNORECASE, psz, 4, _T( "\\\\?\\" ), -1 ) == CSTR_EQUAL)
+			psz += 4;
+		// Skip network server name (\\SERVER)
+		if (CompareString( CP_ACP, NORM_IGNORECASE, psz, 2, _T( "\\\\" ), -1 ) == CSTR_EQUAL) {
+			psz += 2;
+			for (; *psz != _T( '\\' ) && *psz != _T( '\0' ); psz++);
+		}
+		// Create intermediate directories
+		for (; (e == ERROR_SUCCESS) && *psz; ) {
+			for (; *psz == _T( '\\' ); psz++);
+			for (; *psz != _T( '\\' ) && *psz != _T( '\0' ); psz++);
+			ch = *psz, *psz = _T( '\0' );
+			e = CreateDirectory( pszBuf, NULL ) ? ERROR_SUCCESS : GetLastError();
+			if (e == ERROR_ALREADY_EXISTS || e == ERROR_ACCESS_DENIED)
+				e = ERROR_SUCCESS;
+			*psz = ch;
+		}
+
+		MyFree( pszBuf );
+
+	} else {
+		e = ERROR_OUTOFMEMORY;
+	}
+
+	return e;
+}
+
+
 //++ MyStrDup
 LPVOID MyStrDup( _In_ Encodings iEnc, _In_ LPCVOID pszSrc )
 {
@@ -344,7 +404,9 @@ ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR p
 		if (hMem) {
 			LPVOID pRes = LockResource( hMem );
 			if (pRes) {
-				HANDLE h = CreateFile( pszOutPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+				HANDLE h;
+				MyCreateDirectory( pszOutPath, TRUE );
+				h = CreateFile( pszOutPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 				if (h != INVALID_HANDLE_VALUE) {
 					ULONG iWritten;
 					if (WriteFile( h, pRes, iResSize, &iWritten, NULL )) {
