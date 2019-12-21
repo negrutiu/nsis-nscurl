@@ -1123,7 +1123,15 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			ULONG e;
 			CurlRequestFormatError( pReq, NULL, 0, NULL, &e );
 			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), e );
+		} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0) {
+			if (pReq->Error.iWin32 == ERROR_CANCELLED || pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK) {
+				lstrcpyn( pszKeyword, _T( "1" ), iMaxLen );
+			} else {
+				lstrcpyn( pszKeyword, _T( "0" ), iMaxLen );
+			}
 		}
+	} else {
+		// TODO: pReq is NULL. Replace all keywords with "", "n/a", etc.
 	}
 /*
 	{SSL/TLS info}
