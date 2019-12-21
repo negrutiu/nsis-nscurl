@@ -678,7 +678,11 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	} else {
 
 		// Multiple or zero Running transfers
-		iPercent = (qs.iComplete * 100) / (qs.iWaiting + qs.iRunning + qs.iComplete);
+		if (qs.iWaiting + qs.iRunning + qs.iComplete > 0) {
+			iPercent = (qs.iComplete * 100) / (qs.iWaiting + qs.iRunning + qs.iComplete);
+		} else {
+			iPercent = 0;
+		}
 
 		if (pGui->Runtime.hTitle) {
 			lstrcpyn( pszBuf, pGui->pszTitleMulti ? pGui->pszTitleMulti : DEFAULT_TITLE_MULTI, iBufSize );
