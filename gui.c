@@ -44,7 +44,12 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 	BOOL bRet = TRUE;
 	assert( iParamMaxLen && pszParam && pGui );
 
-	if (lstrcmpi( pszParam, _T( "/BACKGROUND" ) ) == 0) {
+	if (lstrcmpi( pszParam, _T( "/RETURN" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			MyFree( pGui->pszReturn );
+			pGui->pszReturn = MyStrDup( eT2T, pszParam );
+		}
+	} else if (lstrcmpi( pszParam, _T( "/BACKGROUND" ) ) == 0) {
 		pGui->bBackground = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/PAGE" ) ) == 0) {
 		pGui->bPopup = FALSE;
@@ -593,20 +598,27 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 				GuiSilentWait( pGui );
 			}
 		}
+	}
 
+	// Return
+	if (!pGui->bBackground) {
 		if (pGui->iId != QUEUE_NO_ID) {
-			//? Wait for ID: Return status
-			lstrcpyn( pszResult, _T( "@ERROR@" ), iResultMaxLen );
+			//? Wait for single ID
+			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "@ERROR@" ), iResultMaxLen );
 			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
 		} else {
-			//? Wait for all: Return OK
-			lstrcpyn( pszResult, _T( "OK" ), iResultMaxLen );
+			//? Wait for all
+			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "OK" ), iResultMaxLen );
+			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
 		}
-
 	} else {
-		//? Background: Return request ID
+		//? Background transfer, no waiting. Always return transfer ID
 		assert( pGui->iId != QUEUE_NO_ID );
-		_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->iId );
+		if (pGui->iId != QUEUE_NO_ID) {
+			_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->iId );
+		} else {
+			lstrcpyn( pszResult, _T( "0" ), iResultMaxLen );		// 0 == invalid ID
+		}
 	}
 }
 

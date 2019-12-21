@@ -111,6 +111,7 @@ NScurl::http
 	[/CERT thumbprint1]...[/CERT thumbprintN]
 	[/CACERT dir\cacert.pem]
 
+	[/RETURN query_string]
 	[/BACKGROUND]
 	
 	[/PAGE] [/POPUP] [/SILENT]
@@ -124,7 +125,6 @@ NScurl::http
 Remarks:
 	Add a transfer request to the queue.
 	The transfer will start as soon as a worker thread becomes available.
-	This command will not display any GUI.
 	
 Parameters:
 	GET|POST|HEAD|...			| HTTP Method (default: GET)
@@ -157,9 +157,13 @@ Parameters:
 	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
 	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
 
+	/RETURN query_string		| Request a custom return value. Default is "@ERROR@" (aka transfer status)
+								| Query variable are accepted (e.g. "@ERRORCODE@ - @ELAPSEDTIME@")
+								| Check out "query()" for a list of query variables
+
 	/BACKGROUND					| Don't wait for the transfer to complete. No visual progress is displayed.
 								| The HTTP request is added to the queue and handled in the background.
-								| The call returns a transfer ID that you can pass to NScurl::wait() or NScurl::query()
+								| The call returns the transfer ID
 
 	/PAGE						| Wait for the transfer to complete. If waiting in (built-in) InstFiles page, the progress is displayed on a dedicated progress bar/text. This is the default mode
 	/POPUP						| Wait for the transfer to complete. Progress is displayed on a pop-up window
@@ -179,9 +183,9 @@ Parameters:
 	/END						| Must conclude the parameter list
 
 Return:
-	[Stack] Returns two possible values
-	1. An error string (e.g. "OK", "Not Found", etc.) by default
-	2. An unique request ID if /BACKGROUND parameter is specified
+	Transfer status (aka "@ERROR@") is returned on the stack by default (e.g. "OK" or success)
+	If /BACKGROUND is specified, transfer ID is returned on the stack (instead of the transfer status)
+	If /RETURN is specified, a custom query string is returned on the stack (instead of the transfer status)
 
 Examples:
 

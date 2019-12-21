@@ -8,10 +8,11 @@
 //+ struct GUI_REQUEST
 typedef struct {
 	ULONG iId;							/// Can be QUEUE_NO_ID
-	BOOLEAN bBackground : 1;			/// Background transfer, no waiting
-	BOOLEAN bSilent : 1;				/// Wait in Silent-mode
-	BOOLEAN bPopup : 1;					/// Wait in Popup-mode
-	BOOLEAN bCancel : 1;				/// Enable Cancel button in Page-mode and Popup-mode
+	LPTSTR pszReturn;					/// Can be NULL. Custom return string (e.g. "@ERRORCODE@")
+	BOOLEAN bBackground   : 1;			/// Background transfer, no waiting
+	BOOLEAN bSilent       : 1;			/// Wait in Silent-mode
+	BOOLEAN bPopup        : 1;			/// Wait in Popup-mode
+	BOOLEAN bCancel       : 1;			/// Enable Cancel button in Page-mode and Popup-mode
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
 	LPTSTR pszTitle;
 	LPTSTR pszTitleNoSize;
@@ -37,6 +38,7 @@ static void GuiRequestInit( _Inout_ PGUI_REQUEST pGui ) {
 //+ GuiRequestDestroy
 static void GuiRequestDestroy( _Inout_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
+	MyFree( pGui->pszReturn );
 	MyFree( pGui->pszTitle );
 	MyFree( pGui->pszTitleNoSize );
 	MyFree( pGui->pszTitleMulti );
