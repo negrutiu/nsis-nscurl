@@ -1,18 +1,20 @@
 
-# NScurl demo
+# NScurl development script
 # Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl#nsis-plugin-nscurl
 # Syntax: Test.exe /dll <nscurl.dll>
 
 !ifdef AMD64
-	Target amd64-unicode
+	!define _TARGET_ amd64-unicode
 !else ifdef ANSI
-	Target x86-ansi
+	!define _TARGET_ x86-ansi
 !else
-	Target x86-unicode	; Default
+	!define _TARGET_ x86-unicode		; Default
 !endif
 
+Target ${_TARGET_}
+
 # /dll commandline parameter
-Var /global NSCURL
+Var /global DLL
 
 !include "MUI2.nsh"
 !define LOGICLIB_STRCMP
@@ -52,15 +54,8 @@ InstType "None"		; 2
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
 # Installer details
-!ifdef NSIS_AMD64
-	OutFile "NScurl-Debug-amd64-unicode.exe"
-!else ifdef NSIS_UNICODE
-	OutFile "NScurl-Debug-x86-unicode.exe"
-!else
-	OutFile "NScurl-Debug-x86-ansi.exe"
-!endif
-
-Name "NScurl-Debug"
+Name    "NScurl-Debug-${_TARGET_}"
+OutFile "NScurl-Debug-${_TARGET_}.exe"
 XPStyle on
 RequestExecutionLevel user		; Don't require UAC elevation
 ShowInstDetails show
@@ -90,7 +85,7 @@ Function .onInit
 
 	; Command line
 	${GetParameters} $R0
-	${GetOptions} "$R0" "/dll" $NSCURL
+	${GetOptions} "$R0" "/dll" $DLL
 	${If} ${Errors}
 		MessageBox MB_ICONSTOP 'Syntax:$\n"$EXEFILE" /DLL <NScurl.dll>'
 		Abort
@@ -108,7 +103,7 @@ Function .onInit
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 	!insertmacro STACK_VERIFY_END
 */
@@ -141,7 +136,7 @@ Section "Parallel (50 * put)"
 		Push "Memory"
 		Push "https://httpbin.org/put"
 		Push "PUT"
-		CallInstDLL $NSCURL http
+		CallInstDLL $DLL http
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -174,7 +169,7 @@ Section "httpbin.org/get"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -198,7 +193,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -223,7 +218,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -248,7 +243,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -303,7 +298,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "POST"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -337,7 +332,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "POST"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -369,7 +364,7 @@ Section "httpbin.org/post (application/json)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "POST"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -406,7 +401,7 @@ Section "httpbin.org/put"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "PUT"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -436,7 +431,7 @@ Section /o "Big file (100MB)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -466,7 +461,7 @@ Section /o "Big file (10GB)"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 
 	Pop $0
 	DetailPrint "Status: $0"
@@ -494,7 +489,7 @@ Section "httpbin.org/basic-auth"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -521,7 +516,7 @@ Section "httpbin.org/hidden-basic-auth"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -547,7 +542,7 @@ Section "httpbin.org/bearer"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -574,7 +569,7 @@ Section "httpbin.org/digest-auth/auth"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -600,7 +595,7 @@ Section "httpbin.org/digest-auth/auth-int"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -629,7 +624,7 @@ Section "httpbin.org/get"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -657,7 +652,7 @@ Section "httpbin.org/digest-auth/auth-int"
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
-	CallInstDLL $NSCURL http
+	CallInstDLL $DLL http
 	Pop $0
 
 	DetailPrint "Status: $0"
@@ -681,7 +676,7 @@ Section "Wait for all"
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
 	Push "/CANCEL"
-	CallInstDLL $NSCURL wait
+	CallInstDLL $DLL wait
 	!insertmacro STACK_VERIFY_END
 
 	; Print summary
@@ -695,7 +690,7 @@ Function PrintAllRequests
 	; NScurl::enumerate
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
-	CallInstDLL $NSCURL enumerate
+	CallInstDLL $DLL enumerate
 	
 _enum_loop:
 
@@ -709,7 +704,7 @@ _enum_loop:
 	Push 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
 	Push $0
 	Push "/ID"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -718,7 +713,7 @@ _enum_loop:
 	Push '@METHOD@ @URL@ -> @OUT@'
 	Push $0
 	Push "/ID"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -727,7 +722,7 @@ _enum_loop:
 	Push 'Request Headers: @SENTHEADERS@'
 	Push $0
 	Push "/ID"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -736,7 +731,7 @@ _enum_loop:
 	Push 'Reply Headers: @RECVHEADERS@'
 	Push $0
 	Push "/ID"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -745,7 +740,7 @@ _enum_loop:
 	Push 'Remote Content: @RECVDATA@'
 	Push $0
 	Push "/ID"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $1
 	DetailPrint "$1"
 	!insertmacro STACK_VERIFY_END
@@ -771,7 +766,7 @@ Section /o Test
 	Push 1
 	Push bbb
 	Push "aaa"
-	CallInstDLL $NSCURL echo
+	CallInstDLL $DLL echo
 	Pop $0
 	DetailPrint 'NScurl::echo(...) = "$0"'
 	!insertmacro STACK_VERIFY_END
@@ -786,7 +781,7 @@ Section /o Hashes
 	; NScurl::md5
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	CallInstDLL $NSCURL md5
+	CallInstDLL $DLL md5
 	Pop $0
 	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
@@ -794,7 +789,7 @@ Section /o Hashes
 	; NScurl::sha1
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	CallInstDLL $NSCURL sha1
+	CallInstDLL $DLL sha1
 	Pop $0
 	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
@@ -802,7 +797,7 @@ Section /o Hashes
 	; NScurl::sha256
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	CallInstDLL $NSCURL sha256
+	CallInstDLL $DLL sha256
 	Pop $0
 	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
 	!insertmacro STACK_VERIFY_END
@@ -819,14 +814,14 @@ Section /o "Un/Escape"
 
 	!insertmacro STACK_VERIFY_START
 	Push $R0
-	CallInstDLL $NSCURL escape
+	CallInstDLL $DLL escape
 	Pop $1
 	DetailPrint "Escaped: $1"
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
 	Push $1
-	CallInstDLL $NSCURL unescape
+	CallInstDLL $DLL unescape
 	Pop $0
 	DetailPrint "Unescaped: $0"
 	!insertmacro STACK_VERIFY_END
@@ -841,14 +836,14 @@ Section About
 	; NScurl::query
 	!insertmacro STACK_VERIFY_START
 	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $0
 	DetailPrint 'NScurl::query = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
 	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
-	CallInstDLL $NSCURL query
+	CallInstDLL $DLL query
 	Pop $0
 	DetailPrint 'NScurl::query = "$0"'
 	!insertmacro STACK_VERIFY_END
@@ -878,7 +873,7 @@ Section /o "HTTP GET (Popup mode)"
 	Push "/LOCAL"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL $NSCURL Transfer
+	CallInstDLL $DLL Transfer
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -903,7 +898,7 @@ Section /o "HTTP GET (Silent mode)"
 	Push "/LOCAL"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL $NSCURL Transfer
+	CallInstDLL $DLL Transfer
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -927,7 +922,7 @@ Section /o "HTTP GET (Parallel transfers)"
 	Push "/LOCAL"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL $NSCURL Request
+	CallInstDLL $DLL Request
 	Pop $1
 	!insertmacro STACK_VERIFY_END
 
@@ -943,7 +938,7 @@ Section /o "HTTP GET (Parallel transfers)"
 	Push "/LOCAL"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL $NSCURL Request
+	CallInstDLL $DLL Request
 	Pop $2
 	!insertmacro STACK_VERIFY_END
 
@@ -959,7 +954,7 @@ Section /o "HTTP GET (Parallel transfers)"
 	Push "/LOCAL"
 	Push "${LINK}"
 	Push "/URL"
-	CallInstDLL $NSCURL Request
+	CallInstDLL $DLL Request
 	Pop $3
 	!insertmacro STACK_VERIFY_END
 
@@ -972,7 +967,7 @@ Section /o "HTTP GET (Parallel transfers)"
 	Push "/ABORT"
 	Push "Page"
 	Push "/Mode"
-	CallInstDLL $NSCURL Wait
+	CallInstDLL $DLL Wait
 	Pop $0
 	!insertmacro STACK_VERIFY_END
 
@@ -1011,7 +1006,7 @@ Section /o "HTTP GET (proxy)"
 	Push "/URL"
 	Push 10
 	Push "/PRIORITY"
-	CallInstDLL $NSCURL Transfer
+	CallInstDLL $DLL Transfer
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -1046,7 +1041,7 @@ Section /o "HTTP POST (application/json)"
 	Push "/URL"
 	Push "POST"
 	Push "/METHOD"
-	CallInstDLL $NSCURL Transfer
+	CallInstDLL $DLL Transfer
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -1081,7 +1076,7 @@ Section /o "HTTP POST (application/x-www-form-urlencoded)"
 	Push "/URL"
 	Push "POST"
 	Push "/METHOD"
-	CallInstDLL $NSCURL Transfer
+	CallInstDLL $DLL Transfer
 	Pop $0
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
@@ -1112,7 +1107,7 @@ SectionEnd
 	Push "/DEPEND"
 	Push 2000
 	Push "/PRIORITY"
-	CallInstDLL $NSCURL Request
+	CallInstDLL $DLL Request
 	Pop $0	; Request ID
 !macroend
 
@@ -1144,7 +1139,7 @@ Section /o "Test Dependencies (depend on first request)"
 	Push "/SETDEPEND"
 	Push $R0		; First request ID
 	Push "/ID"
-	CallInstDLL $NSCURL "Set"
+	CallInstDLL $DLL "Set"
 	Pop $0	; Error code. Ignored
 
 	; Wait
@@ -1155,7 +1150,7 @@ Section /o "Test Dependencies (depend on first request)"
 	Push "/ABORT"
 	Push "Page"
 	Push "/Mode"
-	CallInstDLL $NSCURL Wait
+	CallInstDLL $DLL Wait
 	Pop $0
 
 	!insertmacro STACK_VERIFY_END
@@ -1189,7 +1184,7 @@ Section /o "Test Dependencies (depend on previous request)"
 	Push "/SETDEPEND"
 	Push $R0		; First request ID
 	Push "/ID"
-	CallInstDLL $NSCURL "Set"
+	CallInstDLL $DLL "Set"
 	Pop $0	; Error code. Ignored
 
 	; Wait
@@ -1203,7 +1198,7 @@ Section /o "Test Dependencies (depend on previous request)"
 	;Push "/TITLEHWND"
 	Push "Page"
 	Push "/MODE"
-	CallInstDLL $NSCURL Wait
+	CallInstDLL $DLL Wait
 	Pop $0
 
 	!insertmacro STACK_VERIFY_END
@@ -1226,7 +1221,7 @@ Function PrintSummary
 	; Enumerate all transfers (completed + pending + waiting)
 	DetailPrint "NScurl::Enumerate"
 	Push "/END"
-	CallInstDLL $NSCURL Enumerate
+	CallInstDLL $DLL Enumerate
 	Pop $1	; Count
 	DetailPrint "    $1 requests"
 	${For} $0 1 $1
@@ -1259,7 +1254,7 @@ Function PrintSummary
 		Push "/PRIORITY"
 		Push $2	; Request ID
 		Push "/ID"
-		CallInstDLL $NSCURL Query
+		CallInstDLL $DLL Query
 
 		StrCpy $R0 "[>] ID:$2"
 		Pop $3 ;PRIORITY
@@ -1356,7 +1351,7 @@ Function PrintSummary
 	Push "/TOTALDOWNLOADING"
 	Push "/TOTALCOMPLETED"
 	Push "/TOTALCOUNT"
-	CallInstDLL $NSCURL QueryGlobal
+	CallInstDLL $DLL QueryGlobal
 	Pop $R0 ; Total
 	Pop $R1 ; Completed
 	Pop $R2 ; Downloading

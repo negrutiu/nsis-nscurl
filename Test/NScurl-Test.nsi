@@ -3,12 +3,14 @@
 # Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl#nsis-plugin-nscurl
 
 !ifdef AMD64
-	Target amd64-unicode
+	!define _TARGET_ amd64-unicode
 !else ifdef ANSI
-	Target x86-ansi
+	!define _TARGET_ x86-ansi
 !else
-	Target x86-unicode	; Default
+	!define _TARGET_ x86-unicode		; Default
 !endif
+
+Target ${_TARGET_}
 
 !include "MUI2.nsh"
 !define LOGICLIB_STRCMP
@@ -49,15 +51,8 @@ InstType "None"		; 2
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
 # Installer details
-!ifdef NSIS_AMD64
-	OutFile "NScurl-Test-amd64-unicode.exe"
-!else ifdef NSIS_UNICODE
-	OutFile "NScurl-Test-x86-unicode.exe"
-!else
-	OutFile "NScurl-Test-x86-ansi.exe"
-!endif
-
-Name "NScurl-Test"
+Name    "NScurl-Test-${_TARGET_}"
+OutFile "NScurl-Test-${_TARGET_}.exe"
 XPStyle on
 RequestExecutionLevel user		; Don't require UAC elevation
 ShowInstDetails show
