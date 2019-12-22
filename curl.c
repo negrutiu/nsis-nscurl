@@ -73,7 +73,29 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "OK" ) );
 			} else {
 				if (pbSuccess) *pbSuccess = FALSE;
-				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iHttp, pReq->Error.pszHttp );
+				if (pszError) {
+					// Some servers don't return the Reason-Phrase in their Status-Line (e.g. https://files.loseapp.com/file)
+					if (!pReq->Error.pszHttp) {
+						if (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "OK" );
+						} else if (pReq->Error.iHttp == 400) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Bad Request" );
+						} else if (pReq->Error.iHttp == 401) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Unauthorized" );
+						} else if (pReq->Error.iHttp == 403) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Forbidden" );
+						} else if (pReq->Error.iHttp == 404) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Found" );
+						} else if (pReq->Error.iHttp == 405) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Method Not Allowed" );
+						} else if (pReq->Error.iHttp == 500) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Internal Server Error" );
+						} else {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Error" );
+						}
+					}
+					_sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iHttp, pReq->Error.pszHttp );
+				}
 			}
 		}
 	}
@@ -428,13 +450,15 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		// Extract HTTP status text from header
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
 		// e.g. "HTTP/1.1 404 NOT FOUND" -> "NOT FOUND"
+		// e.g. "HTTP/1.1 200 " -> Some servers don't return the Reason-Phrase in their Status-Line (e.g. https://files.loseapp.com/file)
+		MyFree( pReq->Error.pszHttp );
 		for (psz1 = buffer; (*psz1 != ' ') && (*psz1 != '\0'); psz1++);		/// Find first whitespace
 		if (*psz1++ == ' ') {
 			for (; (*psz1 != ' ') && (*psz1 != '\0'); psz1++);				/// Find second whitespace
 			if (*psz1++ == ' ') {
 				for (psz2 = psz1; (*psz2 != '\r') && (*psz2 != '\n') && (*psz2 != '\0'); psz2++);	/// Find trailing \r\n
-				MyFree( pReq->Error.pszHttp );
-				pReq->Error.pszHttp = MyStrDupN( eA2A, psz1, (int)(psz2 - psz1) );
+				if (psz2 > psz1)
+					pReq->Error.pszHttp = MyStrDupN( eA2A, psz1, (int)(psz2 - psz1) );
 			}
 		}
 
