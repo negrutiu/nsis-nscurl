@@ -981,9 +981,46 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		MyStrCopy( eT2T, pszKeyword, iMaxLen, PLUGINNAME );
 	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINVERSION@" ) ) == 0) {
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, g_Curl.szVersion );
+	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINAUTHOR@" ) ) == 0) {
+		TCHAR szPath[MAX_PATH] = _T( "" );
+		GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) );
+		MyReadVersionString( szPath, _T( "CompanyName" ), pszKeyword, iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@PLUGINWEB@" ) ) == 0) {
+		TCHAR szPath[MAX_PATH] = _T( "" );
+		GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) );
+		MyReadVersionString( szPath, _T( "LegalTrademarks" ), pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLVERSION@" ) ) == 0) {
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->version );
+	} else if (lstrcmpi( pszKeyword, _T( "@CURLSSLVERSION@" ) ) == 0) {
+		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
+		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->ssl_version );
+	} else if (lstrcmpi( pszKeyword, _T( "@CURLPROTOCOLS@" ) ) == 0) {
+		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
+		ULONG i, len;
+		for (i = 0, len = 0, pszKeyword[0] = 0; ver->protocols && ver->protocols[i]; i++) {
+			if (pszKeyword[0])
+				pszKeyword[len++] = _T( ' ' ), pszKeyword[len] = _T( '\0' );
+			MyStrCopy( eA2T, pszKeyword + len, iMaxLen - len, ver->protocols[i] );
+			len += lstrlen( pszKeyword + len );
+		}
+	} else if (lstrcmpi( pszKeyword, _T( "@CURLFEATURES@" ) ) == 0) {
+		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
+		ULONG i, len;
+		CHAR features[][16] = {
+		"IPv6", "Kerberos4", "SSL", "libz", "NTLM", "GSSNEGOTIATE", "Debug", "AsynchDNS",
+		"SPNEGO", "Largefile", "IDN", "SSPI", "CharConv", "TrackMemory", "TLS-SRP", "NTLM_WB",
+		"HTTP2", "GSS-API", "Kerberos", "UnixSockets", "PSL", "HTTPS-proxy", "MultiSSL", "brotli",
+		"alt-svc", "HTTP3", "ESNI"
+		};
+		for (i = 0, len = 0, pszKeyword[0] = 0; i < ARRAYSIZE( features ); i++) {
+			if (ver->features & (1 << i)) {
+				if (pszKeyword[0])
+					pszKeyword[len++] = _T( ' ' ), pszKeyword[len] = _T( '\0' );
+				MyStrCopy( eA2T, pszKeyword + len, iMaxLen - len, features[i] );
+				len += lstrlen( pszKeyword + len );
+			}
+		}
 	} else if (lstrcmpi( pszKeyword, _T( "@MBEDTLSVERSION@" ) ) == 0) {
 		//? "mbedTLS/x.y.z" -> "x.y.z"
 		LPCSTR psz;

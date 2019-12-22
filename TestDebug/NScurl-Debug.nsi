@@ -832,17 +832,52 @@ Section About
 
 	; NScurl::query
 	!insertmacro STACK_VERIFY_START
-	Push "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	Push "NScurl/@PLUGINVERSION@"
 	CallInstDLL $DLL query
 	Pop $0
-	DetailPrint 'NScurl::query = "$0"'
+	DetailPrint '$0'
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
-	Push "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	Push "    @PLUGINAUTHOR@"
 	CallInstDLL $DLL query
 	Pop $0
-	DetailPrint 'NScurl::query = "$0"'
+	DetailPrint '$0'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "    @PLUGINWEB@"
+	CallInstDLL $DLL query
+	Pop $0
+	DetailPrint '$0'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "curl/@CURLVERSION@ @CURLSSLVERSION@"
+	CallInstDLL $DLL query
+	Pop $0
+	DetailPrint '$0'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "    Protocols: @CURLPROTOCOLS@"
+	CallInstDLL $DLL query
+	Pop $0
+	DetailPrint '$0'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "    Features: @CURLFEATURES@"
+	CallInstDLL $DLL query
+	Pop $0
+	DetailPrint '$0'
+	!insertmacro STACK_VERIFY_END
+
+	!insertmacro STACK_VERIFY_START
+	Push "Agent: @USERAGENT@"
+	CallInstDLL $DLL query
+	Pop $0
+	DetailPrint '$0'
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 

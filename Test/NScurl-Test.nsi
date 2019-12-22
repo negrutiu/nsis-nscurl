@@ -510,13 +510,33 @@ Section About
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	NScurl::query "[Version] @PLUGINVERSION@, [Agent] @USERAGENT@"
+	NScurl::query "NScurl/@PLUGINVERSION@"
 	Pop $0
-	DetailPrint 'NScurl::query = "$0"'
+	DetailPrint '$0'
 
-	NScurl::query "[SSL] curl/@CURLVERSION@, mbedtls/@MBEDTLSVERSION@"
+	NScurl::query "    @PLUGINAUTHOR@"
 	Pop $0
-	DetailPrint 'NScurl::query = "$0"'
+	DetailPrint '$0'
+
+	NScurl::query "    @PLUGINWEB@"
+	Pop $0
+	DetailPrint '$0'
+
+	NScurl::query "curl/@CURLVERSION@ @CURLSSLVERSION@"
+	Pop $0
+	DetailPrint '$0'
+
+	NScurl::query "    Protocols: @CURLPROTOCOLS@"
+	Pop $0
+	DetailPrint '$0'
+
+	NScurl::query "    Features: @CURLFEATURES@"
+	Pop $0
+	DetailPrint '$0'
+
+	NScurl::query "Agent: @USERAGENT@"
+	Pop $0
+	DetailPrint '$0'
 SectionEnd
 
 
