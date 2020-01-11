@@ -399,6 +399,89 @@ SectionEnd
 SectionGroupEnd		; Proxy
 
 
+SectionGroup /e "SSL Validation"
+
+Section "Expired certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://expired.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "Revoked certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://revoked.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "Self-signed certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://self-signed.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "Untrusted certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://untrusted-root.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "Wrong host"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://wrong.host.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "HTTP public key pinning (HPKP)"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://pinning-test.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+SectionGroupEnd		; SSL Validation
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

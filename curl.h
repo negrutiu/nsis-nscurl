@@ -29,9 +29,8 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszReferrer;			/// can be NULL
 	BOOLEAN		bResume       : 1;
 	BOOLEAN		bNoRedirect   : 1;
-	BOOLEAN		bInsecure     : 1;
-	struct curl_slist *pCertList;		/// can be NULL. Ignored if bInsecure is TRUE
-	LPCSTR		pszCacert;				/// can be NULL. Ignored if bInsecure is TRUE
+	LPCSTR		pszCacert;				/// can be NULL. If valid and empty ("") no cacert.pem is used
+	struct curl_slist *pCertList;		/// can be NULL. If pszCacert=="" and pCertList==NULL, the SSL validation is turned off
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
@@ -50,6 +49,7 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
+		ULONG		iRootCertFlags;		/// Original root certificate validation flags
 		HANDLE		hDebugFile;			/// Debug connection
 		LPCSTR		pszFinalURL;		/// The final URL, after following all redirections
 		LONG		iServerPort;
@@ -76,6 +76,7 @@ static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
 	pReq->Runtime.iPercent = -1;		/// Unknown size
+	pReq->Runtime.iRootCertFlags = -1;	/// Uninitialized
 }
 
 //+ CurlRequestDestroy

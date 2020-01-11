@@ -659,6 +659,137 @@ SectionEnd
 SectionGroupEnd		; Proxy
 
 
+SectionGroup /e "SSL Validation"
+
+Section "Expired certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://expired.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Revoked certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://revoked.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Self-signed certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://self-signed.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Untrusted certificate"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://untrusted-root.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Wrong host"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://wrong.host.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "HTTP public key pinning (HPKP)"
+	SectionIn 1	; All
+		
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://pinning-test.badssl.com/'
+	!define /redef FILE 'Memory'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+SectionGroupEnd		; SSL Validation
+
+
 Section "Wait for all"
 	SectionIn 1	2 ; All
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

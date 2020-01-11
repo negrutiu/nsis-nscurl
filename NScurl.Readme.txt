@@ -84,7 +84,7 @@ Return:
 	[Stack] "OK" for successful transfers, or an error string (HTTP or Win32) otherwise
 _________________________________________________________________________________________________
 
-NScurl::http		
+NScurl::http
 
 	GET|POST|HEAD|PUT|...
 	URL
@@ -107,9 +107,8 @@ NScurl::http
 	[/DATA data|@datafile]
 	[/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile]...[/POSTVAR ...]
 
-	[/INSECURE]
-	[/CERT thumbprint1]...[/CERT thumbprintN]
 	[/CACERT dir\cacert.pem]
+	[/CERT thumbprint1]...[/CERT thumbprintN]
 
 	[/RETURN query_string]
 	[/BACKGROUND]
@@ -153,9 +152,8 @@ Parameters:
 		name					|	Part name (e.g. "MyData")
 		data|@datafile			|	Part data string/file
 
-	/INSECURE					| No SSL validation. Accept any server certificate. This parameter overwrites /CERT and /CACERT (default: false)
-	/CERT thumbprint			| Specify a TRUSTED certificate server. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). This parameter overwrites /CACERT
-	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used
+	/CACERT <dir\cacert.pem>	| Specify a custom cacert.pem file. By default a built-in cacert.pem is extracted and used. SSL validation can be turned off by specifying an empty cacert.pem file
+	/CERT thumbprint			| Specify a TRUSTED server certificate (sha1) thumbprint. Multiple /CERT parameters are accepted (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc). Trusted thumbprints will be used for server validation in addition to cacert.pem
 
 	/RETURN query_string		| Request a custom return value. Default is "@ERROR@" (aka transfer status)
 								| Query variable are accepted (e.g. "@ERRORCODE@ - @ELAPSEDTIME@")
