@@ -19,6 +19,12 @@ CURL_GLOBALS g_Curl = {0};
 #define DEFAULT_HEADERS_VIRTUAL_SIZE	CURL_MAX_HTTP_HEADER	/// 100KB
 #define DEFAULT_UKNOWN_VIRTUAL_SIZE		1024 * 1024 * 200		/// 200MB
 
+// ----------------------------------------------------------------------
+// TODO: Client certificate (CURLOPT_SSLCERT, CURLOPT_PROXY_SSLCERT)
+// TODO: Certificate revocation (CURLOPT_CRLFILE, CURLOPT_PROXY_CRLFILE)
+// TODO: Secure Proxy (CURLOPT_PROXY_CAPATH, CURLOPT_PROXY_SSL_VERIFYHOST, CURLOPT_PROXY_SSL_VERIFYPEER)
+// TODO: HPKP - HTTP public key pinning (CURLOPT_PINNEDPUBLICKEY, CURLOPT_PROXY_PINNEDPUBLICKEY)
+// ----------------------------------------------------------------------
 
 //+ CurlRequestSizes
 void CurlRequestSizes( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PBOOL pbDown )

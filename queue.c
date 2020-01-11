@@ -103,7 +103,7 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 					g_Queue.ThreadCount++;
 					MySetThreadName( hThread, L"NScurl" );
 				} else {
-					// TODO: GetLastError()
+					TRACE( _T( "%hs::CreateThread( Id:%u, Url:%hs ) = 0x%x\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL, GetLastError() );
 				}
 			} else {
 				//? The maximum number of threads are already running
