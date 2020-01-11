@@ -12,6 +12,7 @@ VOID UtilsDestroy();
 #if DBG || _DEBUG
 	#define TRACE_ENABLED
 #endif
+#define TRACE_NO_PREFIX _T("\x0001")
 
 #if defined (TRACE_ENABLED)
 	#define TRACE TraceImpl

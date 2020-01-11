@@ -33,9 +33,15 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 		int iLen1, iLen2;
 		va_list args;
 
-		iLen1 = _sntprintf( szStr, ARRAYSIZE(szStr), _T( "[nscurl.th%04x] " ), GetCurrentThreadId() );
-
 		va_start( args, pszFormat );
+
+		if (pszFormat[0] == TRACE_NO_PREFIX[0]) {
+			pszFormat++;
+			iLen1 = 0;
+		} else {
+			iLen1 = _sntprintf( szStr, ARRAYSIZE( szStr ), _T( "[nscurl.th%04x] " ), GetCurrentThreadId() );
+		}
+
 		iLen2 = _vsntprintf( szStr + iLen1, (int)ARRAYSIZE( szStr ) - iLen1, pszFormat, args );
 		if ( iLen2 > 0 ) {
 			if ( iLen1 + iLen2 < ARRAYSIZE( szStr ) )
@@ -44,6 +50,7 @@ VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
 			szStr[ARRAYSIZE( szStr ) - 1] = 0;
 		}
 		OutputDebugString( szStr );
+
 		va_end( args );
 	}
 }
