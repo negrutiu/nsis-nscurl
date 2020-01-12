@@ -178,6 +178,23 @@ SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T siz
 void   VirtualMemoryReset( _Inout_ VMEMO *pMem );			/// Reset to 0-bytes
 void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );			/// Free everything
 
+//+ Input Data
+#define IDATA_TYPE_STRING		's'
+#define IDATA_TYPE_FILE			'f'
+#define IDATA_TYPE_MEM			'm'
+typedef struct {
+	char Type;					/// IDATA_TYPE_XXX
+	union {
+		LPCSTR  Str;			/// utf8
+		LPCTSTR File;			/// TCHAR
+		PUCHAR  Mem;			/// LPBYTE
+	};
+	curl_off_t Size;
+} IDATA;
+void IDataInitialize( _Inout_ IDATA *pData );
+void IDataDestroy( _Inout_ IDATA *pData );
+BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData );
+
 
 //+ Unicode
 #ifdef _UNICODE

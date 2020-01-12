@@ -552,22 +552,40 @@ SectionEnd
 Section /o Hashes
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!define S1 "Hash this string"
 
-	; NScurl::md5
-	NScurl::md5 $EXEPATH
+	; NScurl::md5 /FILE filename
+	NScurl::md5 /FILE $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::md5 /FILE "$EXEFILE" = "$0"'
+
+	; NScurl::md5 string
+	NScurl::md5 "${S1}"
+	Pop $0
+	DetailPrint 'NScurl::md5 "${S1}" = "$0"'
+
+	; NScurl::md5 /MEM ptr size
+	StrLen $R1 "${S1}"
+	System::Call '*(&m128 "${S1}") p.r10'
+	IntFmt $R0 "0x%Ix" $R0
+
+	NScurl::md5 /MEM $R0 $R1
+	Pop $0
+	DetailPrint 'NScurl::md5 /MEM ($R0:"${S1}", $R1) = "$0"'
+
+	System::Free $R0
 
 	; NScurl::sha1
-	NScurl::sha1 $EXEPATH
+	NScurl::sha1 /FILE $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::sha1 /FILE "$EXEFILE" = "$0"'
 
 	; NScurl::sha256
-	NScurl::sha256 $EXEPATH
+	NScurl::sha256 /FILE $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::sha256 /FILE "$EXEFILE" = "$0"'
 
+	!undef S1
 SectionEnd
 
 

@@ -458,9 +458,9 @@ Pop $0	; Returns the original string<br>
 
 <hr>
 
-<h2><a name="md5">NScurl::md5</a> &lt;file&gt;<br>
-<a name="sha1">NScurl::sha1</a> &lt;file&gt;<br>
-<a name="sha256">NScurl::sha256</a> &lt;file&gt;</h2>
+<h2><a name="md5">NScurl::md5</a> &lt;string|/FILE filename|/MEM ptr size&gt;<br>
+<a name="sha1">NScurl::sha1</a> &lt;string|/FILE filename|/MEM ptr size&gt;<br>
+<a name="sha256">NScurl::sha256</a> &lt;string|/FILE filename|/MEM ptr size&gt;</h2>
 
 <h3>Description:</h3>
 Compute the md5/sha1/sha256 file hashes.<br>
@@ -470,13 +470,16 @@ The hash (formatted as hex string) is pushed to the stack.<br>
 
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
-<b><a href="#md5">NScurl::md5</a></b> $EXEPATH<br>
+<b><a href="#md5">NScurl::md5</a></b> "Hash this string"<br>
+Pop $0	; e.g. "376630459092d7682c2a2e745d74aa6b"<br>
+<br>
+<b><a href="#md5">NScurl::md5</a></b> /FILE $EXEPATH<br>
 Pop $0	; e.g. "93a52d04f7b56bc267d45bd95c6de49b"<br>
 <br>
-<b><a href="#sha1">NScurl::sha1</a></b> $EXEPATH<br>
+<b><a href="#sha1">NScurl::sha1</a></b> /FILE $EXEPATH<br>
 Pop $0	; e.g. "faff487654d4dfa1deb5e5d462c8cf51b00a4acd"<br>
 <br>
-<b><a href="#sha256">NScurl::sha256</a></b> $EXEPATH<br>
+<b><a href="#sha256">NScurl::sha256</a></b> /FILE $EXEPATH<br>
 Pop $0	; e.g. "e6fababe9530b1d5c4395ce0a1379c201ebb017997e4671a442a8410d1e2e6ac"<br>
 </div>
 <br>

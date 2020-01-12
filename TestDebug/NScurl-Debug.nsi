@@ -905,31 +905,66 @@ SectionEnd
 Section /o Hashes
 	SectionIn 1
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!define S1 "Hash this string"
 
-	; NScurl::md5
+	; NScurl::md5 /FILE filename
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
+	Push /FILE
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::md5 /FILE "$EXEFILE" = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::md5 string
+	!insertmacro STACK_VERIFY_START
+	Push "${S1}"
+	CallInstDLL $DLL md5
+	Pop $0
+	DetailPrint 'NScurl::md5 "${S1}" = "$0"'
+	!insertmacro STACK_VERIFY_END
+
+	; NScurl::md5 /MEM ptr size
+	!insertmacro STACK_VERIFY_START
+	Push $R0
+	Push $R1
+
+	StrLen $R1 "${S1}"
+	System::Call '*(&m128 "${S1}") p.r10'
+	IntFmt $R0 "0x%Ix" $R0
+
+	Push $R1
+	Push $R0
+	Push /mem
+	CallInstDLL $DLL md5
+	Pop $0
+	DetailPrint 'NScurl::md5 /MEM ($R0:"${S1}", $R1) = "$0"'
+
+	System::Free $R0
+
+	Pop $R1
+	Pop $R0
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha1
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
+	Push /FILE
 	CallInstDLL $DLL sha1
 	Pop $0
-	DetailPrint 'NScurl::sha1( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::sha1 /FILE "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha256
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
+	Push /FILE
 	CallInstDLL $DLL sha256
 	Pop $0
-	DetailPrint 'NScurl::sha256( $EXEFILE ) = "$0"'
+	DetailPrint 'NScurl::sha256 /FILE "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
+	!undef S1
 SectionEnd
 
 

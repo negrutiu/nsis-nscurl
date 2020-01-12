@@ -83,11 +83,12 @@ UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 }
 
 
-//++ [exported] md5 <file>
+//++ [exported] md5 <string|/FILE filename|/MEM ptr size>
 EXTERN_C __declspec(dllexport)
 void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz;
+	IDATA data;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -100,8 +101,13 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[16];
-		if (FileHash( psz, hash, NULL, NULL ) == ERROR_SUCCESS) {
-			MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+		if (IDataParseParam( psz, string_size, &data )) {
+			if (Hash( &data, hash, NULL, NULL ) == ERROR_SUCCESS) {
+				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+			} else {
+				psz[0] = 0;
+			}
+			IDataDestroy( &data );
 		} else {
 			psz[0] = 0;
 		}
@@ -112,11 +118,12 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 }
 
 
-//++ [exported] sha1 <file>
+//++ [exported] sha1 <string|/FILE filename|/MEM ptr size>
 EXTERN_C __declspec(dllexport)
 void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz;
+	IDATA data;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -129,8 +136,13 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[20];
-		if (FileHash( psz, NULL, hash, NULL ) == ERROR_SUCCESS) {
-			MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+		if (IDataParseParam( psz, string_size, &data )) {
+			if (Hash( &data, NULL, hash, NULL ) == ERROR_SUCCESS) {
+				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+			} else {
+				psz[0] = 0;
+			}
+			IDataDestroy( &data );
 		} else {
 			psz[0] = 0;
 		}
@@ -141,11 +153,12 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] sha256 <file>
+//++ [exported] sha256 <string|/FILE filename|/MEM ptr size>
 EXTERN_C __declspec(dllexport)
 void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz;
+	IDATA data;
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -158,8 +171,13 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[32];
-		if (FileHash( psz, NULL, NULL, hash ) == ERROR_SUCCESS) {
-			MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+		if (IDataParseParam( psz, string_size, &data )) {
+			if (Hash( &data, NULL, NULL, hash ) == ERROR_SUCCESS) {
+				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
+			} else {
+				psz[0] = 0;
+			}
+			IDataDestroy( &data );
 		} else {
 			psz[0] = 0;
 		}

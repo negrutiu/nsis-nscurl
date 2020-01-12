@@ -816,3 +816,63 @@ void VirtualMemoryDestroy( _Inout_ VMEMO *pMem )
 		ZeroMemory( pMem, sizeof( *pMem ) );
 	}
 }
+
+
+//++ IDataInitialize
+void IDataInitialize( _Inout_ IDATA *pData )
+{
+	assert( pData );
+	ZeroMemory( pData, sizeof( *pData ) );
+}
+
+
+//++ IDataDestroy
+void IDataDestroy( _Inout_ IDATA *pData )
+{
+	assert( pData );
+	MyFree( pData->Str );
+	ZeroMemory( pData, sizeof( *pData ) );
+}
+
+
+//++ IDataParseParam
+//? Syntax: string | /FILE filename | /MEM ptr size
+BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
+{
+	BOOL bRet = FALSE;
+	assert( pszParam && iParamMaxLen && pData );
+
+	IDataInitialize( pData );
+
+	if (lstrcmpi( pszParam, _T( "/FILE" ) ) == 0) {
+		// Clone the filename (TCHAR)
+		if (popstring( pszParam ) == NO_ERROR) {
+			if ((pData->File = MyStrDup( eT2T, pszParam )) != NULL) {
+				pData->Type = IDATA_TYPE_FILE;
+			//x	pData->Size = lstrlen( pData->File );
+				bRet = TRUE;
+			}
+		}
+	} else if (lstrcmpi( pszParam, _T( "/MEM" ) ) == 0) {
+		// Clone the buffer (PVOID)
+		LPCVOID ptr;
+		size_t size;
+		if ((ptr = (LPCVOID)popintptr()) != NULL && (size = (ULONG_PTR)popintptr()) != 0) {
+			if ((pData->Mem = MyAlloc( size )) != NULL) {
+				CopyMemory( pData->Mem, ptr, size );
+				pData->Type = IDATA_TYPE_MEM;
+				pData->Size = size;
+				bRet = TRUE;
+			}
+		}
+	} else {
+		// Clone the string (utf8)
+		if ((pData->Str = MyStrDup( eT2A, pszParam )) != NULL) {
+			pData->Type = IDATA_TYPE_STRING;
+			pData->Size = lstrlenA( pData->Str );
+			bRet = TRUE;
+		}
+	}
+
+	return bRet;
+}

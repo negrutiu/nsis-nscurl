@@ -10,8 +10,27 @@
 #include <mbedtls/sha256.h>
 
 
-//++ FileHash
-ULONG FileHash( _In_ LPCTSTR pszFile, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha1, _Out_opt_ PUCHAR sha256 )
+//++ Hash
+ULONG Hash( _In_ IDATA *pData, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha1, _Out_opt_ PUCHAR sha256 )
+{
+	if (!pData)
+		return ERROR_INVALID_PARAMETER;
+
+	if (pData->Type == IDATA_TYPE_FILE) {
+		return HashFile( pData->File, md5, sha1, sha256 );
+	} else if (pData->Type == IDATA_TYPE_MEM) {
+		return HashMem( pData->Mem, (size_t)pData->Size, md5, sha1, sha256 );
+	} else if (pData->Type == IDATA_TYPE_STRING) {
+		assert( lstrlenA( pData->Str ) == pData->Size );
+		return HashMem( pData->Str, (size_t)pData->Size, md5, sha1, sha256 );
+	}
+
+	return ERROR_NOT_SUPPORTED;
+}
+
+
+//++ HashFile
+ULONG HashFile( _In_ LPCTSTR pszFile, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha1, _Out_opt_ PUCHAR sha256 )
 {
 	ULONG e = ERROR_SUCCESS;
 	HANDLE h;
@@ -60,6 +79,45 @@ ULONG FileHash( _In_ LPCTSTR pszFile, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha
 		CloseHandle( h );
 	} else {
 		e = GetLastError();
+	}
+
+	return e;
+}
+
+
+//++ HashMem
+ULONG HashMem( _In_ LPCVOID pPtr, _In_ size_t iSize, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha1, _Out_opt_ PUCHAR sha256 )
+{
+	ULONG e = ERROR_SUCCESS;
+
+	if (!pPtr || !iSize || (!md5 && !sha1 && !sha256))
+		return ERROR_INVALID_PARAMETER;
+
+	if (md5) {
+		mbedtls_md5_context ctx;
+		mbedtls_md5_init( &ctx );
+		mbedtls_md5_starts( &ctx );
+		mbedtls_md5_update( &ctx, pPtr, iSize );
+		mbedtls_md5_finish( &ctx, md5 );
+		mbedtls_md5_free( &ctx );
+	}
+
+	if (sha1) {
+		mbedtls_sha1_context ctx;
+		mbedtls_sha1_init( &ctx );
+		mbedtls_sha1_starts( &ctx );
+		mbedtls_sha1_update( &ctx, pPtr, iSize );
+		mbedtls_sha1_finish( &ctx, sha1 );
+		mbedtls_sha1_free( &ctx );
+	}
+
+	if (sha256) {
+		mbedtls_sha256_context ctx;
+		mbedtls_sha256_init( &ctx );
+		mbedtls_sha256_starts( &ctx, FALSE );
+		mbedtls_sha256_update( &ctx, pPtr, iSize );
+		mbedtls_sha256_finish( &ctx, sha256 );
+		mbedtls_sha256_free( &ctx );
 	}
 
 	return e;
