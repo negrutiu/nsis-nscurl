@@ -212,7 +212,9 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/POSTVAR [FILENAME=file_name] [TYPE=mime_type] name data|@datafile ... /POSTVAR ...<br>
+	<td>/POSTVAR [FILENAME=remote_filename] [TYPE=mime_type] name &lt;string|/FILE filename|/MEM ptr size&gt;<br>
+	...<br>
+	/POSTVAR ...<br>
 	</td>
 	<td>Multipart form part.<br>
 	Used only with POST, ignored otherwise.<br>
@@ -221,7 +223,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	FILENAME: Optional remote file name (e.g. "mydata.json")<br>
 	TYPE: Optional MIME type (e.g. "application\json")<br>
 	name: Part name (e.g. "MyData")<br>
-	data: Part data string/file<br>
+	data: Part data string/file/memory buffer<br>
 	</td>
 </tr>
 <tr>

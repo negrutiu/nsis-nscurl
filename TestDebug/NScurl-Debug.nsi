@@ -257,18 +257,33 @@ Section "httpbin.org/post (multipart/form-data)"
 	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
+	!define S1 "<Your memory data here>"
+	Push $R0
+	Push $R1
+	StrLen $R1 "${S1}"
+	System::Call '*(&m128 "${S1}") p.r10'
+
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
 	Push 30000
 	Push "/CONNECTTIMEOUT"
 
-	Push "@$PLUGINSDIR\cacert.pem"
+	Push $R1
+	Push $R0
+	Push "/MEM"
+	Push "Binary"
+	Push "type=application/octet-stream"
+	Push "/POSTVAR"
+
+	Push "$PLUGINSDIR\cacert.pem"
+	Push /FILE
 	Push "cacert2.pem"
 	Push "filename=cacert2.pem"
 	Push "/POSTVAR"
 
-	Push "@$PLUGINSDIR\cacert.pem"
+	Push "$PLUGINSDIR\cacert.pem"
+	Push /FILE
 	Push "cacert.pem"
 	Push "filename=cacert.pem"
 	Push "/POSTVAR"
@@ -299,6 +314,12 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	Pop $0
 	DetailPrint "Status: $0"
+
+	System::Free $R0
+	Pop $R1
+	Pop $R0
+	!undef S1
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 

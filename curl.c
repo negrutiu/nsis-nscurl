@@ -6,6 +6,7 @@
 #include "curl.h"
 #include <mbedtls/ssl.h>
 #include <mbedtls/sha1.h>
+#include "crypto.h"
 
 
 typedef struct {
@@ -215,6 +216,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/POSTVAR" ) ) == 0) {
 		LPSTR pszFilename = NULL, pszType = NULL, pszName = NULL, pszData = NULL;
+		IDATA Data;
 		/// Extract optional parameters "filename=XXX" and "type=XXX"
 		int e = NOERROR;
 		while (e == NOERROR) {
@@ -228,17 +230,35 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 				}
 			}
 		}
-		/// Extract mandatory parameters "name" and "data|@datafile"
+		/// Extract mandatory parameters "name" and IDATA
 		if (e == NOERROR) {
 			pszName = MyStrDup( eT2A, pszParam );
 			if ((e = popstring( pszParam )) == NOERROR) {
-				pszData = MyStrDup( eT2A, pszParam );
+				if (IDataParseParam( pszParam, iParamMaxLen, &Data )) {
 
-				// Store 4-tuple MIME form part
-				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
-				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszType ? pszType : "" );
-				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszName ? pszName : "" );
-				pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszData ? pszData : "" );
+					// Store 5-tuple MIME form part
+					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
+					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszType ? pszType : "" );
+					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszName ? pszName : "" );
+					{
+						CHAR szType[] = {Data.Type, '\0'};
+						pReq->pPostVars = curl_slist_append( pReq->pPostVars, szType );
+					}
+					{
+						if (Data.Type == IDATA_TYPE_STRING) {
+							pszData = MyStrDup( eA2A, Data.Str );
+						} else if (Data.Type == IDATA_TYPE_FILE) {
+							pszData = MyStrDup( eT2A, Data.File );
+						} else if (Data.Type == IDATA_TYPE_MEM) {
+							pszData = EncBase64( Data.Mem, (size_t)Data.Size );
+						} else {
+							assert( !"Unexpected IDATA type" );
+						}
+						pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszData );
+					}
+
+					IDataDestroy( &Data );
+				}
 			}
 		}
 		MyFree( pszFilename );
@@ -862,6 +882,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						for (p = pReq->pPostVars; p; p = p->next) {
 							curl_mimepart *part = curl_mime_addpart( form );
 							if (part) {
+								char iType;
 								/// String 1
 								if (p && p->data && *p->data)
 									curl_mime_filename( part, p->data );
@@ -878,11 +899,23 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 								/// String 4
 								p = p->next;
 								assert( p && p->data );
+								iType = p->data[0];
+								assert( iType == IDATA_TYPE_STRING || iType == IDATA_TYPE_FILE || iType == IDATA_TYPE_MEM );
+								/// String 5
+								p = p->next;
+								assert( p && p->data );
 								if (p && p->data && *p->data) {
-									if (p->data[0] == '@') {
-										curl_mime_filedata( part, p->data + 1 );				/// Data file
-									} else {
+									if (iType == IDATA_TYPE_STRING) {
 										curl_mime_data( part, p->data, CURL_ZERO_TERMINATED );	/// Data string
+									} else if (iType == IDATA_TYPE_FILE) {
+										curl_mime_filedata( part, p->data );					/// Data file
+									} else if (iType == IDATA_TYPE_MEM) {
+										size_t ptrsize;
+										PVOID ptr = DecBase64( p->data, &ptrsize );
+										if (ptr)
+											curl_mime_data( part, ptr, ptrsize );				/// Data buffer
+										assert( ptr );
+										MyFree( ptr );
 									}
 								}
 							}
@@ -892,7 +925,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				} else {
 					/// Send input data as raw form (CURLOPT_POSTFIELDS, "application/x-www-form-urlencoded")
 					//! The caller is responsible to format/escape the input data
-					curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, pReq->iDataSize );
+					curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE_LARGE, pReq->Data.Size );
 				}
 
 			} else if (lstrcmpiA( pReq->pszMethod, "HEAD" ) == 0) {

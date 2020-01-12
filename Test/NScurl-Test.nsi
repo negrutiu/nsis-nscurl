@@ -174,6 +174,10 @@ Section "httpbin.org/post (multipart/form-data)"
 	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
+	!define S1 "<Your memory data here>"
+	StrLen $R1 "${S1}"
+	System::Call '*(&m128 "${S1}") p.r10'
+
 	NScurl::http \
 		POST \
 		"${LINK}" \
@@ -183,14 +187,18 @@ Section "httpbin.org/post (multipart/form-data)"
 		/POSTVAR "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
 		/POSTVAR "Name" "<Your name here>" \
 		/POSTVAR "Password" "<Your password here>" \
-		/POSTVAR "filename=cacert.pem" "cacert.pem" "@$PLUGINSDIR\cacert.pem" \
-		/POSTVAR "filename=cacert2.pem" "cacert2.pem" "@$PLUGINSDIR\cacert.pem" \
+		/POSTVAR "filename=cacert.pem" "cacert.pem" /FILE "$PLUGINSDIR\cacert.pem" \
+		/POSTVAR "filename=cacert2.pem" "cacert2.pem" /FILE "$PLUGINSDIR\cacert.pem" \
+		/POSTVAR "type=application/octet-stream" "Binary" /MEM $R0 $R1 \
 		/CONNECTTIMEOUT 30000 \
 		/REFERER "https://test.com" \
 		/END
 
 	Pop $0
 	DetailPrint "Status: $0"
+
+	System::Free $R0
+	!undef S1
 
 SectionEnd
 

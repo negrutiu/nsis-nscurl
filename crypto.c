@@ -8,6 +8,7 @@
 #include <mbedtls/md5.h>
 #include <mbedtls/sha1.h>
 #include <mbedtls/sha256.h>
+#include <mbedtls/base64.h>
 
 
 //++ Hash
@@ -121,4 +122,64 @@ ULONG HashMem( _In_ LPCVOID pPtr, _In_ size_t iSize, _Out_opt_ PUCHAR md5, _Out_
 	}
 
 	return e;
+}
+
+
+//++ EncBase64
+LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
+{
+	LPSTR pszBase64 = NULL;
+	int e2;
+	size_t l;
+	
+	assert( pPtr && iSize );
+
+	// Compute base64 length
+	e2 = mbedtls_base64_encode( NULL, 0, &l, pPtr, iSize );
+	if (e2 != MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+		return NULL;
+
+	pszBase64 = (LPSTR)MyAlloc( l );
+	if (pszBase64) {
+		e2 = mbedtls_base64_encode( pszBase64, l, &l, pPtr, iSize );
+		if (e2 == 0) {
+			// OK
+		} else {
+			MyFree( pszBase64 );
+		}
+	}
+
+	return pszBase64;
+}
+
+
+//++ DecBase64
+PVOID DecBase64( _In_ LPCSTR pszBase64, _Out_opt_ size_t *piSize )
+{
+	PVOID pPtr = NULL;
+	int e2;
+	size_t l = 0;
+
+	if (piSize)
+		*piSize = 0;
+	assert( pszBase64 );
+
+	// Compute decoded length
+	e2 = mbedtls_base64_decode( NULL, 0, &l, pszBase64, lstrlenA( pszBase64 ) );
+	if (e2 != MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+		return NULL;
+
+	pPtr = MyAlloc( l );
+	if (pPtr) {
+		e2 = mbedtls_base64_decode( pPtr, l, &l, pszBase64, lstrlenA( pszBase64 ) );
+		if (e2 == 0) {
+			// OK
+			if (piSize)
+				*piSize = l;
+		} else {
+			MyFree( pPtr );
+		}
+	}
+
+	return pPtr;
 }

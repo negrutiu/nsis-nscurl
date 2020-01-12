@@ -30,3 +30,17 @@ ULONG HashMem(
 	_Out_opt_ PUCHAR sha1,					/// 20 bytes / 160 bits
 	_Out_opt_ PUCHAR sha256					/// 32 bytes / 256 bits
 );
+
+//++ EncBase64
+//! The caller must MyFree(..) the string
+LPSTR EncBase64(
+	_In_ LPCVOID pPtr,
+	_In_ size_t iSize
+);
+
+//++ DecBase64
+//! The caller must MyFree(..) the buffer
+PVOID DecBase64(
+	_In_ LPCSTR pszBase64,
+	_Out_opt_ size_t *piSize
+);
