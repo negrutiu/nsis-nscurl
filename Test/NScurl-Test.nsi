@@ -98,7 +98,7 @@ Section "Parallel (50 * put)"
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA "@$PLUGINSDIR\cacert.pem" /BACKGROUND /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA /FILE "$PLUGINSDIR\cacert.pem" /BACKGROUND /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "

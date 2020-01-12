@@ -128,7 +128,8 @@ Section "Parallel (50 * put)"
 	${For} $R0 1 50
 		Push /END
 		Push /BACKGROUND
-		Push "@$PLUGINSDIR\cacert.pem"
+		Push "$PLUGINSDIR\cacert.pem"
+		Push /FILE
 		Push /DATA
 		Push "Memory"
 		Push "https://httpbin.org/put"

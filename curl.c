@@ -271,16 +271,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			pReq->pszProxy = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszData );
-			if (pszParam[0] == _T( '@' )) {
-				pReq->pszData = MyStrDup( eT2T, pszParam + 1 );	/// Data file name
-				pReq->iDataSize = 0;
-			} else {
-				pReq->pszData = MyStrDup( eT2A, pszParam );		/// Data string
-				pReq->iDataSize = lstrlenA( pReq->pszData );
-			}
-		}
+		if (popstring( pszParam ) == NOERROR && *pszParam)
+			IDataParseParam( pszParam, iParamMaxLen, &pReq->Data );
 	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
 		pReq->bResume = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
@@ -533,9 +525,15 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 
 	assert( pReq && pReq->Runtime.pCurl );
 
-	if (pReq->pszData) {	/// Either data buffer, or, file name
+	if (pReq->Data.Type == IDATA_TYPE_STRING || pReq->Data.Type == IDATA_TYPE_MEM) {
+		// Input string/memory buffer
+		assert( pReq->Runtime.iDataPos <= pReq->Data.Size );
+		l = __min( size * nitems, pReq->Data.Size - pReq->Runtime.iDataPos );
+		CopyMemory( buffer, (PCCH)pReq->Data.Str + pReq->Runtime.iDataPos, (size_t)l );
+		pReq->Runtime.iDataPos += l;
+	} else if (pReq->Data.Type == IDATA_TYPE_FILE) {
+		// Input file
 		if (MyValidHandle( pReq->Runtime.hInFile )) {
-			// Read from input file
 			ULONG iRead;
 			if (ReadFile( pReq->Runtime.hInFile, (LPVOID)buffer, size * nitems, &iRead, NULL )) {
 				l = iRead;
@@ -543,13 +541,9 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 			} else {
 				l = CURL_READFUNC_ABORT;
 			}
-		} else {
-			// Read from input buffer
-			assert( pReq->Runtime.iDataPos <= pReq->iDataSize );
-			l = __min( size * nitems, pReq->iDataSize - pReq->Runtime.iDataPos );
-			CopyMemory( buffer, (PCCH)pReq->pszData + pReq->Runtime.iDataPos, (size_t)l );
-			pReq->Runtime.iDataPos += l;
 		}
+	} else {
+		assert( !"Unexpected IDATA type" );
 	}
 
 	return (size_t)l;
@@ -739,16 +733,16 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		(lstrcmpiA( pReq->pszMethod, "POST" ) == 0 && !pReq->pPostVars)
 		))
 	{
-		if (pReq->iDataSize == 0 && pReq->pszData && *(LPCTSTR)pReq->pszData) {
+		if (pReq->Data.Type == IDATA_TYPE_FILE) {
 			ULONG e = ERROR_SUCCESS;
-			pReq->Runtime.hInFile = CreateFile( (LPCTSTR)pReq->pszData, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
+			pReq->Runtime.hInFile = CreateFile( (LPCTSTR)pReq->Data.File, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
 			if (MyValidHandle( pReq->Runtime.hInFile )) {
 				// NOTE: kernel32!GetFileSizeEx is only available in XP+
 				LARGE_INTEGER l;
 				l.LowPart = GetFileSize( pReq->Runtime.hInFile, &l.HighPart );
 				if (l.LowPart != INVALID_FILE_SIZE) {
 					/// Store file size in iDataSize
-					pReq->iDataSize = l.QuadPart;
+					pReq->Data.Size = l.QuadPart;
 				} else {
 					e = GetLastError();
 				}
@@ -758,7 +752,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 				pReq->Error.iWin32 = e;
 				pReq->Error.pszWin32 = MyFormatError( e );
-				TRACE( _T( "[!] CreateFile( DataFile:%s ) = %s\n" ), (LPCTSTR)pReq->pszData, pReq->Error.pszWin32 );
+				TRACE( _T( "[!] CreateFile( DataFile:%s ) = %s\n" ), (LPCTSTR)pReq->Data.File, pReq->Error.pszWin32 );
 			}
 		}
 	}
@@ -937,7 +931,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 				// PUT
 				curl_easy_setopt( curl, CURLOPT_PUT, TRUE );
-				curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, pReq->iDataSize );		/// "Content-Length: <filesize>" header is mandatory in HTTP/1.x
+				curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, pReq->Data.Size );		/// "Content-Length: <filesize>" header is mandatory in HTTP/1.x
 
 			} else {
 

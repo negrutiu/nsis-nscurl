@@ -23,8 +23,7 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszTlsPass;				/// can be NULL
 	struct curl_slist	*pOutHeaders;	/// can be NULL
 	struct curl_slist	*pPostVars;		/// can be NULL
-	LPVOID		pszData;				/// can be NULL. If iDataSize != 0, (LPSTR)pszData is treated as data string. If iDataSize == 0, (LPTSTR)pszData is treated as data file name
-	curl_off_t	iDataSize;				/// can be 0
+	IDATA		Data;					/// can be empty. Input string/buffer/file
 	LPCSTR		pszAgent;				/// can be NULL
 	LPCSTR		pszReferrer;			/// can be NULL
 	BOOLEAN		bResume       : 1;
@@ -92,7 +91,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszTlsPass );
 	curl_slist_free_all( pReq->pOutHeaders );
 	curl_slist_free_all( pReq->pPostVars );
-	MyFree( pReq->pszData );
+	IDataDestroy( &pReq->Data );
 	MyFree( pReq->pszAgent );
 	MyFree( pReq->pszReferrer );
 	curl_slist_free_all( pReq->pCertList );
