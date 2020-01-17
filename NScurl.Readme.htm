@@ -63,7 +63,15 @@ table {
   width: 100%;
 }
 
-td, th {
+th {
+  border: 1px solid #dddddd;
+  background-color: #888888;
+  color: #ffffff;
+  text-align: left;
+  padding: 8px;
+}
+
+td {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
@@ -87,9 +95,9 @@ By default the function waits for the new request to complete, but there are ple
 
 <h3>Return value:</h3>
 The return value is pushed to the stack.<br>
-By default, the function returns the transfer status (aka "@ERROR@" <a href="#query">query</a> string). <b>"OK" for success.</b><br>
+By default, the function returns the transfer status (aka "@ERROR@" query <a href="#keywords">keyword</a>). <b>"OK" for success.</b><br>
 If <b>/BACKGROUND</b> is specified, the function returns an unique transfer ID.<br>
-If <b>/RETURN</b> is specified, the function returns a custom value depending on the specified <a href="#query">query</a> string.<br>
+If <b>/RETURN</b> is specified, the function returns a custom value depending on the specified query <a href="#keywords">keyword</a>.<br>
 
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
@@ -242,7 +250,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/RETURN query_string</td>
 	<td>Request a custom return value. Default is "@ERROR@" (aka transfer status)<br>
-	Any combination of <a href="#query">query variables</a> is accepted.<br>
+	Any combination of query <a href="#keywords">keywords</a> is accepted.<br>
 	(e.g. "@ERRORCODE@ - @ELAPSEDTIME@")<br>
 	</td>
 </tr>
@@ -313,8 +321,200 @@ Pop $0 ; Status text ("OK" for success)<br>
 
 <hr>
 
-<h2><a name="query">NScurl::query</a> [/ID id] &lt;params&gt;</h2>
-<h3>TODO</h3>
+<h2><a name="query">NScurl::query</a> [/ID id] "query_string"</h2>
+
+<h3>Description:</h3>
+Query information.<br>
+The function replaces query <a href="#keywords">keywords</a> in the specified string and returns the result on the stack.
+
+<h3>Return value:</h3>
+The string with expanded <a href="#keywords">keywords</a> is returned on the stack.
+
+<h3>Examples:</h3>
+<div style="background-color: #dddddd">
+<i>; Query information about a specific HTTP request</i><br>
+<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" /END<br>
+Pop $0 ; <i>Transfer ID</i><br>
+<b><a href="#query">NScurl::query</a></b> <b>/ID $0</b> "<a href="#keywords">@RECVHEADERS@</a>"<br>
+Pop $1 ; <i>Server response headers</i>
+</div>
+<br>
+
+<div style="background-color: #dddddd">
+<i>; Query global information</i><br>
+<b><a href="#http">NScurl::query</a></b> "<a href="#keywords">@TOTALSIZE@</a> - <a href="#keywords">@TOTALSPEED@</a>"<br>
+Pop $0
+</div>
+<br>
+
+<h3>Parameters:</h3>
+<table>
+<tr>
+	<td>/ID id</td>
+	<td>Unique transfer ID returned by <a href="#http">NScurl::http</a>.<br>
+	If specified, the function will query information about this specific transfer.<br>
+	If no ID is specified, the function will only replace global keywords.<br>
+	</td>
+</tr>
+<tr>
+	<td>query_string</td>
+	<td>The input string.<br>
+	The function will replace query <a href="#keywords">keywords</a> with real data and return the result.<br>
+	</td>
+</tr>
+</table>
+
+<h3><a name="keywords">Query Keywords:</a></h3>
+
+<table>
+<tr>
+	<th><u>Global</u> keywords</th>
+	<th>Replaced with</th>
+</tr>
+<tr>
+	<td>@PLUGINNAME@</td>
+	<td>"<b>NScurl</b>"<br>
+	</td>
+</tr>
+<tr>
+	<td>@PLUGINVERSION@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@PLUGINAUTHOR@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@PLUGINWEB@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@CURLVERSION@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@CURLSSLVERSION@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@CURLPROTOCOLS@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@CURLFEATURES@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@MBEDTLSVERSION@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@USERAGENT@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALCOUNT@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALWAITING@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALRUNNING@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALCOMPLETE@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALACTIVE@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSTARTED@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALERRORS@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSPEED@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSPEED_B@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZE@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZE_B@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZEUP@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZEUP_B@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZEDOWN@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TOTALSIZEDOWN_B@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+
+<tr>
+	<th><u>Transfer-specific</u> keywords<br>
+	(available when /ID &lt;id&gt; is specified)<br>
+	</th>
+	<th>Replaced with</th>
+</tr>
+<tr>
+	<td>@TODO@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+<tr>
+	<td>@TODO@</td>
+	<td>TODO<br>
+	</td>
+</tr>
+
+</table>
 <hr>
 
 <h2><a name="wait">NScurl::wait</a> [/ID id] &lt;params&gt; /END</h2>
