@@ -159,9 +159,6 @@
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="NScurl.Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="crypto.h" />
     <ClInclude Include="curl.h" />
     <ClInclude Include="gui.h" />
@@ -179,6 +176,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cacert.pem" />
+    <None Include="NScurl.Readme.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
