@@ -1042,9 +1042,11 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) );
 		MyReadVersionString( szPath, _T( "LegalTrademarks" ), pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLVERSION@" ) ) == 0) {
+		//? e.g. "7.68.0"
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->version );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLSSLVERSION@" ) ) == 0) {
+		//? e.g. "mbedTLS/2.20.0"
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->ssl_version );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLPROTOCOLS@" ) ) == 0) {
@@ -1073,14 +1075,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				len += lstrlen( pszKeyword + len );
 			}
 		}
-	} else if (lstrcmpi( pszKeyword, _T( "@MBEDTLSVERSION@" ) ) == 0) {
-		//? "mbedTLS/x.y.z" -> "x.y.z"
-		LPCSTR psz;
-		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
-		for (psz = ver->ssl_version; *psz && *psz != '/'; psz++);
-		if (*psz)
-			psz++;
-		MyStrCopy( eA2T, pszKeyword, iMaxLen, psz );
 	} else if (lstrcmpi( pszKeyword, _T( "@USERAGENT@" ) ) == 0) {
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
 	} else if (pReq) {
