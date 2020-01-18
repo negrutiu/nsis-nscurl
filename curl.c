@@ -25,6 +25,7 @@ CURL_GLOBALS g_Curl = {0};
 // TODO: Certificate revocation (CURLOPT_CRLFILE, CURLOPT_PROXY_CRLFILE)
 // TODO: Secure Proxy (CURLOPT_PROXY_CAPATH, CURLOPT_PROXY_SSL_VERIFYHOST, CURLOPT_PROXY_SSL_VERIFYPEER)
 // TODO: HPKP - HTTP public key pinning (CURLOPT_PINNEDPUBLICKEY, CURLOPT_PROXY_PINNEDPUBLICKEY)
+// TODO: Aggressive connect. Reconnect
 // ----------------------------------------------------------------------
 
 //+ CurlRequestSizes
