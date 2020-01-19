@@ -19,6 +19,8 @@ typedef struct {
 CURL_GLOBALS g_Curl = {0};
 #define DEFAULT_HEADERS_VIRTUAL_SIZE	CURL_MAX_HTTP_HEADER	/// 100KB
 #define DEFAULT_UKNOWN_VIRTUAL_SIZE		1024 * 1024 * 200		/// 200MB
+//x #define DEBUG_TRANSFER_SLOWDOWN		50						/// Delays during transfer
+
 
 // ----------------------------------------------------------------------
 // TODO: Client certificate (CURLOPT_SSLCERT, CURLOPT_PROXY_SSLCERT)
@@ -523,8 +525,11 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 {
 	curl_off_t l = 0;
 	PCURL_REQUEST pReq = (PCURL_REQUEST)instream;
-
 	assert( pReq && pReq->Runtime.pCurl );
+
+#ifdef DEBUG_TRANSFER_SLOWDOWN
+	Sleep( DEBUG_TRANSFER_SLOWDOWN );
+#endif
 
 	if (pReq->Data.Type == IDATA_TYPE_STRING || pReq->Data.Type == IDATA_TYPE_MEM) {
 		// Input string/memory buffer
@@ -556,6 +561,10 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)userdata;
 	assert( pReq && pReq->Runtime.pCurl );
+
+#ifdef DEBUG_TRANSFER_SLOWDOWN
+	Sleep( DEBUG_TRANSFER_SLOWDOWN );
+#endif
 
 	if (MyValidHandle( pReq->Runtime.hOutFile )) {
 		// Write to output file
