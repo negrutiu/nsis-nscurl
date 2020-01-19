@@ -477,7 +477,6 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 				/// New progress bar
 				CopyRect( &rcNewProgress, &rcProgress );
 				OffsetRect( &rcNewProgress, 0, rcNewText.bottom + (rcText.bottom - rcProgress.top) - rcNewProgress.top );
-				iProgressStyle |= MY_PBS_MARQUEE;		/// Marquee capability
 				hNewProgress = CreateWindowEx( iProgressStyleEx, PROGRESS_CLASS, _T( "" ), iProgressStyle, LTWH( rcNewProgress ), hInstFilesPage, NULL, NULL, NULL );
 
 				iDetailsOffsetY = rcNewProgress.bottom + (rcDetailsList.top - rcProgress.bottom) - rcDetailsList.top;
