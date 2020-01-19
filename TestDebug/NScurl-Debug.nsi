@@ -130,6 +130,8 @@ Section "Parallel (50 * put)"
 	StrCpy $1 ""
 	${For} $R0 1 50
 		Push /END
+		Push 30000
+		Push /TIMEOUT
 		Push /BACKGROUND
 		Push "$PLUGINSDIR\cacert.pem"
 		Push /FILE
@@ -159,8 +161,6 @@ Section "httpbin.org/get"
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push 30000
-	Push "/CONNECTTIMEOUT"
 
 	Push "Header3: Value3"
 	Push "/HEADER"
