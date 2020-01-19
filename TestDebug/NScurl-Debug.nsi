@@ -37,8 +37,10 @@ Var /global DLL
 ;!insertmacro MUI_PAGE_WELCOME
 
 # Components page
-InstType "All"		; 1
-InstType "None"		; 2
+!define INSTTYPE_NONE	1
+!define INSTTYPE_MOST	2
+InstType "None"			; 1
+InstType "Most"			; 2
 !define MUI_COMPONENTSPAGE_NODESC
 !insertmacro MUI_PAGE_COMPONENTS
 
@@ -108,7 +110,8 @@ FunctionEnd
 
 
 Section "Cleanup test files"
-	SectionIn 1	2 ; All
+	SectionIn ${INSTTYPE_NONE} ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	FindFirst $0 $1 "$EXEDIR\_*.*"
 loop:
 	StrCmp $1 "" done
@@ -121,7 +124,7 @@ SectionEnd
 
 
 Section "Parallel (50 * put)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
@@ -145,7 +148,7 @@ SectionEnd
 
 
 Section "httpbin.org/get"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -176,7 +179,7 @@ SectionEnd
 
 
 Section "httpbin.org/get (SysinternalsSuite.zip)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -200,7 +203,7 @@ SectionEnd
 
 
 Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -225,7 +228,7 @@ SectionEnd
 
 
 Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -250,7 +253,7 @@ SectionEnd
 
 
 Section "httpbin.org/post (multipart/form-data)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -326,7 +329,7 @@ SectionEnd
 
 
 Section "httpbin.org/post (application/x-www-form-urlencoded)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -360,7 +363,7 @@ SectionEnd
 
 
 Section "httpbin.org/post (application/json)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -392,7 +395,7 @@ SectionEnd
 
 
 Section "httpbin.org/put"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -428,8 +431,8 @@ Section "httpbin.org/put"
 SectionEnd
 
 
-Section /o "Big file (100MB)"
-	SectionIn 1	; All
+Section "Big file (100MB)"
+	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -458,8 +461,8 @@ Section /o "Big file (100MB)"
 SectionEnd
 
 
-Section /o "Big file (10GB)"
-	SectionIn 1	; All
+Section "Big file (10GB)"
+	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -491,7 +494,7 @@ SectionEnd
 SectionGroup /e "Authentication"
 
 Section "httpbin.org/basic-auth"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -517,7 +520,7 @@ SectionEnd
 
 
 Section "httpbin.org/hidden-basic-auth"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -544,7 +547,7 @@ SectionEnd
 
 
 Section "httpbin.org/bearer"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -570,7 +573,7 @@ SectionEnd
 
 
 Section "httpbin.org/digest-auth/auth"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -597,7 +600,7 @@ SectionEnd
 
 
 Section "httpbin.org/digest-auth/auth-int"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -627,7 +630,7 @@ SectionGroupEnd		; Authentication
 SectionGroup /e "Proxy"
 
 Section "httpbin.org/get"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -652,7 +655,7 @@ SectionEnd
 
 
 Section "httpbin.org/digest-auth/auth-int"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
@@ -684,7 +687,7 @@ SectionGroupEnd		; Proxy
 SectionGroup /e "SSL Validation"
 
 Section "Expired certificate"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -705,7 +708,7 @@ Section "Expired certificate"
 SectionEnd
 
 Section "Revoked certificate"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -726,7 +729,7 @@ Section "Revoked certificate"
 SectionEnd
 
 Section "Self-signed certificate"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -747,7 +750,7 @@ Section "Self-signed certificate"
 SectionEnd
 
 Section "Untrusted certificate"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -768,7 +771,7 @@ Section "Untrusted certificate"
 SectionEnd
 
 Section "Wrong host"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -789,7 +792,7 @@ Section "Wrong host"
 SectionEnd
 
 Section "HTTP public key pinning (HPKP)"
-	SectionIn 1	; All
+	SectionIn ${INSTTYPE_MOST}
 		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -813,7 +816,7 @@ SectionGroupEnd		; SSL Validation
 
 
 Section "Wait for all"
-	SectionIn 1	2 ; All
+	SectionIn ${INSTTYPE_NONE} ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	DetailPrint 'Waiting...'
@@ -905,8 +908,8 @@ FunctionEnd
 SectionGroup /e Extra
 
 
-Section /o Test
-	SectionIn 1
+Section Test
+	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	; NScurl::echo
@@ -924,8 +927,8 @@ Section /o Test
 SectionEnd
 
 
-Section /o Hashes
-	SectionIn 1
+Section Hashes
+	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!define S1 "Hash this string"
 
@@ -990,8 +993,8 @@ Section /o Hashes
 SectionEnd
 
 
-Section /o "Un/Escape"
-	SectionIn 1	; All
+Section "Un/Escape"
+	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $R0 "aaa bbb ccc=ddd&eee"
@@ -1015,7 +1018,7 @@ SectionEnd
 
 
 Section About
-	SectionIn 1
+	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	; NScurl::query
