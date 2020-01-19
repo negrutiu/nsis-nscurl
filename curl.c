@@ -27,7 +27,9 @@ CURL_GLOBALS g_Curl = {0};
 // TODO: Certificate revocation (CURLOPT_CRLFILE, CURLOPT_PROXY_CRLFILE)
 // TODO: Secure Proxy (CURLOPT_PROXY_CAPATH, CURLOPT_PROXY_SSL_VERIFYHOST, CURLOPT_PROXY_SSL_VERIFYPEER)
 // TODO: HPKP - HTTP public key pinning (CURLOPT_PINNEDPUBLICKEY, CURLOPT_PROXY_PINNEDPUBLICKEY)
-// TODO: Aggressive connect. Reconnect
+// TODO: Time conditional request (CURLOPT_TIMECONDITION, CURLOPT_TIMEVALUE)
+// TODO: DOH (CURLOPT_DOH_URL)
+// TODO: Query SSL info (certificate chain, cypher, etc.)
 // ----------------------------------------------------------------------
 
 //+ CurlRequestSizes
@@ -1249,9 +1251,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	} else {
 		// TODO: pReq is NULL. Replace all keywords with "", "n/a", etc.
 	}
-/*
-	{SSL/TLS info}
-*/
 }
 
 
