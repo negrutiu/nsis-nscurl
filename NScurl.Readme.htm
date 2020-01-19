@@ -188,7 +188,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/AUTH [TYPE=basic|digest|digestie] user pass</td>
 	<td>HTTP authentication.<br>
-	Type is determined automatically by default. However, an explicit type must be specified when connecting to servers with "hidden" authentication.<br>
+	Type is determined automatically if not specified. However, an explicit type must be specified when connecting to servers with "hidden" authentication.<br>
 	Username and password must be cleartext, unescaped.<br>
 	For more information visit libcurl's <a href="https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html">CURLOPT_HTTPAUTH</a> documentation.<br>
 	</td>
@@ -202,7 +202,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/TLSAUTH user pass</td>
-	<td>TLS-SRP (Secure Remote Password) authentication.<br>
+	<td><a href="https://en.wikipedia.org/wiki/TLS-SRP">TLS-SRP</a> (Secure Remote Password) authentication.<br>
 	Username and password must be cleartext, unescaped.<br>
 	For more information visit libcurl's <a href="https://curl.haxx.se/libcurl/c/CURLOPT_TLSAUTH_TYPE.html">CURLOPT_TLSAUTH_TYPE</a> documentation.<br>
 	</td>
