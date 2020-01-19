@@ -149,15 +149,19 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/TIMEOUT msec<br>
 	/CONNECTTIMEOUT msec<br>
 	</td>
-	<td>Connect timeout (default: infinite)<br>
-	This timeout only applies to the connecting phase.<br>
-	The transfer phase might last much longer...<br>
+	<td>Connect timeout (default: 300s and no retries)<br>
+	If not specified, any error will abort the transfer. The plugin won't try to re-establish a dropped connection.<br>
+	<br>
+	This value sets a connect time limit, and, enables reconnection.<br>
+	For <b>msec</b> milliseconds, the plugin will keep trying to connect even if critical errors occur. If the connection drops during transfer, the plugin will try to reconnect (for another <b>msec</b> milliseconds) and resume the transfer.<br>
+	Using this parameter is highly <b>recommended</b>.<br>
 	</td>
 </tr>
 <tr>
 	<td>/COMPLETETIMEOUT msec</td>
 	<td>Connect + Transfer timeout (default: infinite)<br>
-	The transfer is interrupted if this timeout is reached.
+	This value sets a maximum time limit for the transfer to complete.<br>
+	Useful to automatically abort slow connections and fall back to a secondary server...<br>
 	</td>
 </tr>
 <tr>

@@ -41,6 +41,7 @@ typedef struct _CURL_REQUEST {
 	} Queue;
 	struct {
 		CURL		*pCurl;
+		ULONG		iTimeStart;			/// Milliseconds (tick counts)
 		HANDLE		hInFile;			/// Upload file. iDataSize represents its size
 		curl_off_t	iDataPos;			/// Input data/file position
 		VMEMO		InHeaders;
@@ -53,12 +54,12 @@ typedef struct _CURL_REQUEST {
 		LPCSTR		pszFinalURL;		/// The final URL, after following all redirections
 		LONG		iServerPort;
 		LPCSTR		pszServerIP;		/// Can be IPv6
-		curl_off_t	iTimeElapsed;		/// Microseconds
-		curl_off_t	iTimeRemaining;		/// Microseconds
-		ULONG64		iDlXferred, iDlTotal;
-		ULONG64		iUlXferred, iUlTotal;
-		ULONG		iSpeed;
-		short		iPercent;			/// -1 if the total size is unknown
+		curl_off_t	iResumeFrom;		/// Bytes already downloaded
+		curl_off_t	iTimeElapsed;		/// Milliseconds
+		curl_off_t	iTimeRemaining;		/// Milliseconds
+		curl_off_t	iDlXferred, iDlTotal;
+		curl_off_t	iUlXferred, iUlTotal;
+		curl_off_t	iSpeed;
 	} Runtime;
 	struct {
 		ULONG		iWin32;
@@ -74,7 +75,6 @@ typedef struct _CURL_REQUEST {
 static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
-	pReq->Runtime.iPercent = -1;		/// Unknown size
 	pReq->Runtime.iRootCertFlags = -1;	/// Uninitialized
 }
 
@@ -116,7 +116,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 }
 
 //+ CurlRequestSizes
-void CurlRequestSizes( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PBOOL pbDown );
+void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown );
 
 //+ CurlRequestFormatError
 void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrCode  );

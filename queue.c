@@ -346,7 +346,7 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 
 			pStats->iDlXferred += p->Runtime.iDlXferred;
 			pStats->iUlXferred += p->Runtime.iUlXferred;
-			pStats->iSpeed     += p->Runtime.iSpeed;
+			pStats->iSpeed     += (ULONG)p->Runtime.iSpeed;
 
 			CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
 			if (!bOK)
