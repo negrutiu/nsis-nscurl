@@ -301,6 +301,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			IDataParseParam( pszParam, iParamMaxLen, &pReq->Data );
 	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
 		pReq->bResume = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/RECONNECT" ) ) == 0) {
+		pReq->bReconnect = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
 		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
@@ -1019,7 +1021,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			// Transfer retries loop
 			{
 				BOOLEAN bSuccess;
-				ULONG i, iConnectionTimeStart, e;
+				ULONG i, iConnectionTimeStart, iTimeout, e;
 				for (i = 0, iConnectionTimeStart = GetTickCount(); ; i++) {
 
 					pReq->Runtime.iTimeElapsed = GetTickCount() - pReq->Runtime.iTimeStart;			/// Refresh elapsed time
@@ -1061,13 +1063,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					}
 
 					// Timeout?
+					iTimeout = pReq->iConnectTimeout > 0 ? pReq->iConnectTimeout : 300000;		/// Default built-in libcurl timeout is 300s (5m)
 					pReq->Runtime.iTimeElapsed = GetTickCount() - pReq->Runtime.iTimeStart;		/// Refresh elapsed time
 					if (pReq->Runtime.iUlXferred > 0 || pReq->Runtime.iDlXferred > 0)
 						iConnectionTimeStart = GetTickCount();	/// The previous connection was successful. Some data has been transferred. Reset connection startup time
 
-					if (pReq->iConnectTimeout == 0)
-						break;					/// No retries
-					if ((GetTickCount() >= iConnectionTimeStart + pReq->iConnectTimeout) ||							/// Enforce "Connect" timeout
+					if (!pReq->bReconnect)
+						break;		/// No reconnect
+					if ((GetTickCount() >= iConnectionTimeStart + iTimeout) ||										/// Enforce "Connect" timeout
 						((pReq->iCompleteTimeout > 0) && (pReq->Runtime.iTimeElapsed >= pReq->iCompleteTimeout)))	/// Enforce "Complete" timeout
 					{
 						MyFree( pReq->Error.pszWin32 );

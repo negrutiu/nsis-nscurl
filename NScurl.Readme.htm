@@ -102,7 +102,7 @@ If <b>/RETURN</b> is specified, the function returns a custom value depending on
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
 <i>; Quick transfer (with Cancel and resume)</i><br>
-<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /END<br>
+<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /RECONNECT /END<br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
@@ -149,29 +149,32 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/TIMEOUT msec<br>
 	/CONNECTTIMEOUT msec<br>
 	</td>
-	<td>Connect timeout (default: 300s and no retries)<br>
-	If not specified, any error will abort the transfer. The plugin won't try to re-establish a dropped connection.<br>
-	<br>
-	This value sets a connect time limit, and, enables reconnection.<br>
-	For <b>msec</b> milliseconds, the plugin will keep trying to connect even if critical errors occur. If the connection drops during transfer, the plugin will try to reconnect (for another <b>msec</b> milliseconds) and resume the transfer.<br>
-	Using this parameter is highly <b>recommended</b>.<br>
+	<td>Connect timeout (default: 5m)<br>
+	Unless you also specify /RECONNECT, connecting will fail immediatelly if an error occurs.<br>
 	</td>
 </tr>
 <tr>
 	<td>/COMPLETETIMEOUT msec</td>
 	<td>Connect + Transfer timeout (default: infinite)<br>
-	This value sets a maximum time limit for the transfer to complete.<br>
-	Useful to automatically abort slow connections and fall back to a secondary server...<br>
+	This value sets a maximum time limit that a transfer is allowed to run. When this timeout is reached the transfer is cancelled.<br>
 	</td>
+</tr>
+<tr>
+	<td>/RECONNECT</td>
+	<td>NScurl tries more aggressively to connect to the webserver.<br>
+	It will keep trying to connect until a timeout is reached, even if critical errors occur.<br>
+	If connection drops during the transfer NScurl will try to reestablish it and resume the transfer.<br>
+	By default, any error will abort the transfer.<br>
+	</td>
+</tr>
+<tr>
+	<td>/RESUME</td>
+	<td>Resume the transfer if (part of) the destination file already exists.<br>
+	By default the file is overwritten and the transfer starts over.</td>
 </tr>
 <tr>
 	<td>/NOREDIRECT</td>
 	<td>Don't follow HTTP redirections. They are followed by default</td>
-</tr>
-<tr>
-	<td>/RESUME</td>
-	<td>Resume transfers if (part of) the local file already exists.<br>
-	By default files are overwritten and the transfer starts over.</td>
 </tr>
 <tr>
 	<td>/USERAGENT agent</td>
