@@ -102,7 +102,7 @@ If <b>/RETURN</b> is specified, the function returns a custom value depending on
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
 <i>; Quick transfer (with Cancel and resume)</i><br>
-<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /RECONNECT /END<br>
+<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /INSIST /END<br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
@@ -150,7 +150,8 @@ Pop $0 ; Status text ("OK" for success)<br>
 	/CONNECTTIMEOUT msec<br>
 	</td>
 	<td>Connect timeout (default: 5m)<br>
-	Unless you also specify /RECONNECT, connecting will fail immediatelly if an error occurs.<br>
+	This value applies to a single connection attempt.<br>
+	Unless you also specify <b>/INSIST</b>, NScurl will only try to connect once.<br>
 	</td>
 </tr>
 <tr>
@@ -160,7 +161,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/RECONNECT</td>
+	<td>/INSIST</td>
 	<td>NScurl tries more aggressively to connect to the webserver.<br>
 	It will keep trying to connect until a timeout is reached, even if critical errors occur.<br>
 	If connection drops during the transfer NScurl will try to reestablish it and resume the transfer.<br>

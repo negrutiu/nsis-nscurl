@@ -302,8 +302,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			IDataParseParam( pszParam, iParamMaxLen, &pReq->Data );
 	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
 		pReq->bResume = TRUE;
-	} else if (lstrcmpi( pszParam, _T( "/RECONNECT" ) ) == 0) {
-		pReq->bReconnect = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/INSIST" ) ) == 0) {
+		pReq->bInsist = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
 		pReq->iConnectTimeout = popint();
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
@@ -1069,8 +1069,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					if (pReq->Runtime.iUlXferred > 0 || pReq->Runtime.iDlXferred > 0)
 						iConnectionTimeStart = GetTickCount();	/// The previous connection was successful. Some data has been transferred. Reset connection startup time
 
-					if (!pReq->bReconnect)
-						break;		/// No reconnect
+					if (!pReq->bInsist)
+						break;		/// Don't insist
 					if ((GetTickCount() >= iConnectionTimeStart + iTimeout) ||										/// Enforce "Connect" timeout
 						((pReq->iCompleteTimeout > 0) && (pReq->Runtime.iTimeElapsed >= pReq->iCompleteTimeout)))	/// Enforce "Complete" timeout
 					{

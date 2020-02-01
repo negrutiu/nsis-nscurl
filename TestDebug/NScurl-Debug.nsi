@@ -130,7 +130,7 @@ Section "Parallel (50 * put)"
 	StrCpy $1 ""
 	${For} $R0 1 50
 		Push /END
-		Push /RECONNECT
+		Push /INSIST
 		Push /BACKGROUND
 		Push "$PLUGINSDIR\cacert.pem"
 		Push /FILE
@@ -187,7 +187,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push "/RECONNECT"
+	Push "/INSIST"
 	Push "/CANCEL"
 	Push "${FILE}"
 	Push "${LINK}"
@@ -210,7 +210,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push "/RECONNECT"
+	Push "/INSIST"
 	Push "/POPUP"
 	Push "/CANCEL"
 	Push "${FILE}"
@@ -234,7 +234,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push "/RECONNECT"
+	Push "/INSIST"
 	Push "/SILENT"
 	Push "/CANCEL"
 	Push "${FILE}"
@@ -266,7 +266,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push $R1
 	Push $R0
@@ -335,7 +335,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push 'User=Your+name+here&Password=Your+password+here'
 	Push "/DATA"
@@ -368,7 +368,7 @@ Section "httpbin.org/post (application/json)"
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push '{ "number_of_the_beast" : 666 }'
 	Push "/DATA"
@@ -399,7 +399,7 @@ Section "httpbin.org/put"
 	Push "/END"
 	Push "https://test.com"
 	Push "/REFERER"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push '{ "number_of_the_beast" : 666 }'
 	Push "/DATA"
@@ -433,7 +433,7 @@ Section "Big file (100MB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
@@ -462,7 +462,7 @@ Section "Big file (10GB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push "/RECONNECT"
+	Push "/INSIST"
 
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"

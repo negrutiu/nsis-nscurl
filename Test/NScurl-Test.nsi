@@ -100,7 +100,7 @@ Section "Parallel (50 * put)"
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA /FILE "$PLUGINSDIR\cacert.pem" /BACKGROUND /RECONNECT /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA /FILE "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -133,7 +133,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http get "${LINK}" "${FILE}" /CANCEL /RECONNECT /END
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /INSIST /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -147,7 +147,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Popup.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http get "${LINK}" "${FILE}" /CANCEL /POPUP /RECONNECT /END
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /POPUP /INSIST /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -161,7 +161,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Silent.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http get "${LINK}" "${FILE}" /CANCEL /SILENT /RECONNECT /END
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /SILENT /INSIST /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -192,7 +192,7 @@ Section "httpbin.org/post (multipart/form-data)"
 		/POSTVAR "filename=cacert.pem" "cacert.pem" /FILE "$PLUGINSDIR\cacert.pem" \
 		/POSTVAR "filename=cacert2.pem" "cacert2.pem" /FILE "$PLUGINSDIR\cacert.pem" \
 		/POSTVAR "type=application/octet-stream" "Binary" /MEM $R0 $R1 \
-		/RECONNECT \
+		/INSIST \
 		/REFERER "https://test.com" \
 		/END
 
@@ -220,7 +220,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
 		/DATA 'User=Your+name+here&Password=Your+password+here' \
-		/RECONNECT \
+		/INSIST \
 		/REFERER "https://test.com" \
 		/END
 
@@ -244,7 +244,7 @@ Section "httpbin.org/post (application/json)"
 		"${FILE}" \
 		/HEADER "Content-Type: application/json" \
 		/DATA '{ "number_of_the_beast" : 666 }' \
-		/RECONNECT \
+		/INSIST \
 		/REFERER "https://test.com" \
 		/END
 
@@ -270,7 +270,7 @@ Section "httpbin.org/put"
 		/HEADER "Header3: Value3" \
 		/HEADER "Content-Type: application/json" \
 		/DATA '{ "number_of_the_beast" : 666 }' \
-		/RECONNECT \
+		/INSIST \
 		/REFERER "https://test.com" \
 		/END
 
@@ -288,7 +288,7 @@ Section "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /RECONNECT /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -303,7 +303,7 @@ Section "Big file (10GB)"
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /RECONNECT /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /END
 	Pop $0
 	DetailPrint "Status: $0"
 
