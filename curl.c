@@ -23,7 +23,6 @@ CURL_GLOBALS g_Curl = {0};
 
 
 // ----------------------------------------------------------------------
-// TODO: Fix upload resume/reconnect
 // TODO: Check if remote content has changed at /RECONNECT
 // TODO: Client certificate (CURLOPT_SSLCERT, CURLOPT_PROXY_SSLCERT)
 // TODO: Certificate revocation (CURLOPT_CRLFILE, CURLOPT_PROXY_CRLFILE)
@@ -578,6 +577,7 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 		assert( !"Unexpected IDATA type" );
 	}
 
+//x	TRACE( _T( "%hs( Size:%u ) = Size:%u\n" ), __FUNCTION__, (ULONG)(size * nitems), (ULONG)l );
 	return (size_t)l;
 }
 
@@ -741,6 +741,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	CURL *curl;
 	curl_mime *form = NULL;
 	CHAR szError[CURL_ERROR_SIZE] = "";		/// Runtime error buffer
+	BOOL bGET;
 	#define StringIsEmpty(psz)				((psz) != NULL && ((psz)[0] == 0))
 
 	if (!pReq)
@@ -750,6 +751,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 		pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 		return;
 	}
+
+	// HTTP GET
+	bGET = StringIsEmpty( pReq->pszMethod ) || (lstrcmpiA( pReq->pszMethod, "GET" ) == 0);
 
 	// Extract "$PLUGINSDIR\cacert.pem" once
 	if (pReq->pszCacert == NULL)			/// pszCacert == NULL means embedded cacert.pem
@@ -889,9 +893,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			/// Request method
-			if (!pReq->pszMethod || !*pReq->pszMethod ||
-				lstrcmpiA( pReq->pszMethod, "GET" ) == 0)
-			{
+			if (bGET) {
 
 				// GET
 				curl_easy_setopt( curl, CURLOPT_HTTPGET, TRUE );
@@ -1079,6 +1081,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 						break;
 					}
+
+					// Resume only GET transfers
+					if (!bGET && (pReq->Runtime.iUlXferred > 0 || pReq->Runtime.iDlXferred > 0))
+						break;
 
 					// Retry
 					Sleep( 500 );

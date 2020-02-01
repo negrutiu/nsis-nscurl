@@ -162,10 +162,10 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/INSIST</td>
-	<td>NScurl tries more aggressively to connect to the webserver.<br>
-	It will keep trying to connect until a timeout is reached, even if critical errors occur.<br>
-	If connection drops during the transfer NScurl will try to reestablish it and resume the transfer.<br>
-	By default, any error will abort the transfer.<br>
+	<td>NScurl will try more aggressively to connect to the webserver.<br>
+	It will keep trying to connect until a timeout is reached, even if critical errors occur (e.g. no network connection, server down, etc.)<br>
+	In addition, NScurl will try to re-establish dropped <b>HTTP GET</b> transfers and resume them.<br>
+	By default any error will abort the transfer.<br>
 	</td>
 </tr>
 <tr>
