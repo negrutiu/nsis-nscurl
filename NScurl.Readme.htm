@@ -133,7 +133,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>file|MEMORY</td>
 	<td>Transfer destination.<br>
 	<b>This parameter is mandatory.</b><br>
-	If MEMORY is specified the remote content is downloaded to RAM. It can be <a href="#query">queried</a> after the transfer completes.<br>
+	If "MEMORY" is specified the remote content is downloaded to RAM. It can be <a href="#query">queried</a> after the transfer completes.<br>
 	<b>NOTE:</b> Remote content downloaded to memory is truncated to NSIS string length which is usually 1KB-4KB. If you expect larger data, it's recommended to download it to a file on disk.
 	</td>
 </tr>
@@ -180,7 +180,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/USERAGENT agent</td>
 	<td>Overwrite the default user agent.<br>
-	Default is <b>nscurl/&lt;version&gt;</b> (e.g. <b>nscurl/1.2020.1.10</b>)
+	Default is <b>nscurl/&lt;version&gt;</b>
 	</td>
 </tr>
 <tr>
