@@ -89,12 +89,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl/curl/include;libcurl/mbedtls/include;libcurl/mbedtls/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/mbedtls/crypto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl.lib;libmbedtls.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl\lib\Debug-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\bin\Debug-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-x86-unicode|Win32'">
@@ -103,12 +103,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl/curl/include;libcurl/mbedtls/include;libcurl/mbedtls/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/mbedtls/crypto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl.lib;libmbedtls.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl\lib\Debug-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\bin\Debug-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-ansi|Win32'">
@@ -120,14 +120,14 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl/curl/include;libcurl/mbedtls/include;libcurl/mbedtls/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/mbedtls/crypto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libmbedtls.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl\lib\Release-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\bin\Release-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-unicode|Win32'">
@@ -139,14 +139,14 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl/curl/include;libcurl/mbedtls/include;libcurl/mbedtls/crypto/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/mbedtls/crypto;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libmbedtls.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl\lib\Release-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\bin\Release-VC-mbedTLS-lib-$(Platform)-HTTP_ONLY</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
