@@ -2,6 +2,7 @@
 /nsis
 /libcurl-devel
 libcurl-devel*.7z
+cacert.pem
 
 /Test/*.exe
 /Test/_*
