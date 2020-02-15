@@ -1,6 +1,7 @@
 
 /nsis
 /libcurl-devel
+libcurl-devel*.7z
 
 /Test/*.exe
 /Test/_*
