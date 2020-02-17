@@ -25,6 +25,7 @@ if (ls $fn -ErrorAction:Ignore) {
 }
 
 try {
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	Invoke-WebRequest -Uri $uri -OutFile $fn -Headers $headers -ErrorAction:Stop
 	$StatusCode = 200
 	$StatusDescription = "OK"

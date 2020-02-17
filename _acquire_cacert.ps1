@@ -8,6 +8,7 @@ if (ls $fn -ErrorAction:Ignore) {
 
 $response = try {
     # Returns WebResponseObject. Convert to HttpWebResponse
+	[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 	(Invoke-WebRequest -Uri $uri -OutFile $fn -Headers $headers -PassThru).BaseResponse
 } catch {
     # Returns HttpWebResponse
