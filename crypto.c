@@ -141,7 +141,7 @@ LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
 
 	pszBase64 = (LPSTR)MyAlloc( l );
 	if (pszBase64) {
-		e2 = mbedtls_base64_encode( pszBase64, l, &l, pPtr, iSize );
+		e2 = mbedtls_base64_encode( (PUCHAR)pszBase64, l, &l, pPtr, iSize );
 		if (e2 == 0) {
 			// OK
 		} else {
@@ -165,13 +165,13 @@ PVOID DecBase64( _In_ LPCSTR pszBase64, _Out_opt_ size_t *piSize )
 	assert( pszBase64 );
 
 	// Compute decoded length
-	e2 = mbedtls_base64_decode( NULL, 0, &l, pszBase64, lstrlenA( pszBase64 ) );
+	e2 = mbedtls_base64_decode( NULL, 0, &l, (PUCHAR)pszBase64, lstrlenA( pszBase64 ) );
 	if (e2 != MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
 		return NULL;
 
 	pPtr = MyAlloc( l );
 	if (pPtr) {
-		e2 = mbedtls_base64_decode( pPtr, l, &l, pszBase64, lstrlenA( pszBase64 ) );
+		e2 = mbedtls_base64_decode( pPtr, l, &l, (PUCHAR)pszBase64, lstrlenA( pszBase64 ) );
 		if (e2 == 0) {
 			// OK
 			if (piSize)

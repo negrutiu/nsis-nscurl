@@ -226,7 +226,6 @@ void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 EXTERN_C __declspec(dllexport)
 void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
-	ULONG iRequestID = 0;
 	LPTSTR psz = NULL;
 	PCURL_REQUEST pReq = NULL;
 	PGUI_REQUEST  pGui = NULL;

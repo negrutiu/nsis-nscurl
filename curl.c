@@ -623,7 +623,7 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
-	curl_off_t iTotal, iXferred, iSpeed;
+	curl_off_t iSpeed;
 	curl_off_t iTimeElapsed, iTimeRemaining = 0;
 
 	assert( pReq && pReq->Runtime.pCurl );
@@ -639,12 +639,10 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 	curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_TOTAL_TIME_T, &iTimeElapsed );
 	if (dlnow > 0) {
 		/// Downloading (phase 2)
-		iTotal = dltotal, iXferred = dlnow;
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_DOWNLOAD_T, &iSpeed );
 		iTimeRemaining = (dltotal * iTimeElapsed) / dlnow - iTimeElapsed;
 	} else {
 		/// Uploading (phase 1)
-		iTotal = ultotal, iXferred = ulnow;
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_UPLOAD_T, &iSpeed );
 		if (ulnow > 0)
 			iTimeRemaining = (ultotal * iTimeElapsed) / ulnow - iTimeElapsed;
@@ -771,7 +769,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (MyValidHandle( pReq->Runtime.hInFile )) {
 				// NOTE: kernel32!GetFileSizeEx is only available in XP+
 				LARGE_INTEGER l;
-				l.LowPart = GetFileSize( pReq->Runtime.hInFile, &l.HighPart );
+				l.LowPart = GetFileSize( pReq->Runtime.hInFile, (PULONG)&l.HighPart );
 				if (l.LowPart != INVALID_FILE_SIZE) {
 					/// Store file size in iDataSize
 					pReq->Data.Size = l.QuadPart;
@@ -798,7 +796,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			/// Resume?
 			if (pReq->bResume) {
 				LARGE_INTEGER l;
-				l.LowPart = GetFileSize( pReq->Runtime.hOutFile, &l.HighPart );
+				l.LowPart = GetFileSize( pReq->Runtime.hOutFile, (PULONG)&l.HighPart );
 				if (l.LowPart != INVALID_FILE_SIZE) {
 					pReq->Runtime.iResumeFrom = l.QuadPart;
 					if (SetFilePointer( pReq->Runtime.hOutFile, 0, NULL, FILE_END ) == INVALID_SET_FILE_POINTER) {
@@ -868,7 +866,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				if (pReq->pszCacert == NULL) {
 					CHAR szCacert[MAX_PATH];
 				#if _UNICODE
-					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ws\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
+					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ls\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
 				#else
 					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
 				#endif
@@ -1035,7 +1033,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						if (pReq->iCompleteTimeout > 0) {
 							curl_off_t to = pReq->iCompleteTimeout - pReq->Runtime.iTimeElapsed;	/// Remaining complete timeout
 							to = __max( to, 1 );
-							curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, to );
+							curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, (ULONG)to );
 						}
 						// Resume size
 						pReq->Runtime.iResumeFrom += pReq->Runtime.iDlXferred;
