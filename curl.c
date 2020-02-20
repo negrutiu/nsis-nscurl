@@ -80,28 +80,28 @@ void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSi
 
 
 //+ CurlRequestFormatError
-void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, _In_opt_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrCode )
+void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, _In_opt_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrorCode )
 {
 	if (pszError)
 		pszError[0] = 0;
 	if (pbSuccess)
 		*pbSuccess = TRUE;
-	if (piErrCode)
-		*piErrCode = 0;
+	if (piErrorCode)
+		*piErrorCode = 0;
 	if (pReq) {
 		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
 			// Win32 error code
 			if (pbSuccess) *pbSuccess = FALSE;
 			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
-			if (piErrCode) *piErrCode = pReq->Error.iWin32;
+			if (piErrorCode) *piErrorCode = pReq->Error.iWin32;
 		} else if (pReq->Error.iCurl != CURLE_OK) {
 			// CURL error
 			if (pbSuccess) *pbSuccess = FALSE;
 			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%x \"%hs\"" ), pReq->Error.iCurl, pReq->Error.pszCurl );
-			if (piErrCode) *piErrCode = pReq->Error.iCurl;
+			if (piErrorCode) *piErrorCode = pReq->Error.iCurl;
 		} else {
 			// HTTP status
-			if (piErrCode) *piErrCode = pReq->Error.iHttp;
+			if (piErrorCode) *piErrorCode = pReq->Error.iHttp;
 			if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
 				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "OK" ) );
 			} else {
@@ -132,6 +132,38 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 			}
 		}
 	}
+}
+
+
+//+ CurlRequestErrorType
+LPCSTR CurlRequestErrorType( _In_ PCURL_REQUEST pReq )
+{
+	if (pReq) {
+		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
+			return "win32";
+		} else if (pReq->Error.iCurl != CURLE_OK) {
+			return "curl";
+		} else if (pReq->Error.iHttp >= 0) {
+			return "http";
+		}
+	}
+	return "";
+}
+
+
+//+ CurlRequestErrorCode
+ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq )
+{
+	if (pReq) {
+		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
+			return pReq->Error.iWin32;
+		} else if (pReq->Error.iCurl != CURLE_OK) {
+			return pReq->Error.iCurl;
+		} else if (pReq->Error.iHttp > 0) {
+			return pReq->Error.iHttp;
+		}
+	}
+	return 0;
 }
 
 
@@ -1314,9 +1346,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
-			ULONG e;
-			CurlRequestFormatError( pReq, NULL, 0, NULL, &e );
-			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), e );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), CurlRequestErrorCode( pReq ) );
+		} else if (lstrcmpi( pszKeyword, _T( "@ERRORTYPE@" ) ) == 0) {
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, CurlRequestErrorType( pReq ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0) {
 			if (pReq->Error.iWin32 == ERROR_CANCELLED || pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK) {
 				lstrcpyn( pszKeyword, _T( "1" ), iMaxLen );

@@ -120,7 +120,9 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown );
 
 //+ CurlRequestFormatError
-void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrCode  );
+void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_ LPTSTR pszError, _In_ ULONG iErrorLen, _Out_opt_ PBOOLEAN pbSuccess, _Out_opt_ PULONG piErrorCode );
+LPCSTR CurlRequestErrorType( _In_ PCURL_REQUEST pReq );		//? Returns: "win32", "curl", "http" or ""
+ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq );		//? e.g. 404
 
 // ____________________________________________________________________________________________________________________________________ //
 //                                                                                                                                      //
