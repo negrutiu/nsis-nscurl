@@ -1349,7 +1349,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), CurlRequestErrorCode( pReq ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORTYPE@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, CurlRequestErrorType( pReq ) );
-		} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0) {
+		} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@CANCELED@" ) ) == 0) {
 			if (pReq->Error.iWin32 == ERROR_CANCELLED || pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK) {
 				lstrcpyn( pszKeyword, _T( "1" ), iMaxLen );
 			} else {
