@@ -1084,8 +1084,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 					// Finished?
 					CurlRequestFormatError( pReq, NULL, 0, &bSuccess, &e );
-					if (bSuccess || pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK || pReq->Error.iCurl == CURLE_OPERATION_TIMEDOUT || pReq->Error.iWin32 == ERROR_CANCELLED)
-						break;
+					if (bSuccess)
+						break;		/// Transfer successful
+					if (pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK || pReq->Error.iWin32 == ERROR_CANCELLED)
+						break;		/// Canceled
+					if (pReq->Error.iCurl == CURLE_OPERATION_TIMEDOUT)
+						break;		/// Connect timeout
+					if (pReq->Error.iHttp > 0 && (pReq->Error.iHttp < 200 || pReq->Error.iHttp >= 300))
+						break;		/// HTTP error
 
 					// Cancel?
 					if (InterlockedCompareExchange( &pReq->Queue.iFlagAbort, -1, -1 ) != FALSE) {
