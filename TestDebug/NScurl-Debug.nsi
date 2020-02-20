@@ -433,6 +433,8 @@ Section "Big file (100MB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
 	Push "/INSIST"
 
 	Push "$HWNDPARENT"
@@ -462,6 +464,8 @@ Section "Big file (10GB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
 	Push "/INSIST"
 
 	Push "$HWNDPARENT"
@@ -479,6 +483,98 @@ Section "Big file (10GB)"
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
+
+
+SectionGroup /e "Errors"
+
+Section "httpbin.org/get/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "/INSIST"
+
+	Push "${FILE}.md"
+	Push "/DEBUG"
+
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "httpbin.org/post/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_POST_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "/INSIST"
+
+	Push "${FILE}.md"
+	Push "/DEBUG"
+
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "POST"
+	CallInstDLL $DLL http
+	Pop $0
+
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "httpbin.org/put/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_PUT_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 30000
+	Push "/TIMEOUT"
+	Push "/INSIST"
+
+	Push '{ "number_of_the_beast" : 666 }'
+	Push "/DATA"
+
+	Push "Content-Type: application/json"
+	Push "/HEADER"
+
+	Push "${FILE}.md"
+	Push "/DEBUG"
+
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "PUT"
+	CallInstDLL $DLL http
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+SectionGroupEnd			; Errors
 
 
 SectionGroup /e "Authentication"

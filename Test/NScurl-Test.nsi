@@ -288,7 +288,7 @@ Section "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 
@@ -303,11 +303,55 @@ Section "Big file (10GB)"
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /END
+	NScurl::http GET "${LINK}" "${FILE}" /CANCEL /RESUME /TITLEWND $HWNDPARENT /INSIST /TIMEOUT 30000 /END
 	Pop $0
 	DetailPrint "Status: $0"
 
 SectionEnd
+
+
+SectionGroup /e "Errors"
+
+Section "httpbin.org/get/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_GET_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	NScurl::http GET "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "httpbin.org/post/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_POST_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	NScurl::http POST "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+Section "httpbin.org/put/status/40x"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
+	!define /redef FILE '$EXEDIR\_PUT_httpbin_40x.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	NScurl::http PUT "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /INSIST /TIMEOUT 30000 /END
+	Pop $0
+	DetailPrint "Status: $0"
+SectionEnd
+
+SectionGroupEnd			; Errors
 
 
 SectionGroup /e "Authentication"
