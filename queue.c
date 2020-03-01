@@ -16,6 +16,7 @@ struct {
 
 //+ Prototypes
 ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam );
+void QueueCreateThreads( _In_ LONG iCount );
 
 
 //++ QueueInitialize
@@ -97,34 +98,17 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 				g_Queue.Head = pReq;
 			}
 
-			// Create a new (suspended) worker thread
-			if (g_Queue.ThreadCount + 1 <= g_Queue.ThreadMax) {
-				if ((hThread = CreateThread( NULL, 0, QueueThreadProc, pReq, CREATE_SUSPENDED, NULL )) != NULL) {
-					g_Queue.ThreadCount++;
-					MySetThreadName( hThread, L"NScurl" );
-				} else {
-					TRACE( _T( "%hs::CreateThread( Id:%u, Url:%hs ) = 0x%x\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL, GetLastError() );
-				}
-			} else {
-				//? The maximum number of threads are already running
-				//? The new HTTP request will wait in queue until an existing thread will handle it
-			}
-
-			// Final touches
-			pReq->Queue.pNext = NULL;
-			pReq->Queue.iStatus = (hThread ? STATUS_RUNNING : STATUS_WAITING);
 			pReq->Queue.iId = ++g_Queue.NextId;
+			pReq->Queue.iStatus = STATUS_WAITING;
+			pReq->Queue.pNext = NULL;
+
+			TRACE( _T( "%hs( Id:%u, Url:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL );
+
+			// New worker thread
+			QueueCreateThreads( 1 );
 		}
 		QueueUnlock();
 
-		TRACE( _T( "%hs( Id:%u, Url:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL );
-
-		// Resume the thread
-		if (hThread) {
-			ResumeThread( hThread );
-			CloseHandle( hThread );			//? Thread handle is no longer needed. The thread will continue to run until its procedure exits
-		}
-	
 	} else {
 		e = ERROR_INVALID_PARAMETER;
 	}
@@ -248,10 +232,46 @@ PCURL_REQUEST QueueFirstWaiting()
 {
 	if (g_Queue.Head) {
 		PCURL_REQUEST p;
-		for (p = g_Queue.Head; p && (p->Queue.iStatus != STATUS_WAITING); p = p->Queue.pNext);
-		return p;
+		for (p = g_Queue.Head; p; p = p->Queue.pNext) {
+			if (p->Queue.iStatus == STATUS_WAITING) {
+				if (p->iDependencyId != 0) {
+					PCURL_REQUEST pReqDep = QueueFind( p->iDependencyId );
+					if (pReqDep) {
+						if (pReqDep->Queue.iStatus == STATUS_COMPLETE) {
+							return p;		/// Dependency satisfied
+						} else {
+							/// Continue looking for the next WAITING
+							TRACE( _T( "%hs( Id:%u/Waiting <-> Id:%u/Incomplete ) = Skip\n" ), __FUNCTION__, p->Queue.iId, pReqDep->Queue.iId );
+						}
+					} else {
+						return p;		/// Depends on inexistent/removed request
+					}
+				} else {
+					return p;		/// Independent request
+				}
+			}
+		}
 	}
 	return NULL;
+}
+
+
+//++ QueueCreateThreads
+//!  The queue must be *locked*
+void QueueCreateThreads( _In_ LONG iCount )
+{
+	HANDLE h;
+	LONG i, n;
+	n = __min( iCount, g_Queue.ThreadMax - g_Queue.ThreadCount );
+	for (i = 0; i < n; i++) {
+		if ((h = CreateThread( NULL, 0, QueueThreadProc, (LPVOID)++g_Queue.ThreadCount, 0, NULL )) != NULL) {
+			MySetThreadName( h, L"NScurl" );
+			CloseHandle( h );			//? Thread handle is no longer needed. The thread will continue to run until its procedure exits
+		} else {
+			g_Queue.ThreadCount--;
+			TRACE( _T( "%hs::CreateThread(..) = 0x%x\n" ), __FUNCTION__, GetLastError() );
+		}
+	}
 }
 
 
@@ -259,12 +279,9 @@ PCURL_REQUEST QueueFirstWaiting()
 ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 {
 	ULONG e = ERROR_SUCCESS, t0;
-	LONG iThreadCount;
-	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
+	PCURL_REQUEST pReq = NULL;
+	LONG iThreadCount = (LONG)pParam;
 
-	QueueLock();
-	iThreadCount = g_Queue.ThreadCount;
-	QueueUnlock();
 	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
 
 	while (TRUE) {
@@ -274,17 +291,13 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 			break;
 
 		// Select the next waiting request
-		if (!pReq) {
-			QueueLock();
-			pReq = QueueFirstWaiting();
-			if (pReq)
-				pReq->Queue.iStatus = STATUS_RUNNING;		/// Mark as Running while locked
-			QueueUnlock();
-		}
-
-		// No more waiting requests
+		QueueLock();
+		pReq = QueueFirstWaiting();
+		if (pReq)
+			pReq->Queue.iStatus = STATUS_RUNNING;		/// Mark as Running while locked
+		QueueUnlock();
 		if (!pReq)
-			break;
+			break;		// No more waiting requests
 
 		//+ Transfer
 		t0 = GetTickCount();
@@ -302,8 +315,17 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 		pReq->Queue.iStatus = STATUS_COMPLETE;
 		MemoryBarrier();
 
-		// Cleanup
-		pReq = NULL;
+		// Create more threads to handle multiple dependencies
+		//x QueueLock();
+		//x {
+		//x 	PCURL_REQUEST p;
+		//x 	LONG iDependCount = 0;
+		//x 	for (p = g_Queue.Head; p; p = p->Queue.pNext)
+		//x 		if (p->iDependencyId == pReq->Queue.iId)
+		//x 			iDependCount++;
+		//x 	QueueCreateThreads( iDependCount - 1 );
+		//x }
+		//x QueueUnlock();
 	}
 
 	// Exit

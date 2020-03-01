@@ -297,6 +297,12 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
+	<td>/DEPEND id</td>
+	<td>Makes this HTTP request dependent on another request.<br>
+	The new request will wait in the queue until its dependency gets completed.<br>
+	</td>
+</tr>
+<tr>
 	<td>/BACKGROUND</td>
 	<td>By default NScurl::http waits for the transfer to complete.<br>
 	By specifying the <b>/BACKGROUND</b> parameter you start a background (asynchronous) HTTP transfer.<br>

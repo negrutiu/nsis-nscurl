@@ -34,6 +34,7 @@ typedef struct _CURL_REQUEST {
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
+	ULONG		iDependencyId;			/// can be 0. This request will not be carried out until its dependency completes
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
