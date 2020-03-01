@@ -119,22 +119,29 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>GET | POST | HEAD | PUT | ...</td>
 	<td>HTTP method.<br>
-	<b>This parameter is mandatory.</b>
+	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
 <tr>
 	<td>URL</td>
 	<td>Full URI, including query parameters.<br>
-	<b>This parameter is mandatory.</b><br>
 	<b>NOTE:</b> Query parameters must be escaped by the caller. <a href="#escape">NScurl::escape</a> is available for that.<br>
+	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
 <tr>
-	<td>file|MEMORY</td>
+	<td>filename|MEMORY</td>
 	<td>Transfer destination.<br>
-	<b>This parameter is mandatory.</b><br>
 	If "MEMORY" is specified the remote content is downloaded to RAM. It can be <a href="#query">queried</a> after the transfer completes.<br>
-	<b>NOTE:</b> Remote content downloaded to memory is truncated to NSIS string length which is usually 1KB-4KB. If you expect larger data, it's recommended to download it to a file on disk.
+	<b>NOTE:</b> The data downloaded to MEMORY will be truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build). If you expect larger data, it's recommended to download it to a file on disk.
+	<b>NOTE: This parameter is mandatory.</b><br>
+	</td>
+</tr>
+<tr>
+	<td>/RETURN query_string</td>
+	<td>Request a custom return value. Default is "@ERROR@" (aka transfer status)<br>
+	Any combination of query <a href="#keywords">keywords</a> is accepted.<br>
+	(e.g. "@ERRORCODE@ - @ELAPSEDTIME@")<br>
 	</td>
 </tr>
 <tr>
@@ -216,9 +223,10 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/HEADER hdr1 ... /HEADER hdrN</td>
-	<td>Additional HTTP request header(s) delimited by CRLF ($\r$\n).<br>
-	Multiple /HEADER parameters are accepted.<br>
+	<td>/HEADER hdr(s)</td>
+	<td>Additional HTTP request header(s).<br>
+	<b>NOTE:</b> Multiple headers can be separated by CRLF ($\r$\n)<br>
+	<b>NOTE:</b> Multiple /HEADER parameters are accepted.<br>
 	</td>
 </tr>
 <tr>
@@ -275,22 +283,17 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/CACERT "path\cacert.pem"</td>
-	<td>Specify a custom <b>cacert.pem</b> file.<br>
-	By default a built-in <b>cacert.pem</b> is extracted and used.<br>
-	SSL validation can be turned off by specifying an empty ("") file name.</td>
-</tr>
-<tr>
-	<td>/CERT thumbprint1 ... /CERT thumbprintN</td>
-	<td>Specify a trusted server certificate (sha1) thumbprint (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc).<br>
-	Multiple /CERT parameters are accepted.<br>
-	Trusted thumbprints will be used for server validation in addition to the <b>cacert.pem</b> file.<br>
+	<td>Use a custom <b>cacert.pem</b> database.<br>
+	By default a built-in <b>cacert.pem</b> is extracted and used at runtime.<br>
+	SSL validation can be turned off by specifying an empty ("") path.<br>
+	<b>NOTE:</b> Get the most recent <b>cacert.pem</b> from its <a href="https://curl.haxx.se/ca/cacert.pem">original website</a>.<br>
 	</td>
 </tr>
 <tr>
-	<td>/RETURN query_string</td>
-	<td>Request a custom return value. Default is "@ERROR@" (aka transfer status)<br>
-	Any combination of query <a href="#keywords">keywords</a> is accepted.<br>
-	(e.g. "@ERRORCODE@ - @ELAPSEDTIME@")<br>
+	<td>/CERT thumbprint</td>
+	<td>Specify a trusted server certificate (sha1) thumbprint (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc).<br>
+	Trusted thumbprints are used for SSL validation in addition to the <b>cacert.pem</b> file.<br>
+	<b>NOTE:</b> Multiple /CERT parameters are accepted. All thumbprints are aggregated into a big certificate whitelist.<br>
 	</td>
 </tr>
 <tr>
@@ -353,7 +356,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/END</td>
 	<td>Must always conclude the list of parameters.<br>
-	<b>This parameter is mandatory.</b><br>
+	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
 </table>
@@ -584,26 +587,26 @@ Pop $0	; Transfer ID<br>
 </tr>
 <tr>
 	<td>/PAGE</td>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 </tr>
 <tr>
 	<td>/POPUP</td>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 </tr>
 <tr>
 	<td>/SILENT</td>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 </tr>
 <tr>
 	<td>/CANCEL</td>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 </tr>
 <tr>
 	<td>/TITLEWND hwnd<br>
 	/TEXTWND hwnd<br>
 	/PROGRESSWND hwnd<br>
 	</td>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 </tr>
 <tr>
 	<td>/STRING TITLE string<br>
@@ -612,13 +615,13 @@ Pop $0	; Transfer ID<br>
 	/STRING TEXT string<br>
 	/STRING TEXT_NOSIZE string<br>
 	/STRING TEXT_MULTI string<br>
-	<td>Check out <a href="#http">NScurl::http</a> for details.</td>
+	<td>See <a href="#http">NScurl::http</a></td>
 	</td>
 </tr>
 <tr>
 	<td>/END</td>
 	<td>Must always conclude the list of parameters.<br>
-	<b>This parameter is mandatory.</b><br>
+	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
 </table>
@@ -639,12 +642,12 @@ An empty string ("") is pushed to the stack to mark the end of the enumeration.<
 <div style="background-color: #dddddd">
 <b><a href="#enumerate">NScurl::enumerate</a></b> /END<br>
 _enum_loop:<br>
-<blockquote>
+	<p style="margin-left: 20px; margin-top: 0; margin-bottom: 0">
 	Pop $0<br>
 	StrCmp $0 "" _enum_end<br>
 	DetailPrint 'TODO: Transfer ID $0'<br>
 	Goto _enum_loop<br>
-</blockquote>
+	</p>
 _enum_end:<br>
 </div>
 <br>
@@ -665,7 +668,7 @@ _enum_end:<br>
 <tr>
 	<td>/END</td>
 	<td>Must always conclude the list of parameters.<br>
-	<b>This parameter is mandatory.</b><br>
+	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
 </table>
