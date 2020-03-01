@@ -100,7 +100,7 @@ Section "Parallel (50 * put)"
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA /FILE "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -186,12 +186,12 @@ Section "httpbin.org/post (multipart/form-data)"
 		"${FILE}" \
 		/HEADER "Header1: Value1$\r$\nHeader2: Value2" \
 		/HEADER "Header3: Value3" \
-		/POSTVAR "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
-		/POSTVAR "Name" "<Your name here>" \
-		/POSTVAR "Password" "<Your password here>" \
-		/POSTVAR "filename=cacert.pem" "cacert.pem" /FILE "$PLUGINSDIR\cacert.pem" \
-		/POSTVAR "filename=cacert2.pem" "cacert2.pem" /FILE "$PLUGINSDIR\cacert.pem" \
-		/POSTVAR "type=application/octet-stream" "Binary" /MEM $R0 $R1 \
+		/POST "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
+		/POST "Name" "<Your name here>" \
+		/POST "Password" "<Your password here>" \
+		/POST "filename=cacert.pem" "cacert.pem" (file) "$PLUGINSDIR\cacert.pem" \
+		/POST "filename=cacert2.pem" "cacert2.pem" (file) "$PLUGINSDIR\cacert.pem" \
+		/POST "type=application/octet-stream" "Binary" (memory) $R0 $R1 \
 		/INSIST \
 		/REFERER "https://test.com" \
 		/END
@@ -608,36 +608,36 @@ Section Hashes
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!define S1 "Hash this string"
 
-	; NScurl::md5 /FILE filename
-	NScurl::md5 /FILE $EXEPATH
+	; NScurl::md5 (file) filename
+	NScurl::md5 (file) $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::md5 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::md5 (file) "$EXEFILE" = "$0"'
 
-	; NScurl::md5 string
-	NScurl::md5 "${S1}"
+	; NScurl::md5 (string) string
+	NScurl::md5 (string) "${S1}"
 	Pop $0
-	DetailPrint 'NScurl::md5 "${S1}" = "$0"'
+	DetailPrint 'NScurl::md5 (string) "${S1}" = "$0"'
 
-	; NScurl::md5 /MEM ptr size
+	; NScurl::md5 (memory) ptr size
 	StrLen $R1 "${S1}"
 	System::Call '*(&m128 "${S1}") p.r10'
 	IntFmt $R0 "0x%Ix" $R0
 
-	NScurl::md5 /MEM $R0 $R1
+	NScurl::md5 (memory) $R0 $R1
 	Pop $0
-	DetailPrint 'NScurl::md5 /MEM ($R0:"${S1}", $R1) = "$0"'
+	DetailPrint 'NScurl::md5 (memory) ($R0:"${S1}", $R1) = "$0"'
 
 	System::Free $R0
 
 	; NScurl::sha1
-	NScurl::sha1 /FILE $EXEPATH
+	NScurl::sha1 (file) $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha1 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha1 (file) "$EXEFILE" = "$0"'
 
 	; NScurl::sha256
-	NScurl::sha256 /FILE $EXEPATH
+	NScurl::sha256 (file) $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha256 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha256 (file) "$EXEFILE" = "$0"'
 
 	!undef S1
 SectionEnd

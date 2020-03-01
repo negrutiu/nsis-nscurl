@@ -272,7 +272,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 				psz1 = psz2;
 			}
 		}
-	} else if (lstrcmpi( pszParam, _T( "/POSTVAR" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "/POST" ) ) == 0) {
 		LPSTR pszFilename = NULL, pszType = NULL, pszName = NULL, pszData = NULL;
 		IDATA Data;
 		/// Extract optional parameters "filename=XXX" and "type=XXX"

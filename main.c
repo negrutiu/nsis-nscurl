@@ -83,7 +83,7 @@ UINT_PTR __cdecl UnloadCallback( enum NSPIM iMessage )
 }
 
 
-//++ [exported] md5 <string|/FILE filename|/MEM ptr size>
+//++ [exported] md5 [(string|file|memory)] <data>
 EXTERN_C __declspec(dllexport)
 void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -118,7 +118,7 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 }
 
 
-//++ [exported] sha1 <string|/FILE filename|/MEM ptr size>
+//++ [exported] sha1 [(string|file|memory)] <data>
 EXTERN_C __declspec(dllexport)
 void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -153,7 +153,7 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] sha256 <string|/FILE filename|/MEM ptr size>
+//++ [exported] sha256 [(string|file|memory)] <data>
 EXTERN_C __declspec(dllexport)
 void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {

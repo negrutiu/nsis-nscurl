@@ -222,24 +222,55 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/DATA &lt;string|/FILE filename|/MEM ptr size&gt;</td>
-	<td>Data string/file/memory buffer to be uploaded to server.<br>
-	Valid for POST and PUT, ignored otherwise.<br>
+	<td>/DATA [(string|file|memory)] &lt;data&gt;</td>
+	<td>Update local data to the server.<br>
+	<br>
+	The data is read either from a file or directly from memory.<br>
+	The optional <b>(string)</b>, <b>(file)</b>, <b>(memory)</b> hint can be specified to indicate <b>data</b>'s origin.<br>
+	If unspecified, the function tries to guess whether <b>data</b> represents a file name or a generic string.<br>
+	<br>
+	<b>EXAMPLES:</b><br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA "<b>Send generic string</b>" /END<br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA "<b>C:\dir\file.dat</b>" /END<br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA (string) "<b>C:\dir\file.dat</b>" /END  /* Send the file path itself... */<br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA (memory) <b>0xdeadbeef 256</b> /END<br>
+	<br>
+	<b>NOTE:</b> The <b>(memory)</b> hint must be followed by two parameters: address and size. See examples.<br>
+	<b>NOTE:</b> Although optional, it's recommended that you always specify the <b>(string|file|memory)</b> hint.<br>
+	<b>NOTE:</b> Requires POST or PUT methods. Ignored otherwise.<br>
 	</td>
 </tr>
 <tr>
-	<td>/POSTVAR [FILENAME=remote_filename] [TYPE=mime_type] name &lt;string|/FILE filename|/MEM ptr size&gt;<br>
-	...<br>
-	/POSTVAR ...<br>
+	<td>/POST
+	<p style="margin-left: 10px; margin-top: 0; margin-bottom: 0">
+		[FILENAME=remote_filename]<br>
+		[TYPE=mime_type]<br>
+		&lt;name&gt;<br>
+		[(string|file|memory)] &lt;data&gt;<br>
+	</p>
 	</td>
-	<td>Multipart form part.<br>
-	Used only with POST, ignored otherwise.<br>
-	Multiple /POSTVAR parameters are accepted.<br>
+	<td>Upload a multipart form to the server.<br>
 	<br>
-	FILENAME: Optional remote file name (e.g. "mydata.json")<br>
-	TYPE: Optional MIME type (e.g. "application\json")<br>
-	name: Part name (e.g. "MyData")<br>
-	data: Part data string/file/memory buffer<br>
+	FILENAME: Optional remote file name<br>
+	TYPE: Optional MIME type<br>
+	name: Form part name<br>
+	data: Form part data<br>
+	<br>
+	<b>EXAMPLE:</b><br>
+	<a href="#http"><b>NScurl::http</b></a> POST ${url} ${file} \<br>
+	<p style="margin-left: 10px; margin-top: 0; margin-bottom: 0">
+		/POST "User" <b>"My User Name"</b> \<br>
+		/POST "Pass" <b>"My Password"</b> \<br>
+		/POST "InfoFile" <b>(string) "$TEMP\MyDetail.json"</b> /* Upload the file path itself <u>as string</u> */ \<br>
+		/POST "InfoData" <b>(file) "$TEMP\MyDetail.json"</b> /* Upload the file content */ \<br>
+		/POST "Image" FILENAME=MyImage.jpg TYPE=image/jpeg <b>"$TEMP\MyImage.jpg"</b> \<br>
+		/POST "Details" FILENAME=MyDetails.json TYPE=application/json <b>'{ "number_of_the_beast" : 666 }'</b> \<br>
+		/END<br>
+	</p>
+	<br>
+	<b>NOTE:</b> See /DATA to learn how <b>data</b> is interpreted.<br>
+	<b>NOTE:</b> Multiple /POST parameters are accepted. All form parts will be sent as one multipart form.<br>
+	<b>NOTE:</b> Requires POST method. Ignored otherwise.<br>
 	</td>
 </tr>
 <tr>
@@ -663,12 +694,14 @@ Pop $0	; Returns the original string<br>
 
 <hr>
 
-<h2><a name="md5">NScurl::md5</a> &lt;string|/FILE filename|/MEM ptr size&gt;<br>
-<a name="sha1">NScurl::sha1</a> &lt;string|/FILE filename|/MEM ptr size&gt;<br>
-<a name="sha256">NScurl::sha256</a> &lt;string|/FILE filename|/MEM ptr size&gt;</h2>
+<h2><a name="md5">NScurl::md5</a> [(string|file|memory)] &lt;data&gt;<br>
+<a name="sha1">NScurl::sha1</a> [(string|file|memory)] &lt;data&gt;<br>
+<a name="sha256">NScurl::sha256</a> [(string|file|memory)] &lt;data&gt;</h2>
 
 <h3>Description:</h3>
-Compute the md5/sha1/sha256 file hashes.<br>
+Compute MD5 / SHA1 / SHA256 hashes.<br>
+The data can be read either from a file or directly from memory.<br>
+<b>NOTE:</b> See /DATA to learn how <b>data</b> is interpreted.<br>
 
 <h3>Return value:</h3>
 The hash (formatted as hex string) is pushed to the stack.<br>
@@ -678,13 +711,16 @@ The hash (formatted as hex string) is pushed to the stack.<br>
 <b><a href="#md5">NScurl::md5</a></b> "Hash this string"<br>
 Pop $0	; e.g. "376630459092d7682c2a2e745d74aa6b"<br>
 <br>
-<b><a href="#md5">NScurl::md5</a></b> /FILE $EXEPATH<br>
+<b><a href="#md5">NScurl::md5</a></b> $EXEPATH<br>
 Pop $0	; e.g. "93a52d04f7b56bc267d45bd95c6de49b"<br>
 <br>
-<b><a href="#sha1">NScurl::sha1</a></b> /FILE $EXEPATH<br>
+<b><a href="#sha1">NScurl::sha1</a></b> (file) $EXEPATH<br>
 Pop $0	; e.g. "faff487654d4dfa1deb5e5d462c8cf51b00a4acd"<br>
 <br>
-<b><a href="#sha256">NScurl::sha256</a></b> /FILE $EXEPATH<br>
+<b><a href="#sha1">NScurl::sha1</a></b> (string) $EXEPATH /* Hash the file path as regular string */<br>
+Pop $0<br>
+<br>
+<b><a href="#sha256">NScurl::sha256</a></b> $EXEPATH<br>
 Pop $0	; e.g. "e6fababe9530b1d5c4395ce0a1379c201ebb017997e4671a442a8410d1e2e6ac"<br>
 </div>
 <br>

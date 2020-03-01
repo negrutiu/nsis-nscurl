@@ -836,43 +836,72 @@ void IDataDestroy( _Inout_ IDATA *pData )
 
 
 //++ IDataParseParam
-//? Syntax: string | /FILE filename | /MEM ptr size
+//? Syntax: [(string|file|memory)] <data>
 BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
 {
-	BOOL bRet = FALSE;
+	BOOL bRet = FALSE, bDataPopped = FALSE;
 	assert( pszParam && iParamMaxLen && pData );
+
+	//? Possible combinations:
+	//?   "(string)" "My String"
+	//?   "(file)"   "C:\\MyDir\\MyFile.ext"
+	//?   "(memory)" 0xdeadbeef 256
+	//? If the (string|file|memory) hint is missing, we try to guess between (file) and (string)
 
 	IDataInitialize( pData );
 
-	if (lstrcmpi( pszParam, _T( "/FILE" ) ) == 0) {
-		// Clone the filename (TCHAR)
-		if (popstring( pszParam ) == NO_ERROR) {
-			if ((pData->File = MyStrDup( eT2T, pszParam )) != NULL) {
-				pData->Type = IDATA_TYPE_FILE;
-			//x	pData->Size = lstrlen( pData->File );
+	// Look for the data hint
+	if (lstrcmpi( pszParam, _T( "(string)" ) ) == 0 || lstrcmpi( pszParam, _T( "(str)" ) ) == 0) {
+		pData->Type = IDATA_TYPE_STRING;
+	} else if (lstrcmpi( pszParam, _T( "(file)" ) ) == 0) {
+		pData->Type = IDATA_TYPE_FILE;
+	} else if (lstrcmpi( pszParam, _T( "(memory)" ) ) == 0 || lstrcmpi( pszParam, _T( "(mem)" ) ) == 0 || lstrcmpi( pszParam, _T( "(buf)" ) ) == 0) {
+		pData->Type = IDATA_TYPE_MEM;
+	} else {
+		// Try to guess data type
+		if (MyFileExists( pszParam )) {
+			pData->Type = IDATA_TYPE_FILE;
+		} else {
+			pData->Type = IDATA_TYPE_STRING;
+		}
+		bDataPopped = TRUE;		// pszParam already stores the data itself
+	}
+
+	// Fill IDATA in
+	if (pData->Type == IDATA_TYPE_STRING) {
+		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
+			// Clone the string (utf8)
+			if ((pData->Str = MyStrDup( eT2A, pszParam )) != NULL) {
+				pData->Size = lstrlenA( pData->Str );
 				bRet = TRUE;
 			}
 		}
-	} else if (lstrcmpi( pszParam, _T( "/MEM" ) ) == 0) {
+	} else if (pData->Type == IDATA_TYPE_FILE) {
+		// Clone the filename (TCHAR)
+		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
+			if ((pData->File = MyStrDup( eT2T, pszParam )) != NULL) {
+				pData->Size = lstrlen( pData->File );
+				bRet = TRUE;
+			}
+		}
+	} else if (pData->Type == IDATA_TYPE_MEM) {
 		// Clone the buffer (PVOID)
 		LPCVOID ptr;
 		size_t size;
-		if ((ptr = (LPCVOID)popintptr()) != NULL && (size = (ULONG_PTR)popintptr()) != 0) {
-			if ((pData->Mem = MyAlloc( size )) != NULL) {
-				CopyMemory( pData->Mem, ptr, size );
-				pData->Type = IDATA_TYPE_MEM;
-				pData->Size = size;
-				bRet = TRUE;
+		if ((ptr = (LPCVOID)(bDataPopped ? nsishelper_str_to_ptr( pszParam ) : popint())) != NULL) {
+			if ((size = (ULONG_PTR)popintptr()) != 0) {
+				if ((pData->Mem = MyAlloc( size )) != NULL) {
+					CopyMemory( pData->Mem, ptr, size );
+					pData->Size = size;
+					bRet = TRUE;
+				}
 			}
 		}
 	} else {
-		// Clone the string (utf8)
-		if ((pData->Str = MyStrDup( eT2A, pszParam )) != NULL) {
-			pData->Type = IDATA_TYPE_STRING;
-			pData->Size = lstrlenA( pData->Str );
-			bRet = TRUE;
-		}
+		assert( !"Unexpected data type" );
 	}
 
+	if (!bRet)
+		IDataDestroy( pData );
 	return bRet;
 }

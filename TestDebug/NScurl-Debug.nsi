@@ -133,7 +133,7 @@ Section "Parallel (50 * put)"
 		Push /INSIST
 		Push /BACKGROUND
 		Push "$PLUGINSDIR\cacert.pem"
-		Push /FILE
+		Push "(file)"
 		Push /DATA
 		Push "Memory"
 		Push "https://httpbin.org/put"
@@ -270,36 +270,36 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	Push $R1
 	Push $R0
-	Push "/MEM"
+	Push "(memory)"
 	Push "Binary"
 	Push "type=application/octet-stream"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push "$PLUGINSDIR\cacert.pem"
-	Push /FILE
+	Push "(file)"
 	Push "cacert2.pem"
 	Push "filename=cacert2.pem"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push "$PLUGINSDIR\cacert.pem"
-	Push /FILE
+	Push "(file)"
 	Push "cacert.pem"
 	Push "filename=cacert.pem"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push "<Your password here>"
 	Push "Password"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push "<Your name here>"
 	Push "Name"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push '{ "number_of_the_beast": 666 }'
 	Push "maiden.json"
 	Push "type=application/json"
 	Push "filename=maiden.json"
-	Push "/POSTVAR"
+	Push "/POST"
 
 	Push "Header3: Value3"
 	Push "/HEADER"
@@ -1018,24 +1018,25 @@ Section Hashes
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!define S1 "Hash this string"
 
-	; NScurl::md5 /FILE filename
+	; NScurl::md5 (file) filename
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push /FILE
+	Push "(file)"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::md5 (file) "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
-	; NScurl::md5 string
+	; NScurl::md5 (strint) string
 	!insertmacro STACK_VERIFY_START
 	Push "${S1}"
+	Push "(string)"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 "${S1}" = "$0"'
+	DetailPrint 'NScurl::md5 (string) "${S1}" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
-	; NScurl::md5 /MEM ptr size
+	; NScurl::md5 (memory) ptr size
 	!insertmacro STACK_VERIFY_START
 	Push $R0
 	Push $R1
@@ -1046,10 +1047,10 @@ Section Hashes
 
 	Push $R1
 	Push $R0
-	Push /mem
+	Push "(memory)"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 /MEM ($R0:"${S1}", $R1) = "$0"'
+	DetailPrint 'NScurl::md5 (memory) ($R0:"${S1}", $R1) = "$0"'
 
 	System::Free $R0
 
@@ -1060,19 +1061,19 @@ Section Hashes
 	; NScurl::sha1
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push /FILE
+	Push "(file)"
 	CallInstDLL $DLL sha1
 	Pop $0
-	DetailPrint 'NScurl::sha1 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha1 (file) "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha256
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push /FILE
+	Push "(file)"
 	CallInstDLL $DLL sha256
 	Pop $0
-	DetailPrint 'NScurl::sha256 /FILE "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha256 (file) "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	!undef S1
