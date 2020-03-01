@@ -14,6 +14,7 @@ typedef struct {
 	BOOLEAN bPopup        : 1;			/// Wait in Popup-mode
 	BOOLEAN bCancel       : 1;			/// Enable Cancel button in Page-mode and Popup-mode
 	HWND hTitle, hText, hProgress;		/// Optional window handles. Can be NULL
+	HWND hCancel;						/// Optional button handle. Can be NULL
 	LPTSTR pszTitle;
 	LPTSTR pszTitleNoSize;
 	LPTSTR pszTitleMulti;
@@ -24,6 +25,7 @@ typedef struct {
 		ULONG iId;						/// May be QUEUE_NO_ID
 		ULONG iAnimIndex;				/// Auto increment
 		HWND hTitle, hText, hProgress;	/// Runtime controls
+		HWND hCancel;					/// RUntime controls
 		LPTSTR pszTitle0, pszText0;
 	} Runtime;
 } GUI_REQUEST, *PGUI_REQUEST;

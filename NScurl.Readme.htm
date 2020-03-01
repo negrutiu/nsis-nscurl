@@ -340,10 +340,12 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/TITLEWND hwnd<br>
 	/TEXTWND hwnd<br>
 	/PROGRESSWND hwnd<br>
+	/CANCELWND hwnd<br>
 	</td>
 	<td>Custom Title window handle.<br>
 	Custom Text/Status window handle.<br>
 	Custom progress bar window handle.<br>
+	Custom Cancel button handle.<br>
 	<b>NOTE:</b> These windows are automatically detected/created by default.<br>
 	</td>
 </tr>
@@ -366,6 +368,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 </table>
+<br>
 
 <hr>
 
@@ -558,6 +561,8 @@ Pop $0
 </tr>
 
 </table>
+<br>
+
 <hr>
 
 <h2><a name="wait">NScurl::wait</a> [/ID id] &lt;params&gt; /END</h2>

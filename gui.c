@@ -68,6 +68,8 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 		pGui->hText = (HWND)popintptr();
 	} else if (lstrcmpi( pszParam, _T( "/PROGRESSWND" ) ) == 0) {
 		pGui->hProgress = (HWND)popintptr();
+	} else if (lstrcmpi( pszParam, _T( "/CANCELWND" ) ) == 0) {
+		pGui->hCancel = (HWND)popintptr();
 	} else if (lstrcmpi( pszParam, _T( "/STRING" ) ) == 0) {
 		if (popstring( pszParam ) == NO_ERROR) {
 			TCHAR szName[64];
@@ -209,14 +211,16 @@ LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM 
 	WNDPROC fnWndProc = (WNDPROC)GetProp( hwnd, PROP_WNDPROC );
 	switch (uMsg) {
 		case WM_COMMAND:
-			if (LOWORD( wParam ) == IDCANCEL) {
-				PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_CONTEXT );
-				assert( pGui );
+		{
+			PGUI_REQUEST pGui = (PGUI_REQUEST)GetProp( hwnd, PROP_CONTEXT );
+			assert( pGui );
+			if ((HWND)lParam == pGui->Runtime.hCancel) {
 				// TODO: Confirmation?
 				QueueAbort( pGui->Runtime.iId );
 				return 0;
 			}
 			break;
+		}
 	}
 	return CallWindowProc( fnWndProc, hwnd, uMsg, wParam, lParam );
 }
@@ -225,14 +229,12 @@ LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM 
 //++ GuiSilentWait
 BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 {
-	HWND hCancelBtn = NULL;
 	BOOLEAN bCancelEnabled = FALSE;
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
 
 	// Cancel
 	if (pGui->bCancel) {
-		hCancelBtn = g_hwndparent ? GetDlgItem( g_hwndparent, IDCANCEL ) : NULL;
-		if (hCancelBtn) {
+		if ((pGui->Runtime.hCancel = pGui->hCancel ? pGui->hCancel : (g_hwndparent ? GetDlgItem( g_hwndparent, IDCANCEL ) : NULL)) != NULL) {
 			// Hook NSIS main window to intercept Cancel clicks
 			WNDPROC fnOriginalWndProc = (WNDPROC)SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)GuiNsisWindowProc );
 			if (fnOriginalWndProc) {
@@ -240,8 +242,8 @@ BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 				SetProp( g_hwndparent, PROP_CONTEXT, (HANDLE)pGui );
 			}
 			// Enable it
-			bCancelEnabled = IsWindowEnabled( hCancelBtn );
-			EnableWindow( hCancelBtn, TRUE );
+			bCancelEnabled = IsWindowEnabled( pGui->Runtime.hCancel );
+			EnableWindow( pGui->Runtime.hCancel, TRUE );
 		}
 	}
 
@@ -249,15 +251,16 @@ BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 	GuiWaitLoop( pGui );
 
 	// Cancel
-	if (hCancelBtn) {
+	if (pGui->Runtime.hCancel) {
 		WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_WNDPROC );
-		EnableWindow( hCancelBtn, bCancelEnabled );
+		EnableWindow( pGui->Runtime.hCancel, bCancelEnabled );
 		if (fnWndProc) {
 			// Unhook NSIS main window
 			SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)fnWndProc );
 			RemoveProp( g_hwndparent, PROP_WNDPROC );
 			RemoveProp( g_hwndparent, PROP_CONTEXT );
 		}
+		pGui->Runtime.hCancel = NULL;
 	}
 
 	return TRUE;
@@ -282,6 +285,7 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 			pGui->Runtime.hTitle = hDlg;
 			pGui->Runtime.hText = GetDlgItem( hDlg, IDC_POPUP_STATUS );
 			pGui->Runtime.hProgress = GetDlgItem( hDlg, IDC_POPUP_PROGRESS );
+			pGui->Runtime.hCancel = NULL;
 
 			// Cancel
 			EnableMenuItem( GetSystemMenu( hDlg, FALSE ), SC_CLOSE, MF_BYCOMMAND | (pGui->bCancel ? MF_ENABLED : MF_DISABLED) );
@@ -342,7 +346,7 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 				EnableWindow( hParent, TRUE );
 
 			// Cleanup
-			pGui->Runtime.hTitle = pGui->Runtime.hText = pGui->Runtime.hProgress = NULL;
+			pGui->Runtime.hTitle = pGui->Runtime.hText = pGui->Runtime.hProgress = pGui->Runtime.hCancel = NULL;
 			RemoveProp( hDlg, PROP_CONTEXT );
 			break;
 		}
@@ -399,6 +403,8 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 		pGui->hText = NULL;
 	if (pGui->hProgress && !IsWindow( pGui->hProgress ))
 		pGui->hProgress = NULL;
+	if (pGui->hCancel && !IsWindow( pGui->hCancel ))
+		pGui->hCancel = NULL;
 
 	// Original Title text
 	if (pGui->hTitle) {
@@ -506,11 +512,10 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 	if (pGui->Runtime.hText || pGui->Runtime.hProgress) {
 
 		BOOLEAN bCancelEnabled = FALSE;
-		HWND hCancelBtn = GetDlgItem( g_hwndparent, IDCANCEL );
 
 		// Cancel
-		if (hCancelBtn) {
-			bCancelEnabled = IsWindowEnabled( hCancelBtn );
+		if ((pGui->Runtime.hCancel = pGui->hCancel ? pGui->hCancel : GetDlgItem( g_hwndparent, IDCANCEL )) != NULL) {
+			bCancelEnabled = IsWindowEnabled( pGui->Runtime.hCancel );
 			if (pGui->bCancel) {
 				// Hook NSIS main window to intercept Cancel clicks
 				WNDPROC fnOriginalWndProc = (WNDPROC)SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)GuiNsisWindowProc );
@@ -519,9 +524,9 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 					SetProp( g_hwndparent, PROP_CONTEXT, (HANDLE)pGui );
 				}
 				// Enable it
-				EnableWindow( hCancelBtn, TRUE );
+				EnableWindow( pGui->Runtime.hCancel, TRUE );
 			} else {
-				EnableWindow( hCancelBtn, FALSE );
+				EnableWindow( pGui->Runtime.hCancel, FALSE );
 			}
 		}
 
@@ -555,15 +560,16 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 			SetWindowPos( hDetailsList, NULL, LTWH( rcDetailsList ), SWP_NOZORDER | SWP_NOACTIVATE | SWP_DRAWFRAME );
 		}
 
-		if (hCancelBtn) {
+		if (pGui->Runtime.hCancel) {
 			WNDPROC fnWndProc = (WNDPROC)GetProp( g_hwndparent, PROP_WNDPROC );
-			EnableWindow( hCancelBtn, bCancelEnabled );
+			EnableWindow( pGui->Runtime.hCancel, bCancelEnabled );
 			if (fnWndProc) {
 				// Unhook NSIS main window
 				SetWindowLongPtr( g_hwndparent, GWLP_WNDPROC, (LONG_PTR)fnWndProc );
 				RemoveProp( g_hwndparent, PROP_WNDPROC );
 				RemoveProp( g_hwndparent, PROP_CONTEXT );
 			}
+			pGui->Runtime.hCancel = NULL;
 		}
 
 		return TRUE;
