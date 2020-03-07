@@ -357,18 +357,19 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 
 		if (iId == QUEUE_NO_ID || p->Queue.iId == iId) {
 
-			if (p->Queue.iStatus == STATUS_WAITING)
+			if (p->Queue.iStatus == STATUS_WAITING) {
 				pStats->iWaiting++;
-			else if (p->Queue.iStatus == STATUS_RUNNING)
+			} else if (p->Queue.iStatus == STATUS_RUNNING) {
 				pStats->iRunning++, iLastRunningId = p->Queue.iId;
-			else if (p->Queue.iStatus == STATUS_COMPLETE)
+				pStats->iSpeed += (ULONG)p->Runtime.iSpeed;
+			} else if (p->Queue.iStatus == STATUS_COMPLETE) {
 				pStats->iComplete++;
-			else
+			} else {
 				assert( !"Unexpected request status" );
+			}
 
 			pStats->iDlXferred += p->Runtime.iDlXferred;
 			pStats->iUlXferred += p->Runtime.iUlXferred;
-			pStats->iSpeed     += (ULONG)p->Runtime.iSpeed;
 
 			CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
 			if (!bOK)
