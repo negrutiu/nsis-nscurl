@@ -617,15 +617,8 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 
 	// Return
 	if (!pGui->bBackground) {
-		if (pGui->qsel.iId != 0 && (!pGui->qsel.pszTag || !pGui->qsel.pszTag[0])) {
-			//? Wait for single ID
-			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "@ERROR@" ), iResultMaxLen );
-			QueueQuery( &pGui->qsel, pszResult, iResultMaxLen );
-		} else {
-			//? Wait for all
-			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "OK" ), iResultMaxLen );
-			QueueQuery( &pGui->qsel, pszResult, iResultMaxLen );
-		}
+		lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "@ERROR@" ), iResultMaxLen );
+		QueueQuery( &pGui->qsel, pszResult, iResultMaxLen );
 	} else {
 		//? Background transfer, no waiting. Always return transfer ID
 		assert( pGui->qsel.iId != 0 );

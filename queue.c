@@ -366,7 +366,7 @@ void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats 
 {
 	PCURL_REQUEST p;
 	BOOLEAN bOK;
-	ULONG iLastId = 0, iLastRunningId = 0;
+	ULONG iErrCode, iLastId = 0, iLastRunningId = 0;
 
 	assert( pStats );
 
@@ -392,9 +392,12 @@ void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats 
 			pStats->iDlXferred += p->Runtime.iDlXferred;
 			pStats->iUlXferred += p->Runtime.iUlXferred;
 
-			CurlRequestFormatError( p, NULL, 0, &bOK, NULL );
-			if (!bOK)
+			CurlRequestFormatError( p, NULL, 0, &bOK, &iErrCode );
+			if (!bOK) {
 				pStats->iErrors++;
+				if (p->Error.iWin32 == ERROR_CANCELLED || p->Error.iCurl == CURLE_ABORTED_BY_CALLBACK)
+					pStats->iCancelled++;
+			}
 		}
 	}
 
@@ -420,7 +423,19 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 	QueueUnlock();
 
 	assert( pszKeyword );
-	if (lstrcmpi( pszKeyword, _T( "@TOTALCOUNT@" ) ) == 0) {
+	if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
+		// NOTE: For single-transfer queries this keyword is resolved by CurlQuery(..)
+		lstrcpyn( pszKeyword, _T( "OK" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
+		// NOTE: For single-transfer queries this keyword is resolved by CurlQuery(..)
+		lstrcpyn( pszKeyword, _T( "0" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@ERRORTYPE@" ) ) == 0) {
+		// NOTE: For single-transfer queries this keyword is resolved by CurlQuery(..)
+		lstrcpyn( pszKeyword, _T( "win32" ), iMaxLen );
+	} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0) {
+		// NOTE: For single-transfer queries this keyword is resolved by CurlQuery(..)
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iCancelled );
+	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOUNT@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning + qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALWAITING@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting );

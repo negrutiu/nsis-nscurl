@@ -49,7 +49,7 @@ struct curl_slist* QueueEnumerate( _In_opt_ PQUEUE_SELECTION pSel, _In_ BOOLEAN 
 //+ QueueStatistics
 //! The queue must be locked by the caller
 typedef struct {
-	ULONG iWaiting, iRunning, iComplete, iErrors;
+	ULONG iWaiting, iRunning, iComplete, iErrors, iCancelled;
 	ULONG iSpeed;
 	ULONG64 iDlXferred, iUlXferred;
 	ULONG iSingleId;							/// The transfer that stands out in the crowd
