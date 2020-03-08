@@ -142,7 +142,9 @@ LONG GuiQuery( _Inout_ PGUI_REQUEST pGui, _Inout_ LPTSTR pszStr, _In_ LONG iStrM
 	if (pszStr && iStrMaxLen) {
 
 		// Replace queue keywords
-		QueueQuery( pGui->Runtime.iId, pszStr, iStrMaxLen );
+		QUEUE_SELECTION qsel = pGui->qsel;
+		qsel.iId = pGui->Runtime.iVisibleId;		/// Overwrite
+		QueueQuery( &qsel, pszStr, iStrMaxLen );
 
 		// Replace global keywords
 		iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), GuiQueryKeywordCallback, pGui );
@@ -178,7 +180,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 		if (GetTickCount() - t0 >= HEARTBEAT) {
 
 			QueueLock();
-			QueueStatistics( pGui->iId, &qs );
+			QueueStatistics( &pGui->qsel, &qs );
 			QueueUnlock();
 
 			TRACE( _T( "Waiting( Count:%u )\n" ), qs.iWaiting + qs.iRunning );
@@ -201,7 +203,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 	GuiRefresh( pGui );
 
 	CloseHandle( hDummyEvent );
-	pGui->Runtime.iId = QUEUE_NO_ID;
+	pGui->Runtime.iVisibleId = 0;
 }
 
 
@@ -216,7 +218,9 @@ LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM 
 			assert( pGui );
 			if ((HWND)lParam == pGui->Runtime.hCancel) {
 				// TODO: Confirmation?
-				QueueAbort( pGui->Runtime.iId );
+				QUEUE_SELECTION qsel = pGui->qsel;
+				qsel.iId = pGui->Runtime.iVisibleId;		/// Overwrite
+				QueueAbort( &qsel );
 				return 0;
 			}
 			break;
@@ -354,10 +358,16 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 		case WM_SYSCOMMAND:
 			if (wParam == SC_CLOSE) {
 				/// [X] button
-				PGUI_REQUEST pGui = GetProp( hDlg, PROP_CONTEXT );
-				assert( pGui );
 				// TODO: Confirmation?
-				QueueAbort( pGui->Runtime.iId );
+				PGUI_REQUEST pGui = GetProp( hDlg, PROP_CONTEXT );
+				QUEUE_SELECTION qsel;
+
+				assert( pGui );
+
+				qsel = pGui->qsel;
+				qsel.iId = pGui->Runtime.iVisibleId;		/// Overwrite
+				QueueAbort( &qsel );
+
 				return 0;
 			}
 			break;
@@ -607,20 +617,20 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 
 	// Return
 	if (!pGui->bBackground) {
-		if (pGui->iId != QUEUE_NO_ID) {
+		if (pGui->qsel.iId != 0 && (!pGui->qsel.pszTag || !pGui->qsel.pszTag[0])) {
 			//? Wait for single ID
 			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "@ERROR@" ), iResultMaxLen );
-			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
+			QueueQuery( &pGui->qsel, pszResult, iResultMaxLen );
 		} else {
 			//? Wait for all
 			lstrcpyn( pszResult, pGui->pszReturn ? pGui->pszReturn : _T( "OK" ), iResultMaxLen );
-			QueueQuery( pGui->iId, pszResult, iResultMaxLen );
+			QueueQuery( &pGui->qsel, pszResult, iResultMaxLen );
 		}
 	} else {
 		//? Background transfer, no waiting. Always return transfer ID
-		assert( pGui->iId != QUEUE_NO_ID );
-		if (pGui->iId != QUEUE_NO_ID) {
-			_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->iId );
+		assert( pGui->qsel.iId != 0 );
+		if (pGui->qsel.iId != 0) {
+			_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->qsel.iId );
 		} else {
 			lstrcpyn( pszResult, _T( "0" ), iResultMaxLen );		// 0 == invalid ID
 		}
@@ -640,10 +650,10 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 
 	// Statistics and running ID
 	QueueLock();
-	QueueStatistics( pGui->iId, &qs );
+	QueueStatistics( &pGui->qsel, &qs );
 	QueueUnlock();
 
-	pGui->Runtime.iId = qs.iSingleID;
+	pGui->Runtime.iVisibleId = qs.iSingleId;
 
 	// Anything to refresh?
 	if (!pGui->Runtime.hTitle && !pGui->Runtime.hProgress && !pGui->Runtime.hText)
@@ -653,7 +663,7 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 	if (!pszBuf)
 		return;
 
-	if (pGui->Runtime.iId != QUEUE_NO_ID) {
+	if (pGui->Runtime.iVisibleId != 0) {
 
 		// Single Running transfer
 		lstrcpyn( pszBuf, _T( "@PERCENT@" ), iBufSize );

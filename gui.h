@@ -7,7 +7,7 @@
 
 //+ struct GUI_REQUEST
 typedef struct {
-	ULONG iId;							/// Can be QUEUE_NO_ID
+	QUEUE_SELECTION qsel;				/// HTTP requests that we're waiting for
 	LPTSTR pszReturn;					/// Can be NULL. Custom return string (e.g. "@ERRORCODE@")
 	BOOLEAN bBackground   : 1;			/// Background transfer, no waiting
 	BOOLEAN bSilent       : 1;			/// Wait in Silent-mode
@@ -22,7 +22,7 @@ typedef struct {
 	LPTSTR pszTextNoSize;
 	LPTSTR pszTextMulti;
 	struct {
-		ULONG iId;						/// May be QUEUE_NO_ID
+		ULONG iVisibleId;				/// May be 0
 		ULONG iAnimIndex;				/// Auto increment
 		HWND hTitle, hText, hProgress;	/// Runtime controls
 		HWND hCancel;					/// RUntime controls
@@ -34,12 +34,12 @@ typedef struct {
 static void GuiRequestInit( _Inout_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
 	ZeroMemory( pGui, sizeof( *pGui ) );
-	pGui->iId = QUEUE_NO_ID;
 }
 
 //+ GuiRequestDestroy
 static void GuiRequestDestroy( _Inout_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
+	MyFree( pGui->qsel.pszTag );
 	MyFree( pGui->pszReturn );
 	MyFree( pGui->pszTitle );
 	MyFree( pGui->pszTitleNoSize );

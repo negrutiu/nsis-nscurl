@@ -412,6 +412,12 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			MyFree( pReq->pszDebugFile );
 			pReq->pszDebugFile = MyStrDup( eT2T, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/TAG" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
+			MyFree( pReq->pszTag );
+			if (*pszParam)
+				pReq->pszTag = MyStrDup( eT2A, pszParam );
+		}
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}

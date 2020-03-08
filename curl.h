@@ -35,6 +35,7 @@ typedef struct _CURL_REQUEST {
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
 	ULONG		iDependencyId;			/// can be 0. This request will not be carried out until its dependency completes
+	LPCSTR		pszTag;					/// can be NULL
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
@@ -99,6 +100,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	curl_slist_free_all( pReq->pCertList );
 	MyFree( pReq->pszCacert );
 	MyFree( pReq->pszDebugFile );
+	MyFree( pReq->pszTag );
 	pReq->Runtime.pCurl = NULL;
 	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile );

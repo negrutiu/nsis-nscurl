@@ -268,7 +268,8 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 		if (QueueAdd( pReq ) == ERROR_SUCCESS) {
 
 			// Wait for this particular ID
-			pGui->iId = pReq->Queue.iId;
+			pGui->qsel.iId = pReq->Queue.iId;
+			pGui->qsel.pszTag = NULL;
 
 			// Wait
 			// In /background mode the call returns immediately
@@ -297,7 +298,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] wait [/ID id] parameters /END
+//++ [exported] wait [/ID id] [/TAG tag] parameters /END
 EXTERN_C __declspec(dllexport)
 void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
@@ -324,7 +325,12 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 				break;
 
 			if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
-				pGui->iId = popint();
+				pGui->qsel.iId = popint();
+			} else if (lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
+				if (popstring( psz ) == NOERROR) {
+					MyFree( pGui->qsel.pszTag );
+					pGui->qsel.pszTag = MyStrDup( eT2A, psz );
+				}
 			} else if (!GuiParseRequestParam( psz, string_size, pGui )) {
 				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
 				assert( !"Unknown parameter" );
@@ -341,12 +347,13 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 }
 
 
-//++ [exported] query [/ID id] parameters
+//++ [exported] query [/ID id] [/TAG tag] "query_string"
 EXTERN_C __declspec(dllexport)
 void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
-	ULONG e, iId = QUEUE_NO_ID;
+	ULONG e;
 	LPTSTR psz = NULL;
+	QUEUE_SELECTION qsel = {0};
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -358,14 +365,21 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 	assert( psz );
 	if (psz) {
 
-		e = popstring( psz );
-		if ( e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
-			iId = (ULONG)popintptr();
-			e = popstring( psz );
+		while ((e = popstring( psz )) == NOERROR) {
+			if (e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
+				qsel.iId = (ULONG)popintptr();
+			} else if (e == NOERROR && lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
+				if ((e = popstring( psz )) == NOERROR) {
+					MyFree( qsel.pszTag );
+					qsel.pszTag = MyStrDup( eT2A, psz );
+				}
+			} else {
+				break;
+			}
 		}
 
 		if (e == NOERROR) {
-			QueueQuery( iId, psz, string_size );
+			QueueQuery( &qsel, psz, string_size );
 			pushstringEx( psz );
 		} else {
 			pushstringEx( _T( "" ) );
@@ -373,14 +387,16 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 	}
 
 	MyFree( psz );
+	MyFree( qsel.pszTag );
 }
 
 
-//++ [exported] enumerate [/STATUS s1]..[/STATUS sN] /END
+//++ [exported] enumerate [/STATUS s1]..[/STATUS sN] [/TAG tag] /END
 EXTERN_C __declspec(dllexport)
 void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
 	LPTSTR psz = NULL;
+	QUEUE_SELECTION qsel = {0};
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
@@ -409,6 +425,11 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 						bComplete = TRUE;
 					}
 				}
+			} else if (lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
+				if (popstring( psz ) == NOERROR) {
+					MyFree( qsel.pszTag );
+					qsel.pszTag = MyStrDup( eT2A, psz );
+				}
 			}
 		}
 
@@ -416,7 +437,7 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 			bWaiting = bRunning = bComplete = TRUE;		/// All by default
 
 		// Enumerate ID-s
-		sl = QueueEnumerate( bWaiting, bRunning, bComplete );
+		sl = QueueEnumerate( &qsel, bWaiting, bRunning, bComplete );
 
 		// Empty string marks the end of enumeration
 		pushstringEx( _T( "" ) );
@@ -434,6 +455,7 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 
 		curl_slist_free_all( sl );
 		MyFree( psz );
+		MyFree( qsel.pszTag );
 	}
 }
 

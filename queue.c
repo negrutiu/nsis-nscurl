@@ -57,8 +57,7 @@ void QueueDestroy()
 //x	}
 
 	// Destroy the queue
-	while (g_Queue.Head)
-		QueueRemove( g_Queue.Head->Queue.iId );
+	QueueRemove( NULL );
 
 	// Cleanup
 	DeleteCriticalSection( &g_Queue.Lock );
@@ -118,23 +117,28 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 
 //++ QueueRemove
 //?  The queue must be *unlocked*
-void QueueRemove( _In_ ULONG iId )
+void QueueRemove( _In_opt_ PQUEUE_SELECTION pSel )
 {
-	// Find request by ID
 	PCURL_REQUEST pReq;
-	QueueLock();
-	pReq = QueueFind( iId );
-	QueueUnlock();
+	ULONG t0;
 
-	if (pReq) {
+	while (TRUE) {
 
-		ULONG t0 = GetTickCount();
+		// Find request by ID or tag
+		QueueLock();
+		for (pReq = g_Queue.Head; pReq; pReq = pReq->Queue.pNext)
+			if (QueueRequestMatch( pReq, pSel ))
+				break;
+		QueueUnlock();
+		if (!pReq)
+			break;
 
 		// If running, abort the transfer now
 		InterlockedExchange( &pReq->Queue.iFlagAbort, TRUE );
 
 		// Wait for the transfer to abort
 		// TODO: Polling sucks. Find something better!
+		t0 = GetTickCount();
 		while (TRUE) {
 			MemoryBarrier();
 			if (pReq->Queue.iStatus != STATUS_RUNNING) {
@@ -166,14 +170,14 @@ void QueueRemove( _In_ ULONG iId )
 
 
 //++ QueueAbort
-void QueueAbort( _In_opt_ ULONG iId )
+void QueueAbort( _In_opt_ PQUEUE_SELECTION pSel )
 {
 	PCURL_REQUEST pReq;
-	TRACE( _T( "%hs( Id:%d )\n" ), __FUNCTION__, iId );
+	TRACE( _T( "%hs( Id:%d, Tag:\"%hs\" )\n" ), __FUNCTION__, pSel ? pSel->iId : 0, pSel ? pSel->pszTag : "" );
 	QueueLock();
 	for (pReq = g_Queue.Head; pReq; pReq = pReq->Queue.pNext) {
 
-		if ((iId == QUEUE_NO_ID) || (pReq->Queue.iId == iId)) {
+		if (QueueRequestMatch( pReq, pSel )) {
 
 			if (pReq->Queue.iStatus == STATUS_WAITING) {
 
@@ -219,7 +223,7 @@ PCURL_REQUEST QueueTail()
 //++ QueueFind
 PCURL_REQUEST QueueFind( _In_ ULONG iId )
 {
-	if (iId != 0 && iId != QUEUE_NO_ID) {
+	if (iId != 0) {
 		PCURL_REQUEST p;
 		for (p = g_Queue.Head; p && (p->Queue.iId != iId); p = p->Queue.pNext);
 		return p;
@@ -253,6 +257,23 @@ PCURL_REQUEST QueueFirstWaiting()
 		}
 	}
 	return NULL;
+}
+
+
+//++ QueueRequestMatch
+//!  The queue must be *locked*
+BOOL QueueRequestMatch( _In_ PCURL_REQUEST pReq, _In_opt_ PQUEUE_SELECTION pSel )
+{
+	assert( pReq );
+	return
+		pReq &&
+		(
+			pSel == NULL ||
+			(
+				(pSel->iId == 0 || pSel->iId == pReq->Queue.iId) &&
+				(pSel->pszTag == NULL || pSel->pszTag[0] == ANSI_NULL || (pReq->pszTag && lstrcmpiA( pReq->pszTag, pSel->pszTag ) == 0))
+			)
+		);
 }
 
 
@@ -341,22 +362,22 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 
 
 //++ QueueStatistics
-void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
+void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats )
 {
 	PCURL_REQUEST p;
 	BOOLEAN bOK;
-	ULONG iLastRunningId = QUEUE_NO_ID;
+	ULONG iLastId = 0, iLastRunningId = 0;
 
 	assert( pStats );
 
 	ZeroMemory( pStats, sizeof( *pStats ) );
-	pStats->iSingleID = QUEUE_NO_ID;
 	MemoryBarrier();
 
 	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
 
-		if (iId == QUEUE_NO_ID || p->Queue.iId == iId) {
+		if (QueueRequestMatch( p, pSel )) {
 
+			iLastId = p->Queue.iId;
 			if (p->Queue.iStatus == STATUS_WAITING) {
 				pStats->iWaiting++;
 			} else if (p->Queue.iStatus == STATUS_RUNNING) {
@@ -377,25 +398,25 @@ void QueueStatistics( _In_opt_ ULONG iId, _Out_ PQUEUE_STATS pStats )
 		}
 	}
 
-	if (iId != QUEUE_NO_ID) {
-		pStats->iSingleID = iId;
+	// Identify the request that stands out
+	if (pStats->iWaiting + pStats->iRunning + pStats->iComplete == 1) {
+		pStats->iSingleId = iLastId;			/// Selection matches a single request
 	} else if (pStats->iWaiting == 0 && pStats->iRunning == 1) {
-		pStats->iSingleID = iLastRunningId;
-	} else {
-		pStats->iSingleID = QUEUE_NO_ID;
+		pStats->iSingleId = iLastRunningId;		/// Selection matches multiple requests, but only one of them is Running
 	}
 
-	//x TRACE( _T( "ID:%d, SingleID:%d, Waiting:%u, Running:%u\n" ), iId, pStats->iSingleID, pStats->iWaiting, pStats->iRunning );
+	//x TRACE( _T( "ID:%d, SingleID:%d, Waiting:%u, Running:%u\n" ), iId, pStats->iSingleId, pStats->iWaiting, pStats->iRunning );
 }
 
 
 //+ [internal] QueueQueryKeywordCallback
 void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
 {
+	PQUEUE_SELECTION pSel = (PQUEUE_SELECTION)pParam;
 	QUEUE_STATS qs;
 
 	QueueLock();
-	QueueStatistics( QUEUE_NO_ID, &qs );
+	QueueStatistics( pSel, &qs );
 	QueueUnlock();
 
 	assert( pszKeyword );
@@ -435,7 +456,7 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 
 
 //++ QueueQuery
-LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
+LONG QueueQuery( _In_opt_ PQUEUE_SELECTION pSel, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen )
 {
 	LONG iStrLen = -1;
 	if (pszStr && iStrMaxLen) {
@@ -443,11 +464,15 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 		QueueLock();
 
 		// Replace request-specific keywords
-		iStrLen = CurlQuery( QueueFind( iId ), pszStr, iStrMaxLen );		//? pReq can be NULL
+		{
+			QUEUE_STATS qs;
+			QueueStatistics( pSel, &qs );
+			iStrLen = CurlQuery( QueueFind(qs.iSingleId), pszStr, iStrMaxLen );
+		}
 
 		// Replace global queue keywords
 		if (iStrLen != -1)
-			iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, NULL );
+			iStrLen = MyReplaceKeywords( pszStr, iStrMaxLen, _T( '@' ), _T( '@' ), QueueQueryKeywordCallback, pSel );
 
 		QueueUnlock();
 	}
@@ -456,7 +481,7 @@ LONG QueueQuery( _In_opt_ ULONG iId, _Inout_ LPTSTR pszStr, _In_ LONG iStrMaxLen
 
 
 //++ QueueEnumerate
-struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning, _In_ BOOLEAN bComplete )
+struct curl_slist* QueueEnumerate( _In_opt_ PQUEUE_SELECTION pSel, _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning, _In_ BOOLEAN bComplete )
 {
 	struct curl_slist *sl = NULL;
 	PCURL_REQUEST p;
@@ -464,13 +489,15 @@ struct curl_slist* QueueEnumerate( _In_ BOOLEAN bWaiting, _In_ BOOLEAN bRunning,
 	QueueLock();
 
 	for (p = g_Queue.Head; p; p = p->Queue.pNext) {
-		if ((bWaiting && p->Queue.iStatus == STATUS_WAITING) ||
-			(bRunning && p->Queue.iStatus == STATUS_RUNNING) ||
-			(bComplete && p->Queue.iStatus == STATUS_COMPLETE))
-		{
-			CHAR sz[16];
-			_snprintf( sz, ARRAYSIZE( sz ), "%u", p->Queue.iId );
-			sl = curl_slist_append( sl, sz );
+		if (QueueRequestMatch( p, pSel )) {
+			if ((bWaiting && p->Queue.iStatus == STATUS_WAITING) ||
+				(bRunning && p->Queue.iStatus == STATUS_RUNNING) ||
+				(bComplete && p->Queue.iStatus == STATUS_COMPLETE))
+			{
+				CHAR sz[16];
+				_snprintf( sz, ARRAYSIZE( sz ), "%u", p->Queue.iId );
+				sl = curl_slist_append( sl, sz );
+			}
 		}
 	}
 

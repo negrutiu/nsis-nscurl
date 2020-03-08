@@ -303,6 +303,20 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
+	<td>/TAG tag</td>
+	<td>Assign a tag to the new HTTP request.<br>
+	Multiple transfers can be grouped together under the same tag.<br>
+	<b>NOTE:</b> Tags are custom strings with no character restrictions.<br>
+	<br>
+	<b>EXAMPLE:</b><br>
+	<a href="#http">NScurl::http</a> GET ${URL1} ${File1} <b>/TAG "FirstTag"</b> /BACKGROUND /END<br>
+	<a href="#http">NScurl::http</a> GET ${URL2} ${File2} <b>/TAG "SecondTag"</b> /BACKGROUND /END<br>
+	<a href="#http">NScurl::http</a> GET ${URL3} ${File3} <b>/TAG "FirstTag"</b> /BACKGROUND /END<br>
+	<a href="#wait">NScurl::wait</a> <b>/TAG "FirstTag"</b> /END<br>
+	<a href="#remove">NScurl::remove</a> <b>/TAG "FirstTag"</b><br>
+	</td>
+</tr>
+<tr>
 	<td>/BACKGROUND</td>
 	<td>By default, NScurl::http creates a new HTTP request and <b>waits</b> for it to complete.<br>
 	With the <b>/BACKGROUND</b> parameter you mark it as a background transfer and place it in the queue for later processing.<br>
@@ -372,11 +386,13 @@ Pop $0 ; Status text ("OK" for success)<br>
 
 <hr>
 
-<h2><a name="query">NScurl::query</a> [/ID id] "query_string"</h2>
+<h2><a name="query">NScurl::query</a> [/ID id] [/TAG tag] "query_string"</h2>
 
 <h3>Description:</h3>
 Query information.<br>
-This function will replace <a href="#keywords">query keywords</a> inside <b>query_string</b> with real data.
+This function will replace <a href="#keywords">query keywords</a> inside <b>query_string</b> with real data.<br>
+<b>Transfer-specific keywords</b> are only available when a single transfer is matched (See /ID and /TAG).</br>
+<b>Global keywords</b> are always available.<br>
 
 <h3>Return value:</h3>
 <b>query_string</b> with expanded keywords is returned on the stack.
@@ -386,7 +402,7 @@ This function will replace <a href="#keywords">query keywords</a> inside <b>quer
 <i>; Query information about a specific HTTP request</i><br>
 <b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" /END<br>
 Pop $0 ; <i>Transfer ID</i><br>
-<b><a href="#query">NScurl::query</a></b> <b>/ID $0</b> "<a href="#keywords">@RECVHEADERS@</a>"<br>
+<b><a href="#query">NScurl::query</a></b> /ID $0 "Status: @ERROR@, Headers: @RECVHEADERS@"<br>
 Pop $1 ; <i>Server response headers</i>
 </div>
 <br>
@@ -402,9 +418,13 @@ Pop $0
 <table>
 <tr>
 	<td>/ID id</td>
-	<td>Unique transfer ID returned by <a href="#http">NScurl::http</a>.<br>
-	If specified, the function will query information about this specific transfer.<br>
-	If unspecified, the function will only replace global keywords.<br>
+	<td>Query information about a specific transfer.<br>
+	The transfer ID is returned by <a href="#http">NScurl::http</a>.<br>
+</tr>
+<tr>
+	<td>/TAG tag</td>
+	<td>Query information about multiple transfers tagged with the same <b>tag</b>.<br>
+	See <a href="#http">NScurl::http</a>.
 	</td>
 </tr>
 <tr>
@@ -419,7 +439,7 @@ Pop $0
 
 <table>
 <tr>
-	<th><u>Transfer-specific</u> keywords (/ID &lt;id&gt;)</th>
+	<th><u>Transfer-specific</u> keywords</th>
 	<th>Comments</th>
 </tr>
 <tr>
@@ -709,24 +729,25 @@ Pop $0
 
 <hr>
 
-<h2><a name="wait">NScurl::wait</a> [/ID id] &lt;params&gt; /END</h2>
+<h2><a name="wait">NScurl::wait</a> [/ID id] [/TAG tag] &lt;params&gt; /END</h2>
 
 <h3>Description:</h3>
-This function waits synchronously for <b>background</b> transfer(s) to complete.<br>
-You can either wait for a specific transfer, or wait for all background transfers to complete.<br>
+Wait synchronously for <b>background</b> transfer(s) to complete.<br>
+Depending on parameters visual progress may or may not be displayed.<br>
+You can either wait for a specific transfer, or wait for multiple transfers in one go.<br>
 
 <h3>Return value:</h3>
 <b>None</b>
 
-<h3>Examples:</h3>
+<h3>Example:</h3>
 <div style="background-color: #dddddd">
-; <i>Start a background transfer</i><br>
-<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" <b>/BACKGROUND</b> /END<br>
+<b># Start a background transfer</b><br>
+<b><a href="#http">NScurl::http</a></b> GET "${URL}" "${FILE}" <b>/BACKGROUND</b> /END<br>
 Pop $0	; Transfer ID<br>
 <br>
-; <i>...do some useful stuff...</i><br>
+<b># ...do some useful stuff...</b><br>
 <br>
-; <i>Wait...</i><br>
+<b># Wait...</b><br>
 <b><a href="#wait">NScurl::wait</a></b> /ID $0 /CANCEL /END<br>
 </div>
 <br>
@@ -735,9 +756,13 @@ Pop $0	; Transfer ID<br>
 <table>
 <tr>
 	<td>/ID id</td>
-	<td>Unique transfer ID returned by <a href="#http">NScurl::http</a> /BACKGROUND.<br>
-	If specified, the function will wait for a specific transfer to complete.<br>
-	If unspecified, the function will wait for <b>all</b> transfers to complete.<br>
+	<td>Wait for a specific transfer.<br>
+	The transfer ID is returned by <a href="#http">NScurl::http</a>.<br>
+</tr>
+<tr>
+	<td>/TAG tag</td>
+	<td>Wait for multiple transfers tagged with the same <b>tag</b>.<br>
+	See <a href="#http">NScurl::http</a>
 	</td>
 </tr>
 <tr>
@@ -785,13 +810,13 @@ Pop $0	; Transfer ID<br>
 
 <hr>
 
-<h2><a name="enumerate">NScurl::enumerate</a> [/STATUS status] /END</h2>
+<h2><a name="enumerate">NScurl::enumerate</a> [/TAG tag] [/STATUS status] /END</h2>
 
 <h3>Description:</h3>
 Enumerate HTTP transfers from the internal transfer queue.<br>
 
 <h3>Return value:</h3>
-Transfer ID's are pushed to the stack.<br>
+Transfer ID's are pushed one by one to the stack.<br>
 An empty string ("") is pushed to the stack to mark the end of the enumeration.<br>
 
 <h3>Examples:</h3>
@@ -811,14 +836,17 @@ _enum_end:<br>
 <h3>Parameters:</h3>
 <table>
 <tr>
-	<td>/STATUS Waiting|Running|Complete<br>
-	/STATUS ...</td>
-	<td>Enumerate transfer with specific status.<br>
-	<b>"Waiting"</b> will enumerate transfers that are still waiting for a worker thread to handle them.<br>
-	<b>"Running"</b> will enumerate transfers currently in progress.<br>
-	<b>"Complete"</b> will enumerate completed/aborted/failed transfers.<br>
+	<td>/TAG tag</td>
+	<td>Enumerate transfers tagged with the same <b>tag</b>.</td>
+</tr>
+<tr>
+	<td>/STATUS Waiting|Running|Complete</td>
+	<td>Enumerate transfer with specific status:<br>
+	<li><b>Waiting</b>: transfers that are still waiting in the queue<br>
+	<li><b>Running</b>: transfers currently in progress.<br>
+	<li><b>Complete</b>: complete/aborted/failed transfers.<br>
+	<br>
 	<b>NOTE:</b> Multiple /STATUS parameters are accepted.<br>
-	<b>NOTE:</b> If /STATUS is missing the function will enumerate <b>all</b> transfers in the queue.<br>
 	</td>
 </tr>
 <tr>
