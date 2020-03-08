@@ -1357,6 +1357,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				// Downloaded to memory
 				MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, bEscape );
 			}
+		} else if (lstrcmpi( pszKeyword, _T( "@TAG@" ) ) == 0) {
+			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszTag );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {

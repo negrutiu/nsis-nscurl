@@ -123,13 +123,15 @@ done:
 SectionEnd
 
 
-Section "Parallel (50 * put)"
+Section "Background (50 * put)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
 	${For} $R0 1 50
 		Push /END
+		Push "parallels"		; Custom string
+		Push /TAG
 		Push /INSIST
 		Push /BACKGROUND
 		Push "$PLUGINSDIR\cacert.pem"
@@ -940,7 +942,7 @@ _enum_loop:
 	DetailPrint '[ID: $0] -----------------------------------------------'
 
 	!insertmacro STACK_VERIFY_START
-	Push 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
+	Push 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@, Tag: "@TAG@"'
 	Push $0
 	Push "/ID"
 	CallInstDLL $DLL query

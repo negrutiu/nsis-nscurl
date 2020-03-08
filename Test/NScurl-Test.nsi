@@ -94,13 +94,13 @@ done:
 SectionEnd
 
 
-Section "Parallel (50 * put)"
+Section "Background (50 * put)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /TAG "parallels" /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -562,7 +562,7 @@ _enum_loop:
 
 	DetailPrint '[ID: $0] -----------------------------------------------'
 
-	NScurl::query /ID $0 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@'
+	NScurl::query /ID $0 'Status: @Status@, @ERROR@, Percent: @PERCENT@%, Size: @XFERSIZE@, Speed: @SPEED@, Time: @TIMEELAPSED@, Tag: "@TAG@"'
 	Pop $1
 	DetailPrint "$1"
 
