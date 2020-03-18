@@ -199,7 +199,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 	}	/// while
 	#undef HEARTBEAT
 
-	// Final paint
+	// Final paint (100%)
 	GuiRefresh( pGui );
 
 	CloseHandle( hDummyEvent );
@@ -703,6 +703,11 @@ void GuiRefresh( _Inout_ PGUI_REQUEST pGui )
 			SetWindowText( pGui->Runtime.hText, pszBuf );
 		}
 	}
+
+	/// Reset the percent when aborting an unknown-size transfer
+	/// This will also remove the progress bar's marquee style
+	if (iPercent == -1 && qs.iWaiting == 0 && qs.iRunning == 0)
+		iPercent = 0;
 
 	if (pGui->Runtime.hProgress) {
 		LONG_PTR iStyle = GetWindowLongPtr( pGui->Runtime.hProgress, GWL_STYLE );
