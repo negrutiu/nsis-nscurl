@@ -191,9 +191,10 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>Optional referrer URL.</td>
 </tr>
 <tr>
-	<td>/DEBUG debugfile</td>
+	<td>/DEBUG [nodata] debugfile</td>
 	<td>Write transfer HTTP/SSL details to a debugging file.<br>
-	Empty by default.<br>
+    <b>nodata</b> prevents the remote content from being actually written to the debugging file. Only its size gets written.<br>
+	Disabled by default.<br>
 	</td>
 </tr>
 <tr>

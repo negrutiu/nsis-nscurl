@@ -408,7 +408,12 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DEBUG" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam) {
+		int e = popstring( pszParam );
+		if (e == NOERROR && lstrcmpi( pszParam, _T( "nodata" ) ) == 0) {
+			pReq->bNoDebugData = TRUE;
+			e = popstring( pszParam );
+		}
+		if (e == NOERROR && *pszParam) {
 			MyFree( pReq->pszDebugFile );
 			pReq->pszDebugFile = MyStrDup( eT2T, pszParam );
 		}
@@ -727,45 +732,59 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 	if (MyValidHandle( pReq->Runtime.hDebugFile )) {
 	
 		ULONG iBytes;
-		LPSTR pszPrefix;
-		const size_t iMaxLen = 1024 * 128;
-		const size_t iLineLen = 512;
-		LPSTR pszLine;
+		BOOLEAN bNoData = FALSE;		//? /DEBUG nodata <file>
 
 		// Prefix
-		switch (type) {
-			case CURLINFO_TEXT:			pszPrefix = "[-] "; break;
-			case CURLINFO_HEADER_IN:	pszPrefix = "[<h] "; break;
-			case CURLINFO_HEADER_OUT:	pszPrefix = "[>h] "; break;
-			case CURLINFO_DATA_IN:		pszPrefix = "[<d] "; break;
-			case CURLINFO_DATA_OUT:		pszPrefix = "[>d] "; break;
-			case CURLINFO_SSL_DATA_IN:	pszPrefix = "[<s] "; break;
-			case CURLINFO_SSL_DATA_OUT:	pszPrefix = "[>s] "; break;
-			default:					pszPrefix = "[?] ";
+		{
+			LPSTR psz;
+			switch (type) {
+				case CURLINFO_TEXT:			psz = "[-] "; break;
+				case CURLINFO_HEADER_IN:	psz = "[<h] "; break;
+				case CURLINFO_HEADER_OUT:	psz = "[>h] "; break;
+				case CURLINFO_DATA_IN:		psz = "[<d] "; bNoData = pReq->bNoDebugData; break;
+				case CURLINFO_DATA_OUT:		psz = "[>d] "; bNoData = pReq->bNoDebugData; break;
+				case CURLINFO_SSL_DATA_IN:	psz = "[<s] "; break;
+				case CURLINFO_SSL_DATA_OUT:	psz = "[>s] "; break;
+				default:					psz = "[?] ";
+			}
+			WriteFile( pReq->Runtime.hDebugFile, psz, lstrlenA( psz ), &iBytes, NULL );
 		}
-		WriteFile( pReq->Runtime.hDebugFile, pszPrefix, lstrlenA( pszPrefix ), &iBytes, NULL );
 
 		// Data
-		if ((pszLine = (LPSTR)malloc( iLineLen )) != NULL) {
-			for (size_t iOutLen = 0; iOutLen < iMaxLen; ) {
-				size_t i, n = __min( iLineLen, size - iOutLen );
-				if (n == 0)
-					break;
-				for (i = 0; i < n; i++) {
-					pszLine[i] = data[iOutLen + i];
-					if (pszLine[i] == '\n') {
-						i++;
-						break;
-					} else if ((pszLine[i] < 32 || pszLine[i] > 126) && pszLine[i] != '\r' && pszLine[i] != '\t') {
-						pszLine[i] = '.';
-					}
-				}
-				WriteFile( pReq->Runtime.hDebugFile, pszLine, (ULONG)i, &iBytes, NULL );
-				if (i < 1 || pszLine[i - 1] != '\n')
-					WriteFile( pReq->Runtime.hDebugFile, "\n", 1, &iBytes, NULL );
-				iOutLen += i;
+		if (bNoData) {
+			LPSTR psz;
+			TCHAR szSize[64];
+			MyFormatBytes( size, szSize, ARRAYSIZE( szSize ) );
+			if ((psz = MyStrDup( eT2A, szSize )) != NULL) {
+				WriteFile( pReq->Runtime.hDebugFile, psz, (ULONG)lstrlenA(psz), &iBytes, NULL );
+				WriteFile( pReq->Runtime.hDebugFile, "\n", 1, &iBytes, NULL );
+				MyFree( psz );
 			}
-			free( pszLine );
+		} else {
+			const size_t iMaxLen = 1024 * 128;
+			const size_t iLineLen = 512;
+			LPSTR pszLine;
+			if ((pszLine = (LPSTR)malloc( iLineLen )) != NULL) {
+				for (size_t iOutLen = 0; iOutLen < iMaxLen; ) {
+					size_t i, n = __min( iLineLen, size - iOutLen );
+					if (n == 0)
+						break;
+					for (i = 0; i < n; i++) {
+						pszLine[i] = data[iOutLen + i];
+						if (pszLine[i] == '\n') {
+							i++;
+							break;
+						} else if ((pszLine[i] < 32 || pszLine[i] > 126) && pszLine[i] != '\r' && pszLine[i] != '\t') {
+							pszLine[i] = '.';
+						}
+					}
+					WriteFile( pReq->Runtime.hDebugFile, pszLine, (ULONG)i, &iBytes, NULL );
+					if (i < 1 || pszLine[i - 1] != '\n')
+						WriteFile( pReq->Runtime.hDebugFile, "\n", 1, &iBytes, NULL );
+					iOutLen += i;
+				}
+				free( pszLine );
+			}
 		}
 	}
 
