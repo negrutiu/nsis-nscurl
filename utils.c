@@ -227,6 +227,14 @@ LPVOID MyStrDupN( _In_ Encodings iEnc, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMax
 //++ MyStrCopy
 LPVOID MyStrCopy( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc )
 {
+	return MyStrCopyN( iEnc, pszDest, iDestMaxLen, pszSrc, -1 );
+}
+
+
+//++ MyStrCopyN
+LPVOID MyStrCopyN( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxLen, _In_ LPCVOID pszSrc, _In_opt_ int iSrcMaxLen )
+{
+	int iDestLen;
 	if (!pszDest)
 		return NULL;
 
@@ -248,14 +256,19 @@ LPVOID MyStrCopy( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMaxL
 #endif
 
 	// Copy
+	iDestLen = (iSrcMaxLen < 0 ? INT_MAX : (iSrcMaxLen + 1));		/// Reserve room for \0
+	iDestLen = __min( iDestLen, (int)iDestMaxLen );
+
 	if (iEnc == eW2W) {
-		lstrcpynW( (LPWSTR)pszDest, pszSrc ? (LPCWSTR)pszSrc : L"", iDestMaxLen );
+		lstrcpynW( (LPWSTR)pszDest, pszSrc ? (LPCWSTR)pszSrc : L"", iDestLen );
 	} else if (iEnc == eA2A) {
-		lstrcpynA( (LPSTR)pszDest, pszSrc ? (LPCSTR)pszSrc : "", iDestMaxLen );
+		lstrcpynA( (LPSTR)pszDest, pszSrc ? (LPCSTR)pszSrc : "", iDestLen );
 	} else if (iEnc == eW2A) {
-		WideCharToMultiByte( CP_UTF8, 0, pszSrc ? (LPCWSTR)pszSrc : L"", -1, (LPSTR)pszDest, (int)iDestMaxLen, NULL, NULL );
+		WideCharToMultiByte( CP_UTF8, 0, pszSrc ? (LPCWSTR)pszSrc : L"", iSrcMaxLen, (LPSTR)pszDest, (int)iDestMaxLen, NULL, NULL );
+		((LPSTR)pszDest)[iDestLen-1] = ANSI_NULL;
 	} else if (iEnc == eA2W) {
-		MultiByteToWideChar( CP_UTF8, 0, pszSrc ? (LPCSTR)pszSrc : "", -1, (LPWSTR)pszDest, (int)iDestMaxLen );
+		MultiByteToWideChar( CP_UTF8, 0, pszSrc ? (LPCSTR)pszSrc : "", iSrcMaxLen, (LPWSTR)pszDest, (int)iDestMaxLen );
+		((LPWSTR)pszDest)[iDestLen-1] = UNICODE_NULL;
 	} else {
 		assert( !"MyStrCopy( Unexpected encoding )" );
 	}
