@@ -169,6 +169,14 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
+	<td>/LOWSPEEDLIMIT bps time</td>
+	<td>Low speed limit (default: none)<br>
+	Aborts the transfer if the transfer speed falls below <b>bps</b> for a period of <b>time</b>.<br>
+	<b>NOTE:</b> For <b>time</b> examples see above.<br>
+	<b>EXAMPLE:</b> [...] /LOWSPEEDLIMIT 204800 10s [...]<br>
+	</td>
+</tr>
+<tr>
 	<td>/SPEEDCAP bps</td>
 	<td>Speed cap (default: none)<br>
 	The transfer speed will not be allowed to exceed this value.<br>

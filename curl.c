@@ -363,6 +363,13 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam)
 			pReq->iCompleteTimeout = (ULONG)MyStringToMilliseconds( pszParam );
+	} else if (lstrcmpi( pszParam, _T( "/LOWSPEEDLIMIT" ) ) == 0) {
+		ULONG bps = popint();
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			pReq->iLowSpeedLimit = bps;
+			pReq->iLowSpeedTime = (ULONG)MyStringToMilliseconds( pszParam ) / 1000;
+			pReq->iLowSpeedTime = __max( pReq->iLowSpeedTime, 3 );		/// seconds
+		}
 	} else if (lstrcmpi( pszParam, _T( "/SPEEDCAP" ) ) == 0) {
 		pReq->iSpeedCap = popint();
 	} else if (lstrcmpi( pszParam, _T( "/DEPEND" ) ) == 0) {
@@ -944,6 +951,11 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->iSpeedCap > 0) {
 				curl_easy_setopt( curl, CURLOPT_MAX_SEND_SPEED_LARGE, (curl_off_t)pReq->iSpeedCap );
 				curl_easy_setopt( curl, CURLOPT_MAX_RECV_SPEED_LARGE, (curl_off_t)pReq->iSpeedCap );
+			}
+			if (pReq->iLowSpeedLimit > 0) {
+				curl_easy_setopt( curl, CURLOPT_LOW_SPEED_LIMIT, (long)pReq->iLowSpeedLimit );
+				if (pReq->iLowSpeedTime > 0)
+					curl_easy_setopt( curl, CURLOPT_LOW_SPEED_TIME, (long)pReq->iLowSpeedTime );
 			}
 
 			/// SSL
