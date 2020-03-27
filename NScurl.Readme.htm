@@ -555,19 +555,23 @@ Pop $0
 </tr>
 <tr>
 	<td>@SENTHEADERS@<br>
+	@SENTHEADERS:Header-Name@<br>
 	@SENTHEADERS_RAW@<br>
 	</td>
 	<td>HTTP request headers.<br>
 	Some special characters such as \t, \r, \n are replaced by their string representation "\t", "\r", "\n"<br>
+	<b>NOTE:</b> @SENTHEADERS:Header-Name@ extracts the value of a specific header.<br>
 	<b>NOTE:</b> @SENTHEADERS_RAW@ returns the same value with no characters replaced.<br>
 	</td>
 </tr>
 <tr>
 	<td>@RECVHEADERS@<br>
+	@RECVHEADERS:Header-Name@<br>
 	@RECVHEADERS_RAW@<br>
 	</td>
 	<td>HTTP response headers.<br>
 	Some special characters such as \t, \r, \n are replaced by their string representation "\t", "\r", "\n"<br>
+	<b>NOTE:</b> @RECVHEADERS:Header-Name@ extracts the value of a specific header.<br>
 	<b>NOTE:</b> @RECVHEADERS_RAW@ returns the same value with no characters replaced.<br>
 	</td>
 </tr>

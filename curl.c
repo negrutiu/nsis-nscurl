@@ -230,6 +230,28 @@ ULONG CurlExtractCacert()
 }
 
 
+//++ CurlFindHeader
+void CurlFindHeader( _In_ LPCSTR pszHeaders, _In_ LPCSTR pszHeaderName, _Out_ LPTSTR pszHeaderValue, _In_ ULONG iMaxLen )
+{
+	if (pszHeaderValue)
+		pszHeaderValue[0] = 0;
+	if (pszHeaders && *pszHeaders && pszHeaderName && *pszHeaderName) {
+		LPCSTR psz1, psz2;
+		int iHeaderLen = lstrlenA( pszHeaderName ), iLineLen;
+		for (psz1 = pszHeaders; psz1 && *psz1; ) {
+			for (psz2 = psz1; *psz2 != '\0' && *psz2 != '\r' && *psz2 != '\n'; psz2++);
+			iLineLen = (int)(psz2 - psz1);
+			if (iLineLen > iHeaderLen && psz1[iHeaderLen] == ':' && CompareStringA( CP_ACP, NORM_IGNORECASE, psz1, __min( iLineLen, iHeaderLen ), pszHeaderName, -1 ) == CSTR_EQUAL) {
+				for (psz1 += iHeaderLen + 1; *psz1 == ' ' || *psz1 == '\t'; psz1++);
+				MyStrCopyN( eA2T, pszHeaderValue, iMaxLen, psz1, (int)(psz2 - psz1) );
+				break;
+			}
+			for (psz1 = psz2; *psz1 == '\r' || *psz1 == '\n'; psz1++);
+		}
+	}
+}
+
+
 //++ CurlParseRequestParam
 BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
 {
@@ -1334,6 +1356,19 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\r" ), _T( "\\r" ), FALSE );
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\n" ), _T( "\\n" ), FALSE );
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
+		} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszKeyword, 13, _T( "@SENTHEADERS:" ), -1 ) == CSTR_EQUAL) {
+			int l = lstrlen( pszKeyword );
+			if (pszKeyword[l - 1] == _T( '@' )) {
+				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
+				if (pszHeader) {
+					if (pReq->Runtime.OutHeaders.iSize) {
+						CurlFindHeader( pReq->Runtime.OutHeaders.pMem, pszHeader, pszKeyword, iMaxLen );
+					} else {
+						pszKeyword[0] = 0;
+					}
+					MyFree( pszHeader );
+				}
+			}
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS_RAW@" ) ) == 0) {
 			if (pReq->Runtime.OutHeaders.iSize) {
 				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
@@ -1352,6 +1387,19 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\r" ), _T( "\\r" ), FALSE );
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\n" ), _T( "\\n" ), FALSE );
 			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
+		} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszKeyword, 13, _T( "@RECVHEADERS:" ), -1 ) == CSTR_EQUAL) {
+			int l = lstrlen( pszKeyword );
+			if (pszKeyword[l - 1] == _T( '@' )) {
+				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
+				if (pszHeader) {
+					if (pReq->Runtime.InHeaders.iSize) {
+						CurlFindHeader( pReq->Runtime.InHeaders.pMem, pszHeader, pszKeyword, iMaxLen );
+					} else {
+						pszKeyword[0] = 0;
+					}
+					MyFree( pszHeader );
+				}
+			}
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS_RAW@" ) ) == 0) {
 			if (pReq->Runtime.InHeaders.iSize) {
 				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
