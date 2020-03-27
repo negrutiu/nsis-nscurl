@@ -752,6 +752,27 @@ void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG
 }
 
 
+//++ MyStringToMilliseconds
+UINT_PTR  MyStringToMilliseconds( _In_ LPCTSTR pszStr )
+{
+	UINT_PTR  ms = 0;
+	if (pszStr && *pszStr) {
+		LPCTSTR psz;
+		for (psz = pszStr; *psz && *psz >= _T( '0' ) && *psz <= _T( '9' ); psz++);		/// skip numbers
+		for (; *psz == _T( ' ' ) || *psz == _T( '\t' ) || *psz == _T( '\r' ) || *psz == _T( '\n' ); psz++);		/// skip white spaces
+		ms = (UINT_PTR )nsishelper_str_to_ptr( pszStr );
+		if (lstrcmpi( psz, _T( "s" ) ) == 0 || lstrcmpi( psz, _T( "sec" ) ) == 0 || lstrcmpi( psz, _T( "second" ) ) == 0 || lstrcmpi( psz, _T( "seconds" ) ) == 0) {
+			ms *= 1000;
+		} else if (lstrcmpi( psz, _T( "m" ) ) == 0 || lstrcmpi( psz, _T( "min" ) ) == 0 || lstrcmpi( psz, _T( "minute" ) ) == 0 || lstrcmpi( psz, _T( "minutes" ) ) == 0) {
+			ms *= 1000 * 60;
+		} else if (lstrcmpi( psz, _T( "h" ) ) == 0 || lstrcmpi( psz, _T( "hour" ) ) == 0 || lstrcmpi( psz, _T( "hours" ) ) == 0) {
+			ms *= 1000 * 60 * 60;
+		}
+	}
+	return ms;
+}
+
+
 //++ VirtualMemoryInitialize
 ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 {

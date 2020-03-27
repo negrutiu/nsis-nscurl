@@ -336,9 +336,11 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (lstrcmpi( pszParam, _T( "/INSIST" ) ) == 0) {
 		pReq->bInsist = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/CONNECTTIMEOUT" ) ) == 0 || lstrcmpi( pszParam, _T( "/TIMEOUT" ) ) == 0) {
-		pReq->iConnectTimeout = popint();
+		if (popstring( pszParam ) == NOERROR && *pszParam)
+			pReq->iConnectTimeout = (ULONG)MyStringToMilliseconds( pszParam );
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
-		pReq->iCompleteTimeout = popint();
+		if (popstring( pszParam ) == NOERROR && *pszParam)
+			pReq->iCompleteTimeout = (ULONG)MyStringToMilliseconds( pszParam );
 	} else if (lstrcmpi( pszParam, _T( "/DEPEND" ) ) == 0) {
 		pReq->iDependencyId = popint();
 	} else if (lstrcmpi( pszParam, _T( "/REFERER" ) ) == 0 || lstrcmpi( pszParam, _T( "/REFERRER" ) ) == 0) {

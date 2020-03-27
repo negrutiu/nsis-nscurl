@@ -320,7 +320,7 @@ Section "httpbin.org/get/status/40x"
 	!define /redef FILE '$EXEDIR\_GET_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30000 /END
+	NScurl::http GET "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
@@ -333,7 +333,7 @@ Section "httpbin.org/post/status/40x"
 	!define /redef FILE '$EXEDIR\_POST_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http POST "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30000 /END
+	NScurl::http POST "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
@@ -346,7 +346,7 @@ Section "httpbin.org/put/status/40x"
 	!define /redef FILE '$EXEDIR\_PUT_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http PUT "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /INSIST /TIMEOUT 30000 /END
+	NScurl::http PUT "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /INSIST /TIMEOUT 30s /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd

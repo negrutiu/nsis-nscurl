@@ -166,6 +166,10 @@ void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMax
 void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen );
 
 
+//+ MyStringToMilliseconds
+UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr );
+
+
 //+ Virtual Memory
 // Auto-growing virtual memory buffer
 typedef struct {

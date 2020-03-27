@@ -499,7 +499,7 @@ Section "httpbin.org/get/status/40x"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push 30000
+	Push 30s
 	Push "/TIMEOUT"
 	Push "/INSIST"
 
@@ -526,7 +526,7 @@ Section "httpbin.org/post/status/40x"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push 30000
+	Push 30s
 	Push "/TIMEOUT"
 	Push "/INSIST"
 
@@ -553,7 +553,7 @@ Section "httpbin.org/put/status/40x"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push 30000
+	Push 30s
 	Push "/TIMEOUT"
 	Push "/INSIST"
 

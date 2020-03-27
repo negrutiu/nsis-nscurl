@@ -149,18 +149,23 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/TIMEOUT msec<br>
-	/CONNECTTIMEOUT msec<br>
+	<td>/TIMEOUT time<br>
+	/CONNECTTIMEOUT time<br>
 	</td>
 	<td>Connect timeout (default: 5m)<br>
 	This value applies to a single connection attempt.<br>
 	Unless you also specify <b>/INSIST</b>, NScurl will only try to connect once.<br>
+	<br>
+	<b>NOTE:</b> The <b>time</b> value represents the timeout period in milliseconds. The "s", "m" or "h" suffixes are accepted.<br>
+	<b>EXAMPLES:</b> /TIMEOUT 5000, /TIMEOUT 5s, /TIMEOUT 15m, /TIMEOUT 24h<br>
 	</td>
 </tr>
 <tr>
-	<td>/COMPLETETIMEOUT msec</td>
+	<td>/COMPLETETIMEOUT time</td>
 	<td>Transfer timeout (default: infinite)<br>
 	This value sets a maximum time limit that a transfer is allowed to run. When this timeout is reached the transfer is cancelled.<br>
+	<br>
+	<b>NOTE:</b> For <b>time</b> examples see above.<br>
 	</td>
 </tr>
 <tr>
