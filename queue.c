@@ -466,6 +466,10 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 		MyFormatBytes( qs.iDlXferred, pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEDOWN_B@" ) ) == 0) {
 		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iDlXferred );
+	} else if (lstrcmpi( pszKeyword, _T( "@THREADS@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), g_Queue.ThreadCount );
+	} else if (lstrcmpi( pszKeyword, _T( "@MAXTHREADS@" ) ) == 0) {
+		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), g_Queue.ThreadMax );
 	}
 }
 
