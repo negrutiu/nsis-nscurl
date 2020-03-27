@@ -179,7 +179,7 @@ Section "httpbin.org/get"
 SectionEnd
 
 
-Section "httpbin.org/get (SysinternalsSuite.zip)"
+Section "sysinternals.com/get (Page)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -202,7 +202,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip)"
 SectionEnd
 
 
-Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
+Section "sysinternals.com/get (Popup)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -226,7 +226,7 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Popup)"
 SectionEnd
 
 
-Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
+Section "sysinternals.com/get (Silent)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -238,6 +238,31 @@ Section "httpbin.org/get (SysinternalsSuite.zip : Silent)"
 	Push "/END"
 	Push "/INSIST"
 	Push "/SILENT"
+	Push "/CANCEL"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
+Section "sysinternals.com/get (SpeedCap: 300KB/s)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_SpeedCap.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+	Push 307200			; 300 * 1024
+	Push "/SPEEDCAP"
+	Push "/INSIST"
 	Push "/CANCEL"
 	Push "${FILE}"
 	Push "${LINK}"

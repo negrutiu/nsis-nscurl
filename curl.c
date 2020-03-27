@@ -363,6 +363,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (lstrcmpi( pszParam, _T( "/COMPLETETIMEOUT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam)
 			pReq->iCompleteTimeout = (ULONG)MyStringToMilliseconds( pszParam );
+	} else if (lstrcmpi( pszParam, _T( "/SPEEDCAP" ) ) == 0) {
+		pReq->iSpeedCap = popint();
 	} else if (lstrcmpi( pszParam, _T( "/DEPEND" ) ) == 0) {
 		pReq->iDependencyId = popint();
 	} else if (lstrcmpi( pszParam, _T( "/REFERER" ) ) == 0 || lstrcmpi( pszParam, _T( "/REFERRER" ) ) == 0) {
@@ -939,6 +941,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_CONNECTTIMEOUT_MS, pReq->iConnectTimeout );
 			if (pReq->iCompleteTimeout > 0)
 				curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, pReq->iCompleteTimeout );
+			if (pReq->iSpeedCap > 0) {
+				curl_easy_setopt( curl, CURLOPT_MAX_SEND_SPEED_LARGE, (curl_off_t)pReq->iSpeedCap );
+				curl_easy_setopt( curl, CURLOPT_MAX_RECV_SPEED_LARGE, (curl_off_t)pReq->iSpeedCap );
+			}
 
 			/// SSL
 			if (!StringIsEmpty(pReq->pszCacert) || pReq->pCertList) {
