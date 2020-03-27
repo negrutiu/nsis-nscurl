@@ -164,15 +164,15 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/COMPLETETIMEOUT time</td>
 	<td>Transfer timeout (default: infinite)<br>
 	This value sets a maximum time limit that a transfer is allowed to run. When this timeout is reached the transfer is cancelled.<br>
-	<br>
-	<b>NOTE:</b> For <b>time</b> examples see above.<br>
+	See <b>/TIMEOUT</b> for <b>time</b> examples.<br>
 	</td>
 </tr>
 <tr>
 	<td>/LOWSPEEDLIMIT bps time</td>
 	<td>Low speed limit (default: none)<br>
 	Aborts the transfer if the transfer speed falls below <b>bps</b> for a period of <b>time</b>.<br>
-	<b>NOTE:</b> For <b>time</b> examples see above.<br>
+	See <b>/TIMEOUT</b> for <b>time</b> examples.<br>
+	<br>
 	<b>EXAMPLE:</b> [...] /LOWSPEEDLIMIT 204800 10s [...]<br>
 	</td>
 </tr>
