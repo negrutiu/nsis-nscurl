@@ -2,18 +2,21 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#about">About</a>
-<li>Functions
+<li>HTTP functions
 <ul>
 <li><a href="#http">NScurl::http</a>
 <li><a href="#query">NScurl::query</a>
 <li><a href="#wait">NScurl::wait</a>
 <li><a href="#enumerate">NScurl::enumerate</a>
+<li><a href="#cancel">NScurl::cancel</a>
+</ul>
+<li>Utility functions
+<ul>
 <li><a href="#escape">NScurl::escape</a>
 <li><a href="#unescape">NScurl::unescape</a>
 <li><a href="#md5">NScurl::md5</a>
 <li><a href="#sha1">NScurl::sha1</a>
 <li><a href="#sha256">NScurl::sha256</a>
-</ul>
 </ul>
 </div>
 
@@ -21,8 +24,8 @@
 <b><a href="https://github.com/negrutiu/nsis-nscurl/">NScurl</a></b> is a <b><a href="https://github.com/negrutiu/nsis/">NSIS</a> (Nullsoft Scriptable Install System)</b> plugin with advanced HTTP/HTTPS capabilities.<br>
 It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> with <a href="https://tls.mbed.org/">mbedTLS</a> as SSL backend.<br>
 <br>
-<b>Webpage:</b> <a href="https://github.com/negrutiu/nsis-nscurl/">https://github.com/negrutiu/nsis-nscurl</a><br>
-<b>Depends:</b> <a href="https://github.com/negrutiu/libcurl-devel/">https://github.com/negrutiu/libcurl-devel</a><br>
+<b>Official project page:</b> <a href="https://github.com/negrutiu/nsis-nscurl/">https://github.com/negrutiu/nsis-nscurl</a><br>
+<b>Dependencies:</b> <a href="https://github.com/negrutiu/libcurl-devel/">https://github.com/negrutiu/libcurl-devel</a><br>
 
 <h3><a name="features">Features</h3>
 <ul>
@@ -30,7 +33,7 @@ It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> w
 <li>Compatible: works well on Windows NT4, Windows 10 and everything in between
 <li>Multi-threaded: download/upload multiple files in parallel
 <li>Asynchronous: start multiple background transfers, check on them later
-<li>Insistent: multiple attempts to connect, resume interrupted transfers, etc
+<li>Insistent: multiple attempts to connect and resume interrupted transfers
 <li>NSIS aware: download files at any installation stage (from .onInit, from Sections, from custom pages, silent installers, etc)
 <li>Verbose: plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc)
 <li>Supports HTTP and TLS authentication
@@ -333,7 +336,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<a href="#http">NScurl::http</a> GET ${URL2} ${File2} <b>/TAG "SecondTag"</b> /BACKGROUND /END<br>
 	<a href="#http">NScurl::http</a> GET ${URL3} ${File3} <b>/TAG "FirstTag"</b> /BACKGROUND /END<br>
 	<a href="#wait">NScurl::wait</a> <b>/TAG "FirstTag"</b> /END<br>
-	<a href="#remove">NScurl::remove</a> <b>/TAG "FirstTag"</b><br>
+	<a href="#cancel">NScurl::cancel</a> <b>/TAG "FirstTag"</b> /REMOVE<br>
 	</td>
 </tr>
 <tr>
@@ -891,6 +894,39 @@ _enum_end:<br>
 	<td>/END</td>
 	<td>Must always conclude the list of parameters.<br>
 	<b>NOTE: This parameter is mandatory.</b><br>
+	</td>
+</tr>
+</table>
+<br>
+
+<hr>
+
+<h2><a name="cancel">NScurl::cancel</a> [/ID id] [/TAG tag] [/REMOVE]</h2>
+
+<h3>Description:</h3>
+Cancel (background) transfers and optionally remove them from the queue.
+
+
+<h3>Return value:</h3>
+None.
+
+<h3>Parameters:</h3>
+<table>
+<tr>
+	<td>/ID id</td>
+	<td>Cancel a specific transfer.<br>
+	The transfer ID is returned by <a href="#http">NScurl::http</a> /BACKGROUND<br>
+</tr>
+<tr>
+	<td>/TAG tag</td>
+	<td>Cancel multiple transfers tagged with the same <b>tag</b>.<br>
+	See <a href="#http">NScurl::http</a> /TAG
+	</td>
+</tr>
+<tr>
+	<td>/REMOVE</td>
+	<td>In addition to cancelling, the transfer(s) are also permanently removed from the queue.<br>
+	Further attempts to <a href="#query">NScurl::query</a> them will fail.<br>
 	</td>
 </tr>
 </table>

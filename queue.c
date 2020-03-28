@@ -122,6 +122,10 @@ void QueueRemove( _In_opt_ PQUEUE_SELECTION pSel )
 	PCURL_REQUEST pReq;
 	ULONG t0;
 
+	// Step 1: Abort all matching requests
+	QueueAbort( pSel );
+
+	// Step 2: Wait for matching requests to abort and remove them from the queue
 	while (TRUE) {
 
 		// Find request by ID or tag
@@ -132,9 +136,6 @@ void QueueRemove( _In_opt_ PQUEUE_SELECTION pSel )
 		QueueUnlock();
 		if (!pReq)
 			break;
-
-		// If running, abort the transfer now
-		InterlockedExchange( &pReq->Queue.iFlagAbort, TRUE );
 
 		// Wait for the transfer to abort
 		// TODO: Polling sucks. Find something better!

@@ -391,6 +391,54 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 }
 
 
+//++ [exported] cancel [/ID id] [/TAG tag] [/REMOVE]
+EXTERN_C __declspec(dllexport)
+void __cdecl cancel( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
+{
+	ULONG e;
+	LPTSTR psz = NULL;
+	QUEUE_SELECTION qsel = {0};
+	BOOLEAN bRemove = FALSE;
+
+	EXDLL_INIT();
+	EXDLL_VALIDATE();
+
+	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// Working buffer
+	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
+	assert( psz );
+	if (psz) {
+
+		while ((e = popstring( psz )) == NOERROR) {
+			if (e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
+				qsel.iId = (ULONG)popintptr();
+			} else if (e == NOERROR && lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
+				if ((e = popstring( psz )) == NOERROR) {
+					MyFree( qsel.pszTag );
+					qsel.pszTag = MyStrDup( eT2A, psz );
+				}
+			} else if (e == NOERROR && lstrcmpi( psz, _T( "/REMOVE" ) ) == 0) {
+				bRemove = TRUE;
+			} else {
+				break;
+			}
+		}
+
+		if (bRemove) {
+			// Abort + Wait + Remove
+			QueueRemove( &qsel );
+		} else {
+			// Abort only
+			QueueAbort( &qsel );
+		}
+	}
+
+	MyFree( psz );
+	MyFree( qsel.pszTag );
+}
+
+
 //++ [exported] enumerate [/STATUS s1]..[/STATUS sN] [/TAG tag] /END
 EXTERN_C __declspec(dllexport)
 void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
