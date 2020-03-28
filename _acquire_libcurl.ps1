@@ -61,4 +61,6 @@ Remove-Variable headers -ErrorAction:Ignore
 Pop-Location
 
 ""
-Pause
+if (!([Environment]::GetCommandLineArgs() -like '-noni*')) {
+	Pause
+}
