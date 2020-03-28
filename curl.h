@@ -123,6 +123,14 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	ZeroMemory( pReq, sizeof( *pReq ) );
 }
 
+//+ CurlRequestSetAbortFlag
+#define CurlRequestSetAbortFlag( pReq ) \
+	InterlockedExchange( &(pReq)->Queue.iFlagAbort, TRUE )
+
+//+ CurlRequestGetAbortFlag
+#define CurlRequestGetAbortFlag( pReq ) \
+	InterlockedCompareExchange( &(pReq)->Queue.iFlagAbort, -1, -1 )
+
 //+ CurlRequestSizes
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown );
 

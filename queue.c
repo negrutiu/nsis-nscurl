@@ -193,7 +193,7 @@ void QueueAbort( _In_opt_ PQUEUE_SELECTION pSel )
 			} else if (pReq->Queue.iStatus == STATUS_RUNNING) {
 
 				// Set the Abort flag and let the transfer terminate itself
-				InterlockedExchange( &pReq->Queue.iFlagAbort, TRUE );
+				CurlRequestSetAbortFlag( pReq );
 
 				TRACE( _T( "%hs( Id:%u, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Running" );
 			}
@@ -237,7 +237,7 @@ PCURL_REQUEST QueueFirstWaiting()
 	if (g_Queue.Head) {
 		PCURL_REQUEST p;
 		for (p = g_Queue.Head; p; p = p->Queue.pNext) {
-			if (p->Queue.iStatus == STATUS_WAITING) {
+			if (p->Queue.iStatus == STATUS_WAITING && CurlRequestGetAbortFlag( p ) == FALSE) {
 				if (p->iDependencyId != 0) {
 					PCURL_REQUEST pReqDep = QueueFind( p->iDependencyId );
 					if (pReqDep) {

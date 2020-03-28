@@ -709,7 +709,7 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 	if (TermSignaled())
 		return CURLE_ABORTED_BY_CALLBACK;
 
-	if (InterlockedCompareExchange(&pReq->Queue.iFlagAbort, -1, -1) != FALSE)
+	if (CurlRequestGetAbortFlag( pReq ) != FALSE)
 		return CURLE_ABORTED_BY_CALLBACK;
 
 //x	TRACE( _T( "%hs( DL:%I64u/%I64u, UL:%I64u/%I64u )\n" ), __FUNCTION__, dlnow, dltotal, ulnow, ultotal );
@@ -1163,7 +1163,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						break;		/// HTTP error
 
 					// Cancel?
-					if (InterlockedCompareExchange( &pReq->Queue.iFlagAbort, -1, -1 ) != FALSE) {
+					if (CurlRequestGetAbortFlag( pReq ) != FALSE) {
 						MyFree( pReq->Error.pszWin32 );
 						pReq->Error.iWin32 = ERROR_CANCELLED;
 						pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
