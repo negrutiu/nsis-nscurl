@@ -1,6 +1,6 @@
 
 # NScurl development script
-# Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl#nsis-plugin-nscurl
+# Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl
 # Syntax: Test.exe /dll <nscurl.dll>
 
 !ifdef AMD64

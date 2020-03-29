@@ -1,6 +1,6 @@
 
 # NScurl demo
-# Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl#nsis-plugin-nscurl
+# Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl
 
 !ifdef AMD64
 	!define _TARGET_ amd64-unicode
@@ -19,11 +19,12 @@ Target ${_TARGET_}
 
 !define /ifndef NULL 0
 
-
-# NScurl.dll location
+# NScurl.dll development location
+!ifdef DEVEL
 !AddPluginDir /amd64-unicode "..\Release-mingw-amd64-unicode"
 !AddPluginDir /x86-unicode   "..\Release-mingw-x86-unicode"
 !AddPluginDir /x86-ansi      "..\Release-mingw-x86-ansi"
+!endif
 
 # GUI settings
 !define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\orange-install-nsis.ico"
