@@ -598,14 +598,16 @@ Pop $0
 	</td>
 	<td>A sample of the received data.<br>
 	Non-printable characters are replaced with "."<br>
-	<b>NOTE:</b> This is the only way to query data downloaded to <b>Memory</b>.<br>
+	<b>NOTE:</b> Can retrieve remote content downloaded to <b>MEMORY</b>.<br>
 	<b>NOTE:</b> This value is truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build).<br>
 	<b>NOTE:</b> @RECVDATA_RAW@ returns the same value with no characters replaced.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TAG@</td>
-	<td>Transfer tag, empty by default.</td>
+	<td>Transfer tag, empty by default.<br>
+	Multiple transfers can be tagged with the same tag.<br>
+	</td>
 </tr>
 <tr>
 	<td>@ERROR@</td>
