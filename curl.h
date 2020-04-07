@@ -41,6 +41,7 @@ typedef struct _CURL_REQUEST {
 	ULONG		iSpeedCap;				/// can be 0. Speed cap (ms)
 	ULONG		iDependencyId;			/// can be 0. This request will not be carried out until its dependency completes
 	LPCSTR		pszTag;					/// can be NULL
+	LPCSTR		pszDOH;					/// can be NULL. DNS-over-HTTPS server (e.g. "https://1.1.1.1/dns-query")
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
@@ -106,6 +107,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszCacert );
 	MyFree( pReq->pszDebugFile );
 	MyFree( pReq->pszTag );
+	MyFree( pReq->pszDOH );
 	pReq->Runtime.pCurl = NULL;
 	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile );

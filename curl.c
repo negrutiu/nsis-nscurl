@@ -29,7 +29,6 @@ CURL_GLOBALS g_Curl = {0};
 // TODO: Secure Proxy (CURLOPT_PROXY_CAPATH, CURLOPT_PROXY_SSL_VERIFYHOST, CURLOPT_PROXY_SSL_VERIFYPEER)
 // TODO: HPKP - HTTP public key pinning (CURLOPT_PINNEDPUBLICKEY, CURLOPT_PROXY_PINNEDPUBLICKEY)
 // TODO: Time conditional request (CURLOPT_TIMECONDITION, CURLOPT_TIMEVALUE)
-// TODO: DOH (CURLOPT_DOH_URL)
 // TODO: Query SSL info (certificate chain, cypher, etc.)
 // ----------------------------------------------------------------------
 
@@ -458,6 +457,12 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/MARKOFTHEWEB" ) ) == 0 || lstrcmpi( pszParam, _T( "/Zone.Identifier" ) ) == 0) {
 		pReq->bMarkOfTheWeb = TRUE;
+	} else if (lstrcmpi( pszParam, _T( "/DOH" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
+			MyFree( pReq->pszDOH );
+			if (*pszParam)
+				pReq->pszDOH = MyStrDup( eT2A, pszParam );
+		}
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}
@@ -973,6 +978,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				if (pReq->iLowSpeedTime > 0)
 					curl_easy_setopt( curl, CURLOPT_LOW_SPEED_TIME, (long)pReq->iLowSpeedTime );
 			}
+			if (pReq->pszDOH)
+				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
 			/// SSL
 			if (!StringIsEmpty(pReq->pszCacert) || pReq->pCertList) {

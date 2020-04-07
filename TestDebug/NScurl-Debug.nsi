@@ -160,6 +160,12 @@ Section "httpbin.org/get"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+
+	;Push "${FILE}.md"
+	;Push /DEBUG
+	;Push "https://cloudflare-dns.com/dns-query"
+	;Push /DOH
+
 	Push "https://test.com"
 	Push "/REFERER"
 

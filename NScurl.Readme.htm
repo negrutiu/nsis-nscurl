@@ -38,6 +38,7 @@ It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> w
 <li>Verbose: plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc)
 <li>Supports HTTP and TLS authentication
 <li>Supports all relevant HTTP methods (GET, POST, HEAD, etc)
+<li>Supports DNS-over-HTTPS name resolution
 <li>Supports custom HTTP headers and data
 <li>Supports proxy servers (both authenticated and open)
 <li>Supports files larger than 4GB
@@ -379,6 +380,15 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 	<td>Marks the output file with the "Mark of the Web".<br>
 	An alternate NTFS data stream named "Zone.Identifier" is attached to the output file.<br>
+	</td>
+</tr>
+<tr>
+	<td>/DOH &lt;url&gt;</td>
+	<td>Specify a <a href="https://en.wikipedia.org/wiki/DNS_over_HTTPS">DNS over HTTPS</a> server to resolve DNS requests securely.<br>
+	<b>NOTE:</b> This DoH server is used for the current transfer only. It's not a global setting.<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
 	</td>
 </tr>
 <tr>
