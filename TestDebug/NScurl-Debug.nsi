@@ -189,6 +189,7 @@ Section "sysinternals.com/get (Page)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push "/Zone.Identifier"
 	Push "/INSIST"
 	Push "/CANCEL"
 	Push "${FILE}"
@@ -212,6 +213,7 @@ Section "sysinternals.com/get (Popup)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push "/Zone.Identifier"
 	Push "/INSIST"
 	Push "/POPUP"
 	Push "/CANCEL"
@@ -236,6 +238,7 @@ Section "sysinternals.com/get (Silent)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push "/Zone.Identifier"
 	Push "/INSIST"
 	Push "/SILENT"
 	Push "/CANCEL"
@@ -260,6 +263,7 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
+	Push "/Zone.Identifier"
 	Push 307200			; 300 * 1024
 	Push "/SPEEDCAP"
 	Push "/INSIST"

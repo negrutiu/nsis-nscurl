@@ -456,6 +456,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			if (*pszParam)
 				pReq->pszTag = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/MARKOFTHEWEB" ) ) == 0 || lstrcmpi( pszParam, _T( "/Zone.Identifier" ) ) == 0) {
+		pReq->bMarkOfTheWeb = TRUE;
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}
@@ -900,6 +902,20 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 		} else {
 			e = GetLastError();
+		}
+		if (e == ERROR_SUCCESS && pReq->bMarkOfTheWeb) {
+			ULONG l = lstrlen( pReq->pszPath ) + sizeof( ":Zone.Identifier" );
+			LPTSTR psz = (LPTSTR)MyAlloc( l * sizeof( TCHAR ) );
+			if (psz) {
+				HANDLE h;
+				_sntprintf( psz, l, _T( "%s:Zone.Identifier" ), pReq->pszPath );
+				if ((h = CreateFile( psz, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL )) != INVALID_HANDLE_VALUE) {
+					CHAR zone[] = "[ZoneTransfer]\r\nZoneId=3\r\n";
+					WriteFile( h, (LPCVOID)zone, lstrlenA( zone ), &l, NULL );
+					CloseHandle( h );
+				}
+				MyFree( psz );
+			}
 		}
 		if (e != ERROR_SUCCESS && pReq->Error.iWin32 == ERROR_SUCCESS) {
 			pReq->Error.iWin32 = e;
