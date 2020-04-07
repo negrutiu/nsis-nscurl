@@ -18,6 +18,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - **Verbose**: plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc)
 - Supports HTTP and TLS authentication
 - Supports all relevant HTTP methods (GET, POST, HEAD, etc)
+- Supports DNS-over-HTTPS name resolution
 - Supports custom HTTP headers and data
 - Supports proxy servers (both authenticated and open)
 - Supports files larger than 4GB
