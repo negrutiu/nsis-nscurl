@@ -325,7 +325,9 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 				break;
 
 			if (lstrcmpi( psz, _T( "/ID" ) ) == 0) {
-				pGui->qsel.iId = popint();
+				pGui->qsel.iId = (ULONG)popintptr();
+				if (pGui->qsel.iId == 0)
+					pGui->qsel.iId = 0xffffffff;		// id=0 would match all IDs. We want no match
 			} else if (lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
 				if (popstring( psz ) == NOERROR) {
 					MyFree( pGui->qsel.pszTag );
@@ -368,6 +370,8 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 		while ((e = popstring( psz )) == NOERROR) {
 			if (e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
 				qsel.iId = (ULONG)popintptr();
+				if (qsel.iId == 0)
+					qsel.iId = 0xffffffff;			// id=0 would match all IDs. We want no match
 			} else if (e == NOERROR && lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
 				if ((e = popstring( psz )) == NOERROR) {
 					MyFree( qsel.pszTag );
@@ -413,6 +417,8 @@ void __cdecl cancel( HWND parent, int string_size, TCHAR *variables, stack_t **s
 		while ((e = popstring( psz )) == NOERROR) {
 			if (e == NOERROR && lstrcmpi( psz, _T( "/ID" ) ) == 0) {
 				qsel.iId = (ULONG)popintptr();
+				if (qsel.iId == 0)
+					qsel.iId = 0xffffffff;			// id=0 would match all IDs. We want no match
 			} else if (e == NOERROR && lstrcmpi( psz, _T( "/TAG" ) ) == 0) {
 				if ((e = popstring( psz )) == NOERROR) {
 					MyFree( qsel.pszTag );
