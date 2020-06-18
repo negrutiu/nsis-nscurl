@@ -21,6 +21,9 @@ Target ${_TARGET_}
 
 # NScurl.dll development location
 !ifdef DEVEL
+!if ! /FileExists "..\Release-mingw-${_TARGET_}\NScurl.dll"
+	!error "Missing \Release-mingw-${_TARGET_}\NScurl.dll"
+!endif
 !AddPluginDir /amd64-unicode "..\Release-mingw-amd64-unicode"
 !AddPluginDir /x86-unicode   "..\Release-mingw-x86-unicode"
 !AddPluginDir /x86-ansi      "..\Release-mingw-x86-ansi"
