@@ -16,9 +16,9 @@ resources = Split("""
 # NOTE: Library order does matter!
 libs = Split("""
 	curl
-	mbedtls
-	mbedcrypto
-	mbedx509
+    ssl
+    crypto
+    nghttp2
 	advapi32
 	user32
 	version
@@ -45,11 +45,11 @@ plugin_envT = plugin_env
 if unicodetarget:
 	plugin_envT = plugin_uenv
 
-plugin_envT.Append(CPPPATH = ['libcurl-devel/include', 'libcurl-devel/include/mbedtls/crypto'])
+plugin_envT.Append(CPPPATH = ['libcurl-devel/include', 'libcurl-devel/include/openssl'])
 if env['TARGET_ARCH'] == 'amd64':
-	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/Release-mingw-mbedTLS-x64-HTTP_ONLY'])
+	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/mingw-openssl-Release-x64-Legacy'])
 else:
-	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/Release-mingw-mbedTLS-Win32-HTTP_ONLY'])
+	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/mingw-openssl-Release-Win32-Legacy'])
 
 # Disable benign warnings
 plugin_envT.Append(CCFLAGS = ['-Wno-unused-function', '-Wno-unused-variable', '-Wno-unused-but-set-variable'])

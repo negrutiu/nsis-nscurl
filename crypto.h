@@ -1,6 +1,6 @@
 
 //? Marius Negrutiu (mailto:marius.negrutiu@protonmail.com) :: 2019/11/20
-//? Compute hashes using mbedTLS cryptography engine
+//? Compute hashes using our embedded cryptographic engine
 
 #pragma once
 #include "utils.h"

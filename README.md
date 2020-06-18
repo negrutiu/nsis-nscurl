@@ -1,6 +1,6 @@
 # NScurl ([NSIS](https://github.com/negrutiu/nsis) plugin)
 NScurl is a NSIS (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.<br>
-It's implemented on top of [libcurl](https://curl.haxx.se/libcurl/) with [mbedTLS](https://tls.mbed.org/) as SSL backend.<br>
+It's implemented on top of [libcurl](https://curl.haxx.se/libcurl/) with [OpenSSL](https://www.openssl.org/) as SSL backend.<br>
 This plugin is included in my unofficial [NSIS builds](https://github.com/negrutiu/nsis).<br>
 
 [![License: BSD3](https://img.shields.io/badge/License-BSD3-blue.svg)](LICENSE.md)
@@ -9,7 +9,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 [![GitHub issues](https://img.shields.io/github/issues/negrutiu/nsis-nscurl.svg?label=Issues)](../../issues)
 
 ### Features:
-- **Modern**: supports all relevant SSL protocols and cyphers
+- **Modern**: supports modern SSL protocols and cyphers including HTTPS/2, TLS1.3, etc.
 - **Compatible**: works well on Windows NT4, Windows 10 and everything in between
 - **Multi-threaded**: download/upload multiple files in parallel
 - **Asynchronous**: start multiple background transfers, check on them later

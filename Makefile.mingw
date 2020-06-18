@@ -16,8 +16,8 @@
 PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
-INC      = -I. -Ilibcurl-devel/include -Ilibcurl-devel/include/mbedtls/crypto
-LIB      = -lcurl -lmbedtls -lmbedcrypto -lmbedx509 -lkernel32 -ladvapi32 -luser32 -lversion -lws2_32 -lmsvcrt -lgcc
+INC      = -I. -Ilibcurl-devel/include -Ilibcurl-devel/include/openssl
+LIB      = -lcurl -lssl -lcrypto -lnghttp2 -lkernel32 -ladvapi32 -luser32 -lversion -lws2_32 -lmsvcrt -lgcc
 SAL      = -D__in= -D__out= -D__inout= -D__in_opt= -D__out_opt= \
            -D_In_= -D_Out_= -D_Inout_= -D_In_opt_= -D_Out_opt_=
 
@@ -35,11 +35,11 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 
 # ARCH
 ifeq ($(ARCH), X64)
-	CFLAGS  += -DNDEBUG -Llibcurl-devel/bin/Release-mingw-mbedTLS-x64-HTTP_ONLY
+	CFLAGS  += -DNDEBUG -Llibcurl-devel/bin/mingw-openssl-Release-x64-Legacy
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -DNDEBUG -Llibcurl-devel/bin/Release-mingw-mbedTLS-Win32-HTTP_ONLY -march=pentium2
+	CFLAGS  += -DNDEBUG -Llibcurl-devel/bin/mingw-openssl-Release-Win32-Legacy -march=pentium2
 	LDFLAGS += -Wl,-e'_DllMain'
 	RCFLAGS += -F pe-i386
 endif

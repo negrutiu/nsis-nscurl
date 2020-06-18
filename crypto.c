@@ -1,14 +1,10 @@
 
 //? Marius Negrutiu (mailto:marius.negrutiu@protonmail.com) :: 2019/11/20
-//? Compute hashes using mbedTLS cryptography engine
+//? Compute hashes using our embedded cryptographic engine
 
 #include "main.h"
 #include "crypto.h"
-
-#include <mbedtls/md5.h>
-#include <mbedtls/sha1.h>
-#include <mbedtls/sha256.h>
-#include <mbedtls/base64.h>
+#include <openssl/crypto/evp.h>
 
 
 //++ Hash
@@ -45,32 +41,26 @@ ULONG HashFile( _In_ LPCTSTR pszFile, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha
 		PUCHAR buf = (PUCHAR)HeapAlloc( GetProcessHeap(), 0, bufsize );
 		if (buf) {
 
-			mbedtls_md5_context		md5ctx;
-			mbedtls_sha1_context	sha1ctx;
-			mbedtls_sha256_context	sha2ctx;
 			ULONG l;
-
-			mbedtls_md5_init( &md5ctx );
-			mbedtls_sha1_init( &sha1ctx );
-			mbedtls_sha256_init( &sha2ctx );
-
-			if (md5) mbedtls_md5_starts( &md5ctx );
-			if (sha1) mbedtls_sha1_starts( &sha1ctx );
-			if (sha256) mbedtls_sha256_starts( &sha2ctx, FALSE );
-
-			while ((e = ReadFile( h, buf, bufsize, &l, NULL ) ? ERROR_SUCCESS : GetLastError()) == ERROR_SUCCESS && (l > 0)) {
-				if (md5) mbedtls_md5_update( &md5ctx, buf, l );
-				if (sha1) mbedtls_sha1_update( &sha1ctx, buf, l );
-				if (sha256) mbedtls_sha256_update( &sha2ctx, buf, l );
+			EVP_MD_CTX *md5ctx  = EVP_MD_CTX_new();
+			EVP_MD_CTX *sha1ctx = EVP_MD_CTX_new();
+			EVP_MD_CTX *sha2ctx = EVP_MD_CTX_new();
+			if (md5ctx && sha1ctx && sha2ctx) {
+				if (md5) EVP_DigestInit( md5ctx, EVP_md5() );
+				if (sha1) EVP_DigestInit( sha1ctx, EVP_sha1() );
+				if (sha256) EVP_DigestInit( sha2ctx, EVP_sha256() );
+				while ((e = ReadFile( h, buf, bufsize, &l, NULL ) ? ERROR_SUCCESS : GetLastError()) == ERROR_SUCCESS && (l > 0)) {
+					if (md5) EVP_DigestUpdate( md5ctx, buf, l );
+					if (sha1) EVP_DigestUpdate( sha1ctx, buf, l );
+					if (sha256) EVP_DigestUpdate( sha2ctx, buf, l );
+				}
+				if (md5) EVP_DigestFinal( md5ctx, md5, NULL );
+				if (sha1) EVP_DigestFinal( sha1ctx, sha1, NULL );
+				if (sha256) EVP_DigestFinal( sha2ctx, sha256, NULL );
 			}
-
-			if (md5) mbedtls_md5_finish( &md5ctx, md5 );
-			if (sha1) mbedtls_sha1_finish( &sha1ctx, sha1 );
-			if (sha256) mbedtls_sha256_finish( &sha2ctx, sha256 );
-
-			mbedtls_md5_free( &md5ctx );
-			mbedtls_sha1_free( &sha1ctx );
-			mbedtls_sha256_free( &sha2ctx );
+			if (md5ctx)  EVP_MD_CTX_free( md5ctx );
+			if (sha1ctx) EVP_MD_CTX_free( sha1ctx );
+			if (sha2ctx) EVP_MD_CTX_free( sha2ctx );
 
 			HeapFree( GetProcessHeap(), 0, buf );
 
@@ -89,39 +79,40 @@ ULONG HashFile( _In_ LPCTSTR pszFile, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha
 //++ HashMem
 ULONG HashMem( _In_ LPCVOID pPtr, _In_ size_t iSize, _Out_opt_ PUCHAR md5, _Out_opt_ PUCHAR sha1, _Out_opt_ PUCHAR sha256 )
 {
-	ULONG e = ERROR_SUCCESS;
-
 	if (!pPtr || !iSize || (!md5 && !sha1 && !sha256))
 		return ERROR_INVALID_PARAMETER;
 
 	if (md5) {
-		mbedtls_md5_context ctx;
-		mbedtls_md5_init( &ctx );
-		mbedtls_md5_starts( &ctx );
-		mbedtls_md5_update( &ctx, pPtr, iSize );
-		mbedtls_md5_finish( &ctx, md5 );
-		mbedtls_md5_free( &ctx );
+		EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+		if (ctx) {
+			EVP_DigestInit( ctx, EVP_md5() );
+			EVP_DigestUpdate( ctx, pPtr, iSize );
+			EVP_DigestFinal( ctx, md5, NULL );
+			EVP_MD_CTX_free( ctx );
+		}
 	}
 
 	if (sha1) {
-		mbedtls_sha1_context ctx;
-		mbedtls_sha1_init( &ctx );
-		mbedtls_sha1_starts( &ctx );
-		mbedtls_sha1_update( &ctx, pPtr, iSize );
-		mbedtls_sha1_finish( &ctx, sha1 );
-		mbedtls_sha1_free( &ctx );
+		EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+		if (ctx) {
+			EVP_DigestInit( ctx, EVP_sha1() );
+			EVP_DigestUpdate( ctx, pPtr, iSize );
+			EVP_DigestFinal( ctx, sha1, NULL );
+			EVP_MD_CTX_free( ctx );
+		}
 	}
 
 	if (sha256) {
-		mbedtls_sha256_context ctx;
-		mbedtls_sha256_init( &ctx );
-		mbedtls_sha256_starts( &ctx, FALSE );
-		mbedtls_sha256_update( &ctx, pPtr, iSize );
-		mbedtls_sha256_finish( &ctx, sha256 );
-		mbedtls_sha256_free( &ctx );
+		EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+		if (ctx) {
+			EVP_DigestInit( ctx, EVP_sha256() );
+			EVP_DigestUpdate( ctx, pPtr, iSize );
+			EVP_DigestFinal( ctx, sha256, NULL );
+			EVP_MD_CTX_free( ctx );
+		}
 	}
 
-	return e;
+	return ERROR_SUCCESS;
 }
 
 
@@ -129,26 +120,19 @@ ULONG HashMem( _In_ LPCVOID pPtr, _In_ size_t iSize, _Out_opt_ PUCHAR md5, _Out_
 LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
 {
 	LPSTR pszBase64 = NULL;
-	int e2;
-	size_t l;
-	
-	assert( pPtr && iSize );
-
-	// Compute base64 length
-	e2 = mbedtls_base64_encode( NULL, 0, &l, pPtr, iSize );
-	if (e2 != MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-		return NULL;
-
-	pszBase64 = (LPSTR)MyAlloc( l );
-	if (pszBase64) {
-		e2 = mbedtls_base64_encode( (PUCHAR)pszBase64, l, &l, pPtr, iSize );
-		if (e2 == 0) {
-			// OK
-		} else {
-			MyFree( pszBase64 );
+	EVP_ENCODE_CTX *ctx = EVP_ENCODE_CTX_new();
+	if (ctx) {
+		int lOut = 4 * ((iSize + 2) / 3) + 1;
+		if ((pszBase64 = (LPSTR)MyAlloc( lOut )) != NULL) {
+			LPSTR psz = pszBase64;
+			int len;
+			EVP_EncodeInit( ctx );
+			evp_encode_ctx_set_flags( ctx, EVP_ENCODE_CTX_NO_NEWLINES );
+			EVP_EncodeUpdate( ctx, psz, &len, pPtr, (int)iSize );
+			EVP_EncodeFinal( ctx, (psz += len), &len );
 		}
+		EVP_ENCODE_CTX_free( ctx );
 	}
-
 	return pszBase64;
 }
 
@@ -156,30 +140,26 @@ LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
 //++ DecBase64
 PVOID DecBase64( _In_ LPCSTR pszBase64, _Out_opt_ size_t *piSize )
 {
-	PVOID pPtr = NULL;
-	int e2;
-	size_t l = 0;
-
-	if (piSize)
-		*piSize = 0;
-	assert( pszBase64 );
-
-	// Compute decoded length
-	e2 = mbedtls_base64_decode( NULL, 0, &l, (PUCHAR)pszBase64, lstrlenA( pszBase64 ) );
-	if (e2 != MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-		return NULL;
-
-	pPtr = MyAlloc( l );
-	if (pPtr) {
-		e2 = mbedtls_base64_decode( pPtr, l, &l, (PUCHAR)pszBase64, lstrlenA( pszBase64 ) );
-		if (e2 == 0) {
-			// OK
-			if (piSize)
-				*piSize = l;
-		} else {
-			MyFree( pPtr );
+	LPSTR pPtr = NULL;
+	EVP_ENCODE_CTX *ctx = EVP_ENCODE_CTX_new();
+	if (piSize) *piSize = 0;
+	if (ctx) {
+		int lIn = lstrlenA( pszBase64 );
+		int lOut = (3 * lIn) / 4;
+		if ((pPtr = (LPSTR)MyAlloc( lOut )) != NULL) {
+			LPSTR psz = pPtr;
+			int len1 = 0, len2 = 0;
+			EVP_DecodeInit( ctx );
+			if (EVP_DecodeUpdate( ctx, psz, &len1, pszBase64, lIn ) != -1 &&
+				EVP_DecodeFinal( ctx, (psz += len1), &len2 ) != -1)
+			{
+				if (piSize) *piSize += len1 + len2;
+			} else {
+				MyFree( pPtr );
+			}
 		}
+		EVP_ENCODE_CTX_free( ctx );
 	}
 
-	return pPtr;
+	return (PVOID)pPtr;
 }

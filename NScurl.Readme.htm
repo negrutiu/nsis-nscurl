@@ -22,14 +22,14 @@
 
 <h2><a name="about">About</h2> 
 <b><a href="https://github.com/negrutiu/nsis-nscurl/">NScurl</a></b> is a <b><a href="https://github.com/negrutiu/nsis/">NSIS</a> (Nullsoft Scriptable Install System)</b> plugin with advanced HTTP/HTTPS capabilities.<br>
-It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> with <a href="https://tls.mbed.org/">mbedTLS</a> as SSL backend.<br>
+It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> with <a href="https://www.openssl.org/">OpenSSL</a> as SSL backend.<br>
 <br>
 <b>Official project page:</b> <a href="https://github.com/negrutiu/nsis-nscurl/">https://github.com/negrutiu/nsis-nscurl</a><br>
 <b>Dependencies:</b> <a href="https://github.com/negrutiu/libcurl-devel/">https://github.com/negrutiu/libcurl-devel</a><br>
 
 <h3><a name="features">Features</h3>
 <ul>
-<li>Modern: supports all relevant SSL protocols and cyphers
+<li>Modern: supports modern protocols and ciphers including HTTP/2, TLS1.3, etc.
 <li>Compatible: works well on Windows NT4, Windows 10 and everything in between
 <li>Multi-threaded: download/upload multiple files in parallel
 <li>Asynchronous: start multiple background transfers, check on them later
@@ -150,6 +150,15 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<b>Syntax:</b> scheme://address.domain[:port].<br>
 	Supported schemes: http, https, socks4, socks4a, socks5, socks5a<br>
 	For more information visit libcurl's <a href="https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html">CURLOPT_PROXY</a> documentation.<br>
+	</td>
+</tr>
+<tr>
+	<td>/DOH &lt;url&gt;</td>
+	<td>Specify a <a href="https://en.wikipedia.org/wiki/DNS_over_HTTPS">DNS over HTTPS</a> server to resolve DNS requests securely.<br>
+	<b>NOTE:</b> This DoH server is used for the current transfer only. It's not a global setting.<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> [...] /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
 	</td>
 </tr>
 <tr>
@@ -302,6 +311,14 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
+	<td>/Zone.Identifier<br>
+	/MARKOFTHEWEB<br>
+	</td>
+	<td>Marks the output file with the "Mark of the Web".<br>
+	An alternate NTFS data stream named "Zone.Identifier" is attached to the output file.<br>
+	</td>
+</tr>
+<tr>
 	<td>/CACERT "path\cacert.pem"</td>
 	<td>Validate webserver identity using a custom <b>cacert.pem</b> certificate database.<br>
 	By default a built-in <b>cacert.pem</b> is extracted and used at runtime.<br>
@@ -313,16 +330,17 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/CERT thumbprint</td>
-	<td>Specify a trusted server certificate (sha1) thumbprint (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc).<br>
-	Trusted thumbprints are used for SSL validation in addition to the <b>cacert.pem</b> file.<br>
+	<td>Specify an additional trusted certificate SHA1 thumbprint (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc).<br>
+	Trusted thumbprints are used for SSL validation in addition to the <b>cacert.pem</b> database.<br>
 	<br>
 	<b>NOTE:</b> Multiple /CERT parameters are accepted. All thumbprints are aggregated into a big certificate whitelist.<br>
+	<b>NOTE:</b> <b>cacert.pem</b> database can be turned off by specifying an empty path (<b>/CACERT ""</b>), leaving the thumbprint list the only certificate store used for validation.<br>
 	</td>
 </tr>
 <tr>
 	<td>/DEPEND id</td>
 	<td>Makes this HTTP request dependent on another request.<br>
-	The new request will wait in the queue until its dependency gets completed.<br>
+	The new request will wait in queue until its dependency gets completed.<br>
 	Useful to establish a precise HTTP request order in a multi-threaded environment.<br>
 	</td>
 </tr>
@@ -343,9 +361,9 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/BACKGROUND</td>
 	<td>By default, NScurl::http creates a new HTTP request and <b>waits</b> for it to complete.<br>
-	With the <b>/BACKGROUND</b> parameter you mark it as a background transfer and place it in the queue for later processing.<br>
+	With <b>/BACKGROUND</b> you mark the new request as a background transfer and place it in the queue for later processing.<br>
 	The call returns immediately, no visual progress is displayed.<br>
-	<b>NOTE:</b> <b><a href="#http">NScurl::http</a></b> will return a transfer ID instead of the transfer status.<br>
+	<b>NOTE:</b> <b><a href="#http">NScurl::http</a></b> will return a <b>transfer ID</b> instead of the transfer status. The ID can be used later for <a href="#query">querying</a>.<br>
 	</td>
 </tr>
 <tr>
@@ -353,12 +371,14 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>Wait for the transfer to complete in Page-mode.<br>
 	When waiting from an NSIS section (while on the <b>InstFiles</b> page), the function will create a dedicated progress bar to visually display the progress.<br>
 	<b>NOTE:</b> /PAGE is the default wait mode if nothing else is specified!<br>
+	<b>NOTE:</b> /PAGE is incompatible with /BACKGROUND.<br>
 	</td>
 </tr>
 <tr>
 	<td>/POPUP</td>
 	<td>Wait for the transfer to complete in Popup-mode.<br>
 	Progress is displayed on a pop-up window.<br>
+	<b>NOTE:</b> /POPUP is incompatible with /BACKGROUND.<br>
 	</td>
 </tr>
 <tr>
@@ -366,29 +386,13 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>Wait silently for the transfer to complete.<br>
 	No visual progress is displayed.<br>
 	<b>NOTE:</b> This is the default wait mode for <b>silent</b> installers.<br>
+	<b>NOTE:</b> /SILENT is incompatible with /BACKGROUND.<br>
 	</td>
 </tr>
 <tr>
 	<td>/CANCEL</td>
 	<td>Enable <b>Cancel</b> button when waiting in Page-mode or Popup-mode.<br>
 	By default transfers can not be cancelled.<br>
-	</td>
-</tr>
-<tr>
-	<td>/Zone.Identifier<br>
-	/MARKOFTHEWEB<br>
-	</td>
-	<td>Marks the output file with the "Mark of the Web".<br>
-	An alternate NTFS data stream named "Zone.Identifier" is attached to the output file.<br>
-	</td>
-</tr>
-<tr>
-	<td>/DOH &lt;url&gt;</td>
-	<td>Specify a <a href="https://en.wikipedia.org/wiki/DNS_over_HTTPS">DNS over HTTPS</a> server to resolve DNS requests securely.<br>
-	<b>NOTE:</b> This DoH server is used for the current transfer only. It's not a global setting.<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
 	</td>
 </tr>
 <tr>

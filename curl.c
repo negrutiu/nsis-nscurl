@@ -4,8 +4,7 @@
 
 #include "main.h"
 #include "curl.h"
-#include <mbedtls/ssl.h>
-#include <mbedtls/sha1.h>
+#include <openssl/ssl.h>
 #include "crypto.h"
 
 
@@ -333,6 +332,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 						} else {
 							assert( !"Unexpected IDATA type" );
 						}
+						assert( pszData );
 						pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszData );
 					}
 
@@ -471,83 +471,65 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 }
 
 
-
-//++ MbedtlsCertVerify
-int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint32_t *piVerifyFlags)
+//++ OpenSSLVerifyCallback
+int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 {
-	//? This function gets called to evaluate server's SSL certificates
+	//? This function gets called to evaluate server's SSL certificate chain
 	//? The calls are made sequentially for each certificate in the chain
-	//? That usually happens three times per connection: #2(root certificate), #1(intermediate certificate), #0(user certificate)
+	//? This usually happens three times per connection: #2(root certificate), #1(intermediate certificate), #0(user certificate)
 
 	//? Our logic:
-	//? * If all certificates in the chain are UNTRUSTED, we'll set the MBEDTLS_X509_BADCERT_NOT_TRUSTED verification flag when returning from the last call (index #0)
-	//? * If we TRUST at least one certificate we simply do nothing (return all zeros)
+	//? * We return TRUE for every certificate, to get a chance to inspect the next in chain
+	//? * We return the final value when we reach the last certificate (depth 0)
+	//?   If we're dealing with a TRUSTED certificate we force a positive response
+	//?   Otherwise we return whatever verdict OpenSSL has already assigned to the chain
 
-	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
-	UCHAR Thumbprint[20];
-	CHAR szThumbprint[41];
+	UCHAR Thumbprint[20];		/// sha1
+	char szThumbprint[41];
+	struct curl_slist *p;
 
-	assert( pReq->pCertList );
+	SSL *ssl = X509_STORE_CTX_get_ex_data( x509_ctx, SSL_get_ex_data_X509_STORE_CTX_idx() );
+	SSL_CTX *ssl_ctx = SSL_get_SSL_CTX( ssl );
+	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( ssl_ctx );
 
-	if (!crt)
-		return 1;
+	X509 *cert = X509_STORE_CTX_get_current_cert( x509_ctx );		/// Current certificate in chain
+	int err    = X509_STORE_CTX_get_error( x509_ctx );				/// Current OpenSSL certificate validation error
+	int depth  = X509_STORE_CTX_get_error_depth( x509_ctx );		/// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with user certificate (#0)
 
-	// Remember the original root verification flags
-	if (pReq->Runtime.iRootCertFlags == -1)
-		pReq->Runtime.iRootCertFlags = *piVerifyFlags;
+	//x X509_NAME_oneline( X509_get_subject_name( cert ), szSubject, ARRAYSIZE( szSubject ) );
+	//x X509_NAME_oneline( X509_get_issuer_name( cert ), szIssuer, ARRAYSIZE( szIssuer ) );
 
-	// Reset verification flags for this certificate
-	// Under the hood they are all merged (OR-ed) into a master value
-	*piVerifyFlags = 0;
-
-	// Compute certificate's thumbprint
-	mbedtls_sha1_context sha1c;
-	mbedtls_sha1_init( &sha1c );
-	mbedtls_sha1_starts( &sha1c );
-	mbedtls_sha1_update( &sha1c, crt->raw.p, crt->raw.len );
-	mbedtls_sha1_finish( &sha1c, Thumbprint );
-	mbedtls_sha1_free( &sha1c );
+	// Extract certificate SHA1 fingerprint
+	X509_digest( cert, EVP_sha1(), Thumbprint, NULL );
 	MyFormatBinaryHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
 
 	// Verify against our trusted certificate list
-	{
-		struct curl_slist *p;
-		for (p = pReq->pCertList; p; p = p->next) {
-			if (lstrcmpiA( p->data, szThumbprint ) == 0) {
+	for (p = pReq->pCertList; p; p = p->next) {
+		if (lstrcmpiA( p->data, szThumbprint ) == 0) {
 
-				pReq->Runtime.bTrustedCert = TRUE;
-				break;
-			}
+			pReq->Runtime.bTrustedCert = TRUE;
+			X509_STORE_CTX_set_error( x509_ctx, X509_V_OK );
+			break;
 		}
-		TRACE( _T( "Certificate( #%d, \"%hs\" ) = %hs\n" ), iChainIndex, szThumbprint, p ? "TRUSTED" : "UNTRUSTED" );
-
-		/// Print the certificate
-	#if 0
-	#if defined (TRACE_ENABLED)
-		{
-			CHAR szCert[2048];
-			mbedtls_x509_crt_info( szCert, ARRAYSIZE( szCert ), "                ", crt );
-			TRACE( TRACE_NO_PREFIX _T( "%hs" ), szCert );
-		}
-	#endif
-	#endif
 	}
 
-	// Final verdict
-	if (iChainIndex == 0) {
+	// Verdict
+	if (depth > 0) {
+		TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", err );
+		return TRUE;
+	} else {
 		if (pReq->Runtime.bTrustedCert) {
-			// Clear all verification flags pre-calculated by mbedTLS
-			// If the certificate thumbprint is explicitly trusted, we don't care about the status of the certificate (expired, revoked, whatever...)
-			// The connection is allowed to continue
-			*piVerifyFlags = 0;
-		} else {
-			// Return the original verification flags, pre-calculated by mbedTLS
-			*piVerifyFlags = pReq->Runtime.iRootCertFlags;
+			/// We've found at least one TRUSTED certificate
+			/// Clear all errors, return a positive verdict
+			X509_STORE_CTX_set_error( x509_ctx, X509_V_OK );
+			TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", X509_V_OK );
+			return TRUE;
 		}
-		TRACE( _T( "Certificate verification flags: 0x%x (original) -> 0x%x (final)\n" ), pReq->Runtime.iRootCertFlags, *piVerifyFlags );
+		/// We haven't found any TRUSTED certificate
+		/// Return whatever verdict already made by OpenSSL
+		TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", preverify_ok ? "TRUE" : "FALS", err );
+		return preverify_ok;
 	}
-
-	return 0;	/// Success always
 }
 
 
@@ -555,16 +537,9 @@ int MbedtlsCertVerify(void *pParam, mbedtls_x509_crt *crt, int iChainIndex, uint
 //? This callback function gets called by libcurl just before the initialization of an SSL connection
 CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
 {
-	PCURL_REQUEST pReq = (PCURL_REQUEST)userptr;
-	mbedtls_ssl_config *pssl = (mbedtls_ssl_config*)ssl_ctx;
-
-	assert( pReq && pReq->Runtime.pCurl == curl);
-	assert( pReq->pCertList );
-
-	//? Setup an mbedTLS low-level callback function to analyze server's certificate chain
-	pssl->f_vrfy = MbedtlsCertVerify;
-	pssl->p_vrfy = pReq;
-
+	SSL_CTX *pssl = (SSL_CTX*)ssl_ctx;
+	SSL_CTX_set_app_data( pssl, userptr );
+	SSL_CTX_set_verify( pssl, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
 	return CURLE_OK;
 }
 
@@ -1269,7 +1244,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->version );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLSSLVERSION@" ) ) == 0) {
-		//? e.g. "mbedTLS/2.20.0"
+		//? e.g. "OpenSSL/1.1.1g"
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, ver->ssl_version );
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLPROTOCOLS@" ) ) == 0) {
