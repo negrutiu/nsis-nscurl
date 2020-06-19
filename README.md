@@ -48,3 +48,11 @@ NScurl::http POST "https://httpbin.org/post" Memory /POST "User" "My user name" 
 Pop $0
 ```
 - More complex examples in the [documentation](NScurl.Readme.htm)
+
+### Licenses:
+Project|License
+:---|:---
+This project itself|[BSD3](LICENSE.md)
+libcurl|[MIT/X inspired](https://curl.haxx.se/docs/copyright.html)
+OpenSSL|[Dual License](https://www.openssl.org/source/license.html)
+nghttp2|[MIT](https://github.com/nghttp2/nghttp2/blob/master/COPYING)
