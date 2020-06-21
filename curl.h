@@ -148,6 +148,9 @@ ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq );		//? e.g. 404
 //+ Initialization
 ULONG CurlInitialize();
 void  CurlDestroy();
+
+ULONG CurlInitializeLibcurl();	//! Must be called only when starting transfers. This will lock NScurl.dll in memory until the process exists
+
 ULONG CurlExtractCacert();		/// Called automatically
 
 //+ CurlParseRequestParam

@@ -235,8 +235,12 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
-	// Lock the plugin in memory
+	// Lock the plugin in memory (against NSIS framework trying to unload it)
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
+
+	// Lock the plugin in memory (against Windows itself trying to FreeLibrary it)
+	// Once curl_global_init gets called, the current module must never unload
+	CurlInitializeLibcurl();
 
 	// Working structures
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );

@@ -9,6 +9,7 @@
 
 
 typedef struct {
+	volatile HMODULE		hPinnedModule;
 	CRITICAL_SECTION		csLock;
 	CHAR					szVersion[64];
 	CHAR					szUserAgent[128];
@@ -185,7 +186,6 @@ ULONG CurlInitialize()
 		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
 
-	curl_global_init( CURL_GLOBAL_ALL );
 	return ERROR_SUCCESS;
 }
 
@@ -196,7 +196,41 @@ void CurlDestroy()
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
 	DeleteCriticalSection( &g_Curl.csLock );
-	curl_global_cleanup();
+}
+
+
+//++ CurlInitializeLibcurl
+ULONG CurlInitializeLibcurl()
+{
+	if (InterlockedCompareExchangePointer( &g_Curl.hPinnedModule, NULL, NULL ) == NULL) {
+
+		TCHAR szPath[MAX_PATH];
+		TRACE( _T( "%hs()\n" ), __FUNCTION__ );
+
+		// Initialize libcurl
+		curl_global_init( CURL_GLOBAL_ALL );
+
+		//! CAUTION:
+		//? https://curl.haxx.se/libcurl/c/curl_global_cleanup.html
+		//? curl_global_cleanup does not block waiting for any libcurl-created threads
+		//? to terminate (such as threads used for name resolving). If a module containing libcurl
+		//? is dynamically unloaded while libcurl-created threads are still running then your program
+		//? may crash or other corruption may occur. We recommend you do not run libcurl from any module
+		//? that may be unloaded dynamically. This behavior may be addressed in the future.
+
+		// It's confirmed that NScurl.dll crashes when unloaded after curl_global_cleanup() gets called
+		// Easily reproducible in XP and Vista
+		//! We'll pin it in memory forever and never call curl_global_cleanup()
+		if (GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) ) > 0) {
+			g_Curl.hPinnedModule = LoadLibrary( szPath );
+			assert( g_Curl.hPinnedModule );
+		}
+
+		// kernel32!GetModuleHandleEx is available in XP+
+		//x	GetModuleHandleEx( GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)__FUNCTION__, (HMODULE*)&g_Curl.hPinnedModule );
+	}
+
+	return ERROR_SUCCESS;
 }
 
 
