@@ -81,7 +81,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cacert.pem" />
+    <None Include="curl-ca-bundle.crt" />
     <None Include="NScurl.Readme.htm" />
   </ItemGroup>
 </Project>

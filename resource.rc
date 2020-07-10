@@ -121,7 +121,7 @@ END
 // CACERT.PEM
 //
 
-1                       CACERT.PEM              "cacert.pem"
+1                       CACERT.PEM              "curl-ca-bundle.crt"
 
 
 #endif    // English (United States) resources

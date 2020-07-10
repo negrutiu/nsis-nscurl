@@ -3,7 +3,7 @@
 /libcurl-devel
 libcurl-devel*.7z
 NScurl*.7z
-cacert.pem
+curl-ca-bundle.crt
 
 /Test/*.exe
 /Test/_*

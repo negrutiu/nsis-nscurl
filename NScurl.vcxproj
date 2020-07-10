@@ -175,7 +175,7 @@
     <ResourceCompile Include="resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cacert.pem" />
+    <None Include="curl-ca-bundle.crt" />
     <None Include="NScurl.Readme.htm">
       <DeploymentContent>true</DeploymentContent>
     </None>
