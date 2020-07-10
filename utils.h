@@ -104,6 +104,8 @@ BOOL MyFileExistsA( _In_ LPCSTR pszFile );
 
 
 //+ MyCreateDirectory
+// Create a directory tree, including intermediate sub-directories
+// bHasFilename indicates that the specified path is a full file path. The file name will be stripped away before creating directories
 ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename );
 
 
@@ -113,12 +115,13 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName );
 
 
 //+ MyReadVersionString
+// Reads a named string (e.g. "FileVersion", "CompanyName", "LegalCopyright", etc.) from an executable's Version Information block
 // Returns Win32 error
 ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen );
 
 
 //+ MySaveResource
-// Extract PE resource to file
+// Export PE resource to file
 ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath );
 
 
@@ -168,6 +171,8 @@ void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG
 
 
 //+ MyStringToMilliseconds
+// Convert strings like "30s", "15m", "24h" to milliseconds
+// Input strings without any suffix is assumed to be milliseconds (e.g. "2500" will return 2500)
 UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr );
 
 
