@@ -23,6 +23,7 @@ libs = Split("""
 	user32
 	version
 	ws2_32
+    crypt32
 	mingwex
 	msvcrt
 	gcc
