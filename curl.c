@@ -303,6 +303,13 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		//? Params[1] is always the URL
 		MyFree( pReq->pszURL );
 		pReq->pszURL = MyStrDup( eT2A, pszParam );
+		{	// Replace backslashes with slashes (\ -> /)
+			//? scheme://[user@]host[:port]/path[?query][#fragment]
+			LPSTR psz;
+			for (psz = (LPSTR)pReq->pszURL; *psz != '\0' && *psz != '?' && *psz != '#'; psz++)
+				if (*psz == '\\')
+					*psz = '/';
+		}
 	} else if (iParamIndex == 2) {
 		//? Params[2] is always the output file/memory
 		MyFree( pReq->pszPath );
