@@ -18,7 +18,7 @@ libs = Split("""
 	curl
     ssl
     crypto
-    nghttp2
+    nghttp2_static
 	advapi32
 	user32
 	version
@@ -48,9 +48,9 @@ if unicodetarget:
 
 plugin_envT.Append(CPPPATH = ['libcurl-devel/include', 'libcurl-devel/include/openssl'])
 if env['TARGET_ARCH'] == 'amd64':
-	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/mingw-openssl-Release-x64-Legacy'])
+	plugin_envT.Append(LIBPATH = ['libcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib'])
 else:
-	plugin_envT.Append(LIBPATH = ['libcurl-devel/bin/mingw-openssl-Release-Win32-Legacy'])
+	plugin_envT.Append(LIBPATH = ['libcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib'])
 
 # Disable benign warnings
 plugin_envT.Append(CCFLAGS = ['-Wno-unused-function', '-Wno-unused-variable', '-Wno-unused-but-set-variable'])
