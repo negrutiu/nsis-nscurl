@@ -1213,9 +1213,12 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					if ((GetTickCount() >= iConnectionTimeStart + iTimeout) ||										/// Enforce "Connect" timeout
 						((pReq->iCompleteTimeout > 0) && (pReq->Runtime.iTimeElapsed >= pReq->iCompleteTimeout)))	/// Enforce "Complete" timeout
 					{
-						MyFree( pReq->Error.pszWin32 );
-						pReq->Error.iWin32 = ERROR_TIMEOUT;
-						pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
+						// NOTE: Don't overwrite previous error codes
+						if (pReq->Error.iWin32 == ERROR_SUCCESS && pReq->Error.iCurl == CURLE_OK && pReq->Error.iHttp == 0) {
+							MyFree( pReq->Error.pszWin32 );
+							pReq->Error.iWin32 = ERROR_TIMEOUT;
+							pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
+						}
 						break;
 					}
 
