@@ -286,7 +286,7 @@ void QueueCreateThreads( _In_ LONG iCount )
 	LONG i, n;
 	n = __min( iCount, g_Queue.ThreadMax - g_Queue.ThreadCount );
 	for (i = 0; i < n; i++) {
-		if ((h = CreateThread( NULL, 0, QueueThreadProc, (LPVOID)++g_Queue.ThreadCount, 0, NULL )) != NULL) {
+		if ((h = CreateThread( NULL, 0, QueueThreadProc, UlongToPtr(++g_Queue.ThreadCount), 0, NULL )) != NULL) {
 			MySetThreadName( h, L"NScurl" );
 			CloseHandle( h );			//? Thread handle is no longer needed. The thread will continue to run until its procedure exits
 		} else {
@@ -302,7 +302,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 {
 	ULONG e = ERROR_SUCCESS, t0;
 	PCURL_REQUEST pReq = NULL;
-	LONG iThreadCount = (LONG)pParam;
+	LONG iThreadCount = PtrToUlong(pParam);
 
 	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
 

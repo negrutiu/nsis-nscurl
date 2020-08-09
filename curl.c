@@ -202,7 +202,7 @@ void CurlDestroy()
 //++ CurlInitializeLibcurl
 ULONG CurlInitializeLibcurl()
 {
-	if (InterlockedCompareExchangePointer( &g_Curl.hPinnedModule, NULL, NULL ) == NULL) {
+	if (InterlockedCompareExchangePointer( (void*)&g_Curl.hPinnedModule, NULL, NULL ) == NULL) {
 
 		TCHAR szPath[MAX_PATH];
 		TRACE( _T( "%hs()\n" ), __FUNCTION__ );
