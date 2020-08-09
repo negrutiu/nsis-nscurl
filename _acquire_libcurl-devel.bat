@@ -17,7 +17,7 @@ if %errorlevel% neq 0 pause && exit /B %errorlevel%
 echo HTTP %httpstatus%
 echo.
 
-if %httpstatus% geq 200 if %httpstatus% lss 300 rmdir "%dn%" > NUL 2> NUL
+if %httpstatus% geq 200 if %httpstatus% lss 300 rmdir /S /Q "%dn%" > NUL 2> NUL
 REM if %httpstatus% geq 300 if %httpstatus% lss 400 echo Action 3xx
 if %httpstatus% geq 400 pause && exit /B 1
 
