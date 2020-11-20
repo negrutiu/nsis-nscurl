@@ -28,22 +28,22 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 
 ### Basic usage:
 - Quick transfer:
-```
+```nsis
 NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /END
 Pop $0 ; Status text ("OK" for success)
 ```
 - Quick transfer (custom GET parameters + custom request headers):
-```
+```nsis
 NScurl::http GET "https://httpbin.org/get?param1=value1&param2=value2" "$TEMP\httpbin_get.json" /HEADER "Header1: Value1" /HEADER "Header2: Value2" /END
 Pop $0
 ```
 - POST a .json file
-```
+```nsis
 NScurl::http POST "https://httpbin.org/post" MEMORY /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /END
 Pop $0
 ```
 - POST a .json file (as MIME multi-part form)
-```
+```nsis
 NScurl::http POST "https://httpbin.org/post" Memory /POST "User" "My user name" /POST "Password" "My password" /POST FILENAME=maiden.json TYPE=application/json "Details" '{ "number_of_the_beast" : 666 }' /END
 Pop $0
 ```
