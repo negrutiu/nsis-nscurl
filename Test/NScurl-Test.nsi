@@ -12,6 +12,9 @@
 
 Target ${_TARGET_}
 
+!if /fileexists "${NSISDIR}\Include\ModernXXL.nsh"
+	!include "ModernXXL.nsh"		; Available in the NSIS fork from https://github.com/negrutiu/nsis
+!endif
 !include "MUI2.nsh"
 !define LOGICLIB_STRCMP
 !include "LogicLib.nsh"
@@ -30,8 +33,8 @@ Target ${_TARGET_}
 !endif
 
 # GUI settings
-!define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\orange-install-nsis.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Wizard\orange-nsis.bmp"
+!define /ifndef MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\orange-install-nsis.ico"
+!define /ifndef MUI_WELCOMEFINISHPAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Wizard\orange-nsis.bmp"
 
 # Welcome page
 ;!define MUI_WELCOMEPAGE_TITLE_3LINES
