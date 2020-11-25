@@ -93,7 +93,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -107,7 +107,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -125,7 +125,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
@@ -145,7 +145,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>

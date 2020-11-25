@@ -17,7 +17,7 @@ PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
 INC      = -I. -Ilibcurl-devel/include -Ilibcurl-devel/include/openssl
-LIB      = -lcurl -lssl -lcrypto -lnghttp2_static -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
+LIB      = -lcurl -lssl -lcrypto -lnghttp2_static -lzlibstatic -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
 SAL      = -D__in= -D__out= -D__inout= -D__in_opt= -D__out_opt= \
            -D_In_= -D_Out_= -D_Inout_= -D_In_opt_= -D_Out_opt_=
 

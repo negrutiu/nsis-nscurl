@@ -997,6 +997,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
+			curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );			/// Send Accept-Encoding header with all supported encodings
+
 			/// SSL
 			if (!StringIsEmpty(pReq->pszCacert) || pReq->pCertList) {
 				// SSL validation enabled
