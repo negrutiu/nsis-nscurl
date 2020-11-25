@@ -870,26 +870,27 @@ void IDataDestroy( _Inout_ IDATA *pData )
 
 
 //++ IDataParseParam
-//? Syntax: [(string|file|memory)] <data>
+//? Syntax: [-string|file|memory] <data>
+//? Syntax: [(string|file|memory)] <data> -> still accepted for backward compatibility
 BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
 {
 	BOOL bRet = FALSE, bDataPopped = FALSE;
 	assert( pszParam && iParamMaxLen && pData );
 
 	//? Possible combinations:
-	//?   "(string)" "My String"
-	//?   "(file)"   "C:\\MyDir\\MyFile.ext"
-	//?   "(memory)" 0xdeadbeef 256
-	//? If the (string|file|memory) hint is missing, we try to guess between (file) and (string)
+	//?   "-string" "My String"
+	//?   "-file"   "C:\\MyDir\\MyFile.ext"
+	//?   "-memory" 0xdeadbeef 256
+	//? If the (-string|-file|-memory) hint is missing, we try to guess between `-file` and `-string`
 
 	IDataInitialize( pData );
 
 	// Look for the data hint
-	if (lstrcmpi( pszParam, _T( "(string)" ) ) == 0 || lstrcmpi( pszParam, _T( "(str)" ) ) == 0) {
+	if (lstrcmpi( pszParam, _T( "-string" ) ) == 0 || lstrcmpi( pszParam, _T( "-str" ) ) == 0 || lstrcmpi( pszParam, _T( "(string)" ) ) == 0 || lstrcmpi( pszParam, _T( "(str)" ) ) == 0) {
 		pData->Type = IDATA_TYPE_STRING;
-	} else if (lstrcmpi( pszParam, _T( "(file)" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "-file-" ) ) == 0 || lstrcmpi( pszParam, _T( "(file)" ) ) == 0) {
 		pData->Type = IDATA_TYPE_FILE;
-	} else if (lstrcmpi( pszParam, _T( "(memory)" ) ) == 0 || lstrcmpi( pszParam, _T( "(mem)" ) ) == 0 || lstrcmpi( pszParam, _T( "(buf)" ) ) == 0) {
+	} else if (lstrcmpi( pszParam, _T( "-memory" ) ) == 0 || lstrcmpi( pszParam, _T( "-mem" ) ) == 0 || lstrcmpi( pszParam, _T( "-buf" ) ) == 0 || lstrcmpi( pszParam, _T( "(memory)" ) ) == 0 || lstrcmpi( pszParam, _T( "(mem)" ) ) == 0 || lstrcmpi( pszParam, _T( "(buf)" ) ) == 0) {
 		pData->Type = IDATA_TYPE_MEM;
 	} else {
 		// Try to guess data type
