@@ -19,6 +19,7 @@ libs = Split("""
     ssl
     crypto
     nghttp2_static
+    zlibstatic
 	advapi32
 	user32
 	version
