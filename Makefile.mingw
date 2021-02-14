@@ -18,8 +18,6 @@ BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
 INC      = -I. -Ilibcurl-devel/include -Ilibcurl-devel/include/openssl
 LIB      = -lcurl -lssl -lcrypto -lnghttp2_static -lzlibstatic -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
-SAL      = -D__in= -D__out= -D__inout= -D__in_opt= -D__out_opt= \
-           -D_In_= -D_Out_= -D_Inout_= -D_In_opt_= -D_Out_opt_=
 
 _OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
 _BIN     = $(patsubst %,$(OUTDIR)/%,$(BIN))
@@ -65,7 +63,6 @@ CFLAGS  += \
 	-fno-unwind-tables \
 	-fno-asynchronous-unwind-tables \
 	$(INC) \
-	$(SAL) \
 	$(CUSTOM_CFLAGS)
 
 LDFLAGS += \
