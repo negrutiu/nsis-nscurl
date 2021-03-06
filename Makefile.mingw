@@ -48,13 +48,14 @@ ifeq ($(CHAR), ANSI)
 	LDFLAGS +=
 else
 	CFLAGS  += -municode -DUNICODE -D_UNICODE
-	LDFLAGS += -municode
+	LDFLAGS +=
 endif
 
+# https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/
+CFLAGS += -D__USE_MINGW_ANSI_STDIO=0
 
-CFLAGS  += \
+CFLAGS += \
 	-mdll \
-	-static \
 	-s \
 	-Os \
 	-fPIE \
@@ -67,6 +68,7 @@ CFLAGS  += \
 
 LDFLAGS += \
 	$(CFLAGS) \
+	-static \
 	-Wl,--gc-sections \
 	-Wl,--no-seh \
 	-Wl,--nxcompat \
