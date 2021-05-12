@@ -27,6 +27,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - A lot more... Check out the included [documentation](NScurl.Readme.htm)
 
 ### Basic usage:
+- Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started/) wiki page
 - Quick transfer:
 ```nsis
 NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /END
