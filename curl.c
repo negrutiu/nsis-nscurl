@@ -1159,7 +1159,32 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			curl_easy_setopt( curl, CURLOPT_VERBOSE, TRUE );		/// Activate debugging callback function
 
 			/// URL
-			curl_easy_setopt( curl, CURLOPT_URL, pReq->pszURL );
+			{
+				CURLcode urlerr = CURLE_FAILED_INIT;
+
+				// Encode the path component of the URL (use a CURLU object to split the URI -> extract the path (decoded) -> reapply the path (encoded) -> retrieve the final URI)
+				CURLU *curlu = curl_url();
+				if (curlu) {
+					if (curl_url_set( curlu, CURLUPART_URL, pReq->pszURL, CURLU_DEFAULT_SCHEME | CURLU_ALLOW_SPACE | CURLU_PATH_AS_IS ) == CURLUE_OK) {
+						char *path = NULL;
+						if (curl_url_get( curlu, CURLUPART_PATH, &path, CURLU_URLDECODE ) == CURLUE_OK) {
+							if (curl_url_set( curlu, CURLUPART_PATH, path, CURLU_URLENCODE ) == CURLUE_OK) {
+								char *url = NULL;
+								if (curl_url_get( curlu, CURLUPART_URL, &url, 0 ) == CURLUE_OK) {
+									urlerr = curl_easy_setopt( curl, CURLOPT_URL, url );
+									curl_free( url );
+								}
+							}
+							curl_free( path );
+						}
+					}
+					curl_url_cleanup(curlu);
+				}
+
+				if (urlerr != CURLE_OK) {
+					curl_easy_setopt( curl, CURLOPT_URL, pReq->pszURL );							// Use the original URI if encoding failed
+				}
+			}
 
 			// Transfer retries loop
 			{
