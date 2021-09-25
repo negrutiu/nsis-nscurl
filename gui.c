@@ -99,7 +99,7 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 
 
 //+ [internal] GuiQueryKeywordCallback
-void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+void CALLBACK GuiQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_opt_ PVOID pParam )
 {
 	PGUI_REQUEST pGui = (PGUI_REQUEST)pParam;
 	assert( pszKeyword );
@@ -160,6 +160,8 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 	HANDLE hDummyEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
 	ULONG t0 = 0;
 	QUEUE_STATS qs;
+
+	if (!hDummyEvent) return;
 
 	// First paint
 	GuiRefresh( pGui );
@@ -326,7 +328,7 @@ INT_PTR CALLBACK GuiPopupDialogProc( _In_ HWND hDlg, _In_ UINT uMsg, _In_ WPARAM
 			}
 
 			// Disable parent window (NSIS main window) for our modeless dialog to behave like a modal one
-			if (IsWindowEnabled( hParent ) && (hParent != GetDesktopWindow()))
+			if (hParent && IsWindowEnabled( hParent ) && (hParent != GetDesktopWindow()))
 				EnableWindow( hParent, FALSE );
 
 			return TRUE;	/// Focus (HWND)wParam
@@ -482,6 +484,8 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 					GetWindowRect( hDetailsList, &rcDetailsList );
 					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsList.left );
 					ScreenToClient( hInstFilesPage, (LPPOINT)&rcDetailsList.right );
+				} else {
+					SetRectEmpty( &rcDetailsList );
 				}
 
 				/// New text control

@@ -51,14 +51,19 @@ extern MEMORY_STATS g_MemStats;
 
 //+ MyAlloc
 static LPVOID MyAlloc( _In_ ULONG iSize ) {
-	LPVOID p = GlobalLock( GlobalAlloc( GMEM_FIXED, iSize ) );
-	g_MemStats.AllocBytes += iSize;
-	g_MemStats.AllocCalls++;
-#ifdef _DEBUG
-	if (p)
-		FillMemory( p, iSize, 0xcd );
-#endif
-	return p;
+	HGLOBAL h = GlobalAlloc( GMEM_FIXED, iSize );
+	if (h) {
+		LPVOID p = GlobalLock( h );
+		if (p) {
+			g_MemStats.AllocBytes += iSize;
+			g_MemStats.AllocCalls++;
+		#ifdef _DEBUG
+			FillMemory( p, iSize, 0xcd );
+		#endif
+			return p;
+		}
+	}
+	return NULL;
 }
 
 
@@ -139,17 +144,17 @@ ULONG MyFormatBinaryPrintable( _In_ LPCVOID pData, _In_ ULONG iDataSize, _Out_ L
 //+ MyReplaceKeywordsA
 // A callback function is called for each keyword
 // Returns the length of the output string, without \0. Returns -1 if errors occur
-typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_A)(_Inout_ LPSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam);
-typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_W)(_Inout_ LPWSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam);
+typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_A)(_Inout_ LPSTR pszKeyword, _In_ ULONG iMaxLen, _In_opt_ PVOID pParam);
+typedef void (CALLBACK *REPLACE_KEYWORD_CALLBACK_W)(_Inout_ LPWSTR pszKeyword, _In_ ULONG iMaxLen, _In_opt_ PVOID pParam);
 LONG MyReplaceKeywordsA(
 	_Inout_ LPSTR pszStr, _In_ LONG iMaxLen,
 	_In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd,
-	_In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam
+	_In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_opt_ LPVOID pReplaceParam
 );
 LONG MyReplaceKeywordsW(
 	_Inout_ LPWSTR pszStr, _In_ LONG iMaxLen,
 	_In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd,
-	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam
+	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_opt_ LPVOID pReplaceParam
 );
 
 

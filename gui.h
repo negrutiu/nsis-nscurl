@@ -37,7 +37,7 @@ static void GuiRequestInit( _Inout_ PGUI_REQUEST pGui ) {
 }
 
 //+ GuiRequestDestroy
-static void GuiRequestDestroy( _Inout_ PGUI_REQUEST pGui ) {
+static void GuiRequestDestroy( _In_opt_ PGUI_REQUEST pGui ) {
 	if (!pGui) return;
 	MyFree( pGui->qsel.pszTag );
 	MyFree( pGui->pszReturn );

@@ -564,7 +564,7 @@ LONG MyReplaceMem(
 
 
 //++ MyReplaceKeywordsA
-LONG MyReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_ LPVOID pReplaceParam )
+LONG MyReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKeywordStart, _In_ CHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_A fnReplace, _In_opt_ LPVOID pReplaceParam )
 {
 	LPSTR pszBuf = NULL, psz1, psz2;
 	LONG iStrLen;
@@ -615,7 +615,7 @@ LONG MyReplaceKeywordsA( _Inout_ LPSTR pszStr, _In_ LONG iMaxLen, _In_ CHAR chKe
 
 
 //++ MyReplaceKeywordsW
-LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_ LPVOID pReplaceParam )
+LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR chKeywordStart, _In_ WCHAR chKeywordEnd, _In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_opt_ LPVOID pReplaceParam )
 {
 	LPWSTR pszBuf = NULL, psz1, psz2;
 	LONG iStrLen;
@@ -717,6 +717,7 @@ LONG MyStrReplace(
 //++ MyFormatBytes
 void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen )
 {
+	if (pszStr) pszStr[0] = 0;
 	if (pszStr && iStrMaxLen) {
 		pszStr[0] = 0;
 		if (iBytes >= 1024ULL * 1024 * 1024 * 1024) {
@@ -737,6 +738,7 @@ void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMax
 //++ MyFormatMilliseconds
 void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen )
 {
+	if (pszStr) pszStr[0] = 0;
 	if (pszStr && iStrMaxLen) {
 
 		ULONG iDays, iHours, iMins, iSecs;

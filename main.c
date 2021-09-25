@@ -232,6 +232,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
+	if (!extra) return;
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 

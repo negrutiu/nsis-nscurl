@@ -245,7 +245,7 @@ ULONG CurlExtractCacert()
 	assert( g_variables != NULL );
 
 	{
-		TCHAR szPem[MAX_PATH];
+		TCHAR szPem[MAX_PATH] = {0};
 		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
 		if (!MyFileExists( szPem )) {
 
@@ -320,7 +320,6 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			// The string may contain multiple headers delimited by \r\n
 			LPTSTR psz1, psz2;
 			LPSTR pszA;
-			UNREFERENCED_PARAMETER( pszA );
 			for (psz1 = pszParam; *psz1; ) {
 				for (; (*psz1 == _T('\r')) || (*psz1 == _T('\n')); psz1++);			/// Skip \r\n
 				for (psz2 = psz1; (*psz2 != _T('\0')) && (*psz2 != _T('\r')) && (*psz2 != _T('\n')); psz2++);		/// Find next \r\n\0
@@ -866,7 +865,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	}
 
 	// HTTP GET
-	bGET = StringIsEmpty( pReq->pszMethod ) || (lstrcmpiA( pReq->pszMethod, "GET" ) == 0);
+	bGET = !pReq->pszMethod || StringIsEmpty( pReq->pszMethod ) || (lstrcmpiA( pReq->pszMethod, "GET" ) == 0);
 
 	// Extract "$PLUGINSDIR\cacert.pem" once
 	if (pReq->pszCacert == NULL)			/// pszCacert == NULL means embedded cacert.pem
@@ -1292,7 +1291,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 
 //+ [internal] CurlQueryKeywordCallback
-void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam)
+void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_opt_ PVOID pParam)
 {
 	// NOTE: pReq may be NULL
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;

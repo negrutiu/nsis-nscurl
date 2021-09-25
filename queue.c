@@ -327,7 +327,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 
 	#ifdef TRACE_ENABLED
 		{
-			TCHAR szErr[256];
+			TCHAR szErr[256] = {0};
 			CurlRequestFormatError( pReq, szErr, ARRAYSIZE( szErr ), NULL, NULL );
 			TRACE( _T( "%hs( Id:%u, Url:%hs ) = %s, %ums\n" ), "CurlTransfer", pReq->Queue.iId, pReq->pszURL, szErr, GetTickCount() - t0 );
 		}
@@ -414,7 +414,7 @@ void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats 
 
 
 //+ [internal] QueueQueryKeywordCallback
-void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_ PVOID pParam )
+void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG iMaxLen, _In_opt_ PVOID pParam )
 {
 	PQUEUE_SELECTION pSel = (PQUEUE_SELECTION)pParam;
 	QUEUE_STATS qs;
