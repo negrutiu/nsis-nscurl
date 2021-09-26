@@ -24,11 +24,11 @@ mklink /H _Package\x86-ansi\NScurl.dll				Release-mingw-x86-ansi\NScurl.dll
 mklink /H _Package\NScurl.Readme.htm				NScurl.Readme.htm
 mklink /H _Package\README.md						README.md
 mklink /H _Package\LICENSE.md						LICENSE.md
-mklink /H _Package\LICENSE.curl.md					LICENSE.curl.md
-mklink /H _Package\LICENSE.libcurl-devel.md			LICENSE.libcurl-devel.md
-mklink /H _Package\LICENSE.nghttp2.md				LICENSE.nghttp2.md
-mklink /H _Package\LICENSE.OpenSSL.md				LICENSE.OpenSSL.md
-mklink /H _Package\LICENSE.zlib.md					LICENSE.zlib.md
+mklink /H _Package\LICENSE.curl.md					libcurl-devel\src\curl\COPYING
+mklink /H _Package\LICENSE.libcurl-devel.md			libcurl-devel\LICENSE.md
+mklink /H _Package\LICENSE.nghttp2.md				libcurl-devel\src\nghttp2\COPYING
+mklink /H _Package\LICENSE.openssl.md				libcurl-devel\src\openssl\LICENSE
+mklink /H _Package\LICENSE.zlib.md					libcurl-devel\src\zlib\LICENSE
 
 pushd _Package
 "%Z7%" a "..\NScurl-%RCVER%.7z" * -r
