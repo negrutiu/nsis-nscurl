@@ -125,9 +125,9 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName );
 ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _Out_ LPTSTR szStringValue, _In_ UINT iStringValueLen );
 
 
-//+ MySaveResource
-// Export PE resource to file
-ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath );
+//+ MyQueryResource
+// Retrieve a const pointer to PE resource
+ULONG MyQueryResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _Out_ void **ppData, _Out_opt_ ULONG *piDataSize );
 
 
 //+ MyFormatBinaryHex

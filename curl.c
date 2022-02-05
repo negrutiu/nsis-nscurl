@@ -234,28 +234,20 @@ ULONG CurlInitializeLibcurl()
 }
 
 
-//++ CurlExtractCacert
-//?  Extract the built-in certificate storage to "$PLUGINSDIR\cacert.pem"
-//?  The function does nothing if the file already exists
-ULONG CurlExtractCacert()
+//++ CurlBuiltinCacert
+//?  Retrieve the built-in cacert.pem
+ULONG CurlBuiltinCacert( _Out_ struct curl_blob *blob )
 {
 	ULONG e = ERROR_SUCCESS;
+	ULONG len = 0;
 
 	assert( g_hInst != NULL );
 	assert( g_variables != NULL );
 
-	{
-		TCHAR szPem[MAX_PATH] = {0};
-		_sntprintf( szPem, ARRAYSIZE( szPem ), _T( "%s\\cacert.pem" ), getuservariableEx( INST_PLUGINSDIR ) );
-		if (!MyFileExists( szPem )) {
-
-			EnterCriticalSection( &g_Curl.csLock );
-			
-			if (!MyFileExists( szPem )) 		/// Verify again
-				e = MySaveResource( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, szPem );
-			
-			LeaveCriticalSection( &g_Curl.csLock );
-		}
+	e = MyQueryResource( (HMODULE)g_hInst, _T( "cacert.pem" ), MAKEINTRESOURCE( 1 ), 1033, &blob->data, &len );
+	if (e == ERROR_SUCCESS) {
+		blob->len = len;
+		blob->flags = CURL_BLOB_NOCOPY;
 	}
 
 	return e;
@@ -867,10 +859,6 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	// HTTP GET
 	bGET = !pReq->pszMethod || StringIsEmpty( pReq->pszMethod ) || (lstrcmpiA( pReq->pszMethod, "GET" ) == 0);
 
-	// Extract "$PLUGINSDIR\cacert.pem" once
-	if (pReq->pszCacert == NULL)			/// pszCacert == NULL means embedded cacert.pem
-		CurlExtractCacert();
-
 	// Input file
 	if (pReq->pszMethod && (
 		lstrcmpiA( pReq->pszMethod, "PUT" ) == 0 ||
@@ -1005,14 +993,11 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
 				// cacert.pem
 				if (pReq->pszCacert == NULL) {
-					CHAR szCacert[MAX_PATH];
-				#if _UNICODE
-					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%ls\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-				#else
-					_snprintf( szCacert, ARRAYSIZE( szCacert ), "%s\\cacert.pem", getuservariableEx( INST_PLUGINSDIR ) );
-				#endif
-					curl_easy_setopt( curl, CURLOPT_CAINFO, szCacert );		/// Embedded cacert.pem
-					assert( MyFileExistsA( szCacert ) );
+					struct curl_blob cacert;
+					CurlBuiltinCacert( &cacert );
+					assert( cacert.data );
+					assert( cacert.len > 0 );
+					curl_easy_setopt( curl, CURLOPT_CAINFO_BLOB, &cacert );		/// Embedded cacert.pem
 				} else if (!StringIsEmpty( pReq->pszCacert )) {
 					curl_easy_setopt( curl, CURLOPT_CAINFO, pReq->pszCacert );	/// Custom cacert.pem
 					assert( MyFileExistsA( pReq->pszCacert ) );

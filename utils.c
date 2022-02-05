@@ -408,15 +408,19 @@ ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _
 }
 
 
-//++ MySaveResource
-ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _In_ LPCTSTR pszOutPath )
+//++ MyQueryResource
+ULONG MyQueryResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _Out_ void **ppData, _Out_opt_ ULONG *piDataSize )
 {
 	ULONG e = ERROR_SUCCESS;
 	HRSRC hRes = NULL;
 
-	if (!pszResType || !pszResName || !pszOutPath || !*pszOutPath)
+	if (ppData)
+		*ppData = NULL;
+	if (piDataSize)
+		*piDataSize = 0;
+	if (!pszResType || !pszResName || !ppData)
 		return ERROR_INVALID_PARAMETER;
-	
+
 	hRes = FindResourceEx( hMod, pszResType, pszResName, iResLang );
 	if (hRes) {
 		ULONG iResSize = SizeofResource( hMod, hRes );
@@ -424,18 +428,10 @@ ULONG MySaveResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR p
 		if (hMem) {
 			LPVOID pRes = LockResource( hMem );
 			if (pRes) {
-				HANDLE h;
-				MyCreateDirectory( pszOutPath, TRUE );
-				h = CreateFile( pszOutPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-				if (h != INVALID_HANDLE_VALUE) {
-					ULONG iWritten;
-					if (WriteFile( h, pRes, iResSize, &iWritten, NULL )) {
-						// OK
-					} else {
-						e = GetLastError();
-					}
-					CloseHandle( h );
-				}
+				// NOTE: The pointer returned by LockResource is valid until the module containing the resource is unloaded
+				*ppData = pRes;
+				if (piDataSize)
+					*piDataSize = iResSize;
 			} else {
 				e = ERROR_INVALID_DATA;
 			}
