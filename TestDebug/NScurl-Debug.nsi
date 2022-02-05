@@ -29,6 +29,7 @@ Var /global DLL
 !insertmacro GetParameters
 
 !define /ifndef NULL 0
+!define TEST_FILE "$SYSDIR\lz32.dll"		; ...random file that exists in every Windows build
 
 
 # GUI settings
@@ -137,7 +138,7 @@ Section "Background (50 * put)"
 		Push /TAG
 		Push /INSIST
 		Push /BACKGROUND
-		Push "$PLUGINSDIR\cacert.pem"
+		Push "${TEST_FILE}"
 		Push "(file)"
 		Push /DATA
 		Push "Memory"
@@ -315,16 +316,16 @@ Section "httpbin.org/post (multipart/form-data)"
 	Push "type=application/octet-stream"
 	Push "/POST"
 
-	Push "$PLUGINSDIR\cacert.pem"
+	Push "${TEST_FILE}"
 	Push "(file)"
-	Push "cacert2.pem"
-	Push "filename=cacert2.pem"
+	Push "test2.bin"
+	Push "filename=test2.bin"
 	Push "/POST"
 
-	Push "$PLUGINSDIR\cacert.pem"
+	Push "${TEST_FILE}"
 	Push "(file)"
-	Push "cacert.pem"
-	Push "filename=cacert.pem"
+	Push "test.bin"
+	Push "filename=test.bin"
 	Push "/POST"
 
 	Push "<Your password here>"

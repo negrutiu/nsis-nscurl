@@ -21,6 +21,7 @@ Target ${_TARGET_}
 !include "Sections.nsh"
 
 !define /ifndef NULL 0
+!define TEST_FILE "$SYSDIR\lz32.dll"		; ...random file that exists in every Windows build
 
 # NScurl.dll development location
 !ifdef DEVEL
@@ -107,7 +108,7 @@ Section "Background (50 * put)"
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "$PLUGINSDIR\cacert.pem" /BACKGROUND /INSIST /TAG "parallels" /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "${TEST_FILE}" /BACKGROUND /INSIST /TAG "parallels" /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -210,8 +211,8 @@ Section "httpbin.org/post (multipart/form-data)"
 		/POST "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
 		/POST "Name" "<Your name here>" \
 		/POST "Password" "<Your password here>" \
-		/POST "filename=cacert.pem" "cacert.pem" (file) "$PLUGINSDIR\cacert.pem" \
-		/POST "filename=cacert2.pem" "cacert2.pem" (file) "$PLUGINSDIR\cacert.pem" \
+		/POST "filename=test.bin" "test.bin" (file) "${TEST_FILE}" \
+		/POST "filename=test2.bin" "test2.bin" (file) "${TEST_FILE}" \
 		/POST "type=application/octet-stream" "Binary" (memory) $R0 $R1 \
 		/INSIST \
 		/REFERER "https://test.com" \
