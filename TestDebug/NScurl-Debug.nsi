@@ -277,6 +277,7 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	Push 307200			; 300 * 1024
 	Push "/SPEEDCAP"
 	Push "/INSIST"
+	Push "/RESUME"
 	Push "/CANCEL"
 	Push "${FILE}"
 	Push "${LINK}"

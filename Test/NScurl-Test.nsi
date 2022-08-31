@@ -183,7 +183,7 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_SpeedCap.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http get "${LINK}" "${FILE}" /CANCEL /INSIST /SPEEDCAP 307200 /Zone.Identifier /END
+	NScurl::http get "${LINK}" "${FILE}" /RESUME /CANCEL /INSIST /SPEEDCAP 307200 /Zone.Identifier /END
 	Pop $0
 	DetailPrint "Status: $0"
 
