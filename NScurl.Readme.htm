@@ -30,7 +30,7 @@ It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> w
 <h3><a name="features">Features</h3>
 <ul>
 <li>Modern: supports modern protocols and ciphers including HTTP/2, TLS1.3, etc.
-<li>Compatible: works well on Windows NT4, Windows 10 and everything in between
+<li>Compatible: works well on Windows NT4, Windows 11 and everything in between
 <li>Multi-threaded: download/upload multiple files in parallel
 <li>Asynchronous: start multiple background transfers, check on them later
 <li>Insistent: multiple attempts to connect and resume interrupted transfers
@@ -92,25 +92,25 @@ If <b>/RETURN</b> is specified, the function returns a custom value depending on
 
 <div style="background-color: #dddddd">
 <b># Quick transfer (with Cancel and resume)</b><br>
-<a href="#http">NScurl::http</a> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /END<br>
+<a href="#http">NScurl::http</a> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME <a href="#end">/END</a><br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
 <div style="background-color: #dddddd">
 <b># Quick transfer (with custom GET parameters and custom request headers)</b><br>
-<a href="#http">NScurl::http</a> GET "https://httpbin.org/get?param1=value1&amp;param2=value2" "$TEMP\httpbin_get.json" /HEADER "Header1: Value1" /HEADER "Header2: Value2" /END<br>
+<a href="#http">NScurl::http</a> GET "https://httpbin.org/get?param1=value1&amp;param2=value2" "$TEMP\httpbin_get.json" /HEADER "Header1: Value1" /HEADER "Header2: Value2" <a href="#end">/END</a><br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
 <div style="background-color: #dddddd">
 <b># POST json file</b><br>
-<a href="#http">NScurl::http</a> POST "https://httpbin.org/post" Memory /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /END<br>
+<a href="#http">NScurl::http</a> POST "https://httpbin.org/post" Memory /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' <a href="#end">/END</a><br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
 <div style="background-color: #dddddd">
 <b># POST json file (as multi-part form)</b><br>
-<a href="#http">NScurl::http</a> POST "https://httpbin.org/post" Memory /POST "User" "My user name" /POST "Password" "My password" /POST FILENAME=maiden.json TYPE=application/json "Details" '{ "number_of_the_beast" : 666 }' /END<br>
+<a href="#http">NScurl::http</a> POST "https://httpbin.org/post" Memory /POST "User" "My user name" /POST "Password" "My password" /POST FILENAME=maiden.json TYPE=application/json "Details" '{ "number_of_the_beast" : 666 }' <a href="#end">/END</a><br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 
@@ -259,7 +259,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/DATA [-string|file|memory] &lt;data&gt;</td>
+	<td><a name="data">/DATA</a> [-string|file|memory] &lt;data&gt;</td>
 	<td>Upload local data to the server.<br>
 	<br>
 	The data is read either from a file or directly from memory.<br>
@@ -267,10 +267,10 @@ Pop $0 ; Status text ("OK" for success)<br>
 	If unspecified, the function tries to guess whether <b>data</b> represents a file name or a generic string.<br>
 	<br>
 	<b>EXAMPLES:</b><br>
-	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>"Send generic string"</b> /END<br>
-	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>"C:\dir\file.dat"</b> /END<br>
-	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>-string "C:\dir\file.dat"</b> /END  /* Upload the file path itself <u>as string</u> */<br>
-	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>-memory 0xdeadbeef 256</b> /END<br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>"Send generic string"</b> <a href="#end">/END</a><br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>"C:\dir\file.dat"</b> <a href="#end">/END</a><br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>-string "C:\dir\file.dat"</b> <a href="#end">/END</a>  /* Upload the file path itself <u>as string</u> */<br>
+	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>-memory 0xdeadbeef 256</b> <a href="#end">/END</a><br>
 	<br>
 	<b>NOTE:</b> The <b>-memory</b> hint must be followed by two parameters: address and size.<br>
 	<b>NOTE:</b> Although optional, it's recommended that you always specify the <b>-string|file|memory</b> hint.<br>
@@ -302,10 +302,10 @@ Pop $0 ; Status text ("OK" for success)<br>
 		/POST "InfoData" <b>-file "$TEMP\MyDetail.json"</b> /* Upload the file content */ \<br>
 		/POST "Image" FILENAME=MyImage.jpg TYPE=image/jpeg <b>"$TEMP\MyImage.jpg"</b> \<br>
 		/POST "Details" FILENAME=MyDetails.json TYPE=application/json <b>'{ "number_of_the_beast" : 666 }'</b> \<br>
-		/END<br>
+		<a href="#end">/END</a><br>
 	</p>
 	<br>
-	<b>NOTE:</b> See /DATA to learn how <b>data</b> is interpreted.<br>
+	<b>NOTE:</b> See <a href="#data">/DATA</a> to learn how <b>data</b> is interpreted.<br>
 	<b>NOTE:</b> Multiple /POST parameters are accepted. All form parts will be sent as one multipart form.<br>
 	<b>NOTE:</b> Requires POST method. Ignored otherwise.<br>
 	</td>
@@ -421,7 +421,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td>/END</td>
+	<td><a name="end">/END</a></td>
 	<td>Must always conclude the list of parameters.<br>
 	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
@@ -445,7 +445,7 @@ This function will replace <a href="#keywords">query keywords</a> inside <b>quer
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
 <i>; Query information about a specific HTTP request</i><br>
-<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" /END<br>
+<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" <a href="#end">/END</a><br>
 Pop $0 ; <i>Transfer ID</i><br>
 <b><a href="#query">NScurl::query</a></b> /ID $0 "Status: @ERROR@, Headers: @RECVHEADERS@"<br>
 Pop $1 ; <i>Server response headers</i>
@@ -807,7 +807,7 @@ You can either wait for a specific transfer, or wait for multiple transfers in o
 <h3>Example:</h3>
 <div style="background-color: #dddddd">
 <b># Start a background transfer</b><br>
-<b><a href="#http">NScurl::http</a></b> GET "${URL}" "${FILE}" <b>/BACKGROUND</b> /END<br>
+<b><a href="#http">NScurl::http</a></b> GET "${URL}" "${FILE}" <b>/BACKGROUND</b> <a href="#end">/END</a><br>
 Pop $0	; Transfer ID<br>
 <br>
 <b># ...do some useful stuff...</b><br>
@@ -986,7 +986,7 @@ Pop $0	; Returns the original string<br>
 <h3>Description:</h3>
 Compute MD5 / SHA1 / SHA256 hashes.<br>
 The data can be read either from a file or directly from memory.<br>
-<b>NOTE:</b> See /DATA to learn how <b>data</b> is interpreted.<br>
+<b>NOTE:</b> See <a href="#data">/DATA</a> to learn how <b>data</b> is interpreted.<br>
 
 <h3>Return value:</h3>
 The hash (formatted as hex string) is pushed to the stack.<br>
