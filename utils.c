@@ -732,7 +732,7 @@ void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMax
 
 
 //++ MyFormatMilliseconds
-void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen )
+void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOL bUseInfinitySign )
 {
 	if (pszStr) pszStr[0] = 0;
 	if (pszStr && iStrMaxLen) {
@@ -752,7 +752,20 @@ void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG
 		iSecs = (ULONG)(iMillis / 1000);
 		iMillis %= 1000;
 
-		if (iDays > 0) {
+		if (iMillis < 0 || iDays > 30) {
+#ifdef _UNICODE
+#pragma warning(suppress: 4996)
+			DWORD winVer = GetVersion();
+			BYTE majorVer = LOBYTE(LOWORD(winVer)), minorVer = HIBYTE(LOWORD(winVer));
+			if (majorVer >= 6 && bUseInfinitySign) {
+				lstrcpyn(pszStr, _T("\x221e"), (int)iStrMaxLen);  // infinity sign
+			} else {
+				lstrcpyn(pszStr, _T("--:--"), (int)iStrMaxLen);
+			}
+#else
+			lstrcpyn(pszStr, _T("--:--"), (int)iStrMaxLen);
+#endif
+		} else if (iDays > 0) {
 			_sntprintf( pszStr, iStrMaxLen, _T( "%u.%02u:%02u:%02u" ), iDays, iHours, iMins, iSecs );
 		} else if (iHours > 0) {
 			_sntprintf( pszStr, iStrMaxLen, _T( "%02u:%02u:%02u" ), iHours, iMins, iSecs );
@@ -764,7 +777,7 @@ void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG
 
 
 //++ MyStringToMilliseconds
-UINT_PTR  MyStringToMilliseconds( _In_ LPCTSTR pszStr )
+UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr )
 {
 	UINT_PTR  ms = 0;
 	if (pszStr && *pszStr) {

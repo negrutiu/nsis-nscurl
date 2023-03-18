@@ -715,8 +715,8 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
 {
 	PCURL_REQUEST pReq = (PCURL_REQUEST)clientp;
-	curl_off_t iSpeed;
-	curl_off_t iTimeElapsed, iTimeRemaining = 0;
+	curl_off_t iSpeed = 0;
+	curl_off_t iTimeElapsed = 0, iTimeRemaining = 0;
 
 	assert( pReq && pReq->Runtime.pCurl );
 
@@ -1208,8 +1208,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 					// Finished?
 					CurlRequestFormatError( pReq, NULL, 0, &bSuccess, &e );
-					TRACE(_T("[%hs:%d] curl_easy_perform() = {win32:0x%x \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%us/%us, insist:%s\n"),
-						__FUNCTION__, __LINE__,
+					TRACE(_T("curl_easy_perform() = {win32:0x%x \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%us/%us, insist:%s\n"),
 						pReq->Error.iWin32, pReq->Error.pszWin32 ? pReq->Error.pszWin32 : _T(""),
 						pReq->Error.iCurl, pReq->Error.pszCurl ? pReq->Error.pszCurl : "",
 						pReq->Error.iHttp, pReq->Error.pszHttp ? pReq->Error.pszHttp : "",
@@ -1420,11 +1419,11 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED_B@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iSpeed );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED@" ) ) == 0) {
-			MyFormatMilliseconds( pReq->Runtime.iTimeElapsed, pszKeyword, iMaxLen );
+			MyFormatMilliseconds( pReq->Runtime.iTimeElapsed, pszKeyword, iMaxLen, FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED_MS@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeElapsed );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING@" ) ) == 0) {
-			MyFormatMilliseconds( pReq->Runtime.iTimeRemaining, pszKeyword, iMaxLen );
+			MyFormatMilliseconds( pReq->Runtime.iTimeRemaining, pszKeyword, iMaxLen, TRUE );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING_MS@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeRemaining );
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS@" ) ) == 0) {

@@ -172,7 +172,7 @@ void MyFormatBytes( _In_ ULONG64 iBytes, _Out_ LPTSTR pszStr, _In_ ULONG iStrMax
 
 
 //+ MyFormatMilliseconds
-void MyFormatMilliseconds( _In_ ULONG64 iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen );
+void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ ULONG iStrMaxLen, _In_ BOOL bUseInfinitySign );
 
 
 //+ MyStringToMilliseconds
