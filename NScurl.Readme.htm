@@ -33,7 +33,7 @@ It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> w
 <li>Compatible: works well on Windows NT4, Windows 11 and everything in between
 <li>Multi-threaded: download/upload multiple files in parallel
 <li>Asynchronous: start multiple background transfers, check on them later
-<li>Insistent: multiple attempts to connect and resume interrupted transfers
+<li>Insistent: multiple attempts to connect and resume failed/dropped transfers
 <li>NSIS aware: download files at any installation stage (from .onInit, from Sections, from custom pages, silent installers, etc)
 <li>Verbose: plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc)
 <li>Supports HTTP and TLS authentication
@@ -42,7 +42,7 @@ It's implemented on top of <a href="https://curl.haxx.se/libcurl/">libcurl</a> w
 <li>Supports custom HTTP headers and data
 <li>Supports proxy servers (both authenticated and open)
 <li>Supports files larger than 4GB
-<li>Can download remote content to RAM instead of a file
+<li>Can download remote content directly to Memory (NSIS string) instead of file
 <li>Maaany more...
 </ul>
 
@@ -80,13 +80,14 @@ tr:nth-child(even) {
 This function creates a new HTTP request.<br>
 Requests are added to the internal transfer queue and wait there until a worker thread becomes available.<br>
 Completed transfers remain in the queue and can be <a href="#query">queried</a> at any time.<br>
-By default the function waits (synchronously) for the new request to complete, unless /BACKGROUND parameter is used.<br>
+By default the function waits synchronously for the new transfer to complete.<br>
+The function returns the transfer ID immediately if <b>/BACKGROUND</b> parameter is used.<br>
 
 <h3>Return value:</h3>
 The return value is pushed to the stack.<br>
-By default, the function returns the transfer status (aka "@ERROR@" query <a href="#keywords">keyword</a>). <b>"OK" for success.</b><br>
-If <b>/BACKGROUND</b> is specified, the function returns an unique transfer ID.<br>
-If <b>/RETURN</b> is specified, the function returns a custom value depending on the specified query <a href="#keywords">keyword</a>.<br>
+By default, the function returns the transfer status (aka "@ERROR@" <a href="#keywords">query keyword</a>) (e.g. <b>"OK"</b> for success)<br>
+If <b>/BACKGROUND</b> is specified, the function returns an unique transfer ID that can later be passed to <a href="#query">NScurl::query</a>.<br>
+If <b>/RETURN "query_string"</b> is specified, the function returns the specified string with replaced <a href="#keywords">query keywords</a>.<br>
 
 <h3>Examples:</h3>
 
@@ -132,8 +133,8 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>filename|MEMORY</td>
 	<td>Transfer destination.<br>
-	If "MEMORY" is specified the remote content is downloaded to RAM. It can be retrieved later using the @RECVDATA@ <a href="#keywords">query keyword</a>.<br>
-	<b>NOTE:</b> The data downloaded to MEMORY will be truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build). If you expect larger data, it's recommended to download it to a file on disk.<br>
+	If <b>MEMORY</b> is specified the remote content is downloaded directly to RAM. It can be retrieved later using the <b>@RECVDATA@</b> <a href="#keywords">query keyword</a>.<br>
+	<b>NOTE:</b> The data downloaded to MEMORY is truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build). If you expect larger data, it's recommended to download it to a file on disk.<br>
 	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
@@ -156,9 +157,9 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/DOH &lt;url&gt;</td>
 	<td>Specify a <a href="https://en.wikipedia.org/wiki/DNS_over_HTTPS">DNS over HTTPS</a> server to resolve DNS requests securely.<br>
 	<b>NOTE:</b> This DoH server is used for the current transfer only. It's not a global setting.<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
-	<b>EXAMPLE:</b> [...] /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
+	<b>EXAMPLE:</b> /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
+	<b>EXAMPLE:</b> /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
 	</td>
 </tr>
 <tr>
@@ -166,8 +167,8 @@ Pop $0 ; Status text ("OK" for success)<br>
 	/CONNECTTIMEOUT time<br>
 	</td>
 	<td>Connect timeout (default: 5m)<br>
-	This value applies to a single connection attempt.<br>
-	Unless you also specify <b>/INSIST</b>, NScurl will only try to connect once.<br>
+	This value applies to each re/connection attempt.<br>
+	Unless you also specify <b>/INSIST</b> NScurl will abort after the first failed connection.<br>
 	<br>
 	<b>NOTE:</b> The <b>time</b> value represents the timeout period in milliseconds. The "s", "m" or "h" suffixes are accepted.<br>
 	<b>EXAMPLES:</b> /TIMEOUT 5000, /TIMEOUT 5s, /TIMEOUT 15m, /TIMEOUT 24h<br>
@@ -182,11 +183,11 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/LOWSPEEDLIMIT bps time</td>
-	<td>Low speed limit (default: none)<br>
-	Aborts the transfer if the transfer speed falls below <b>bps</b> for a period of <b>time</b>.<br>
+	<td>Aborts the transfer if the transfer speed falls below <b>bps</b> for a period of <b>time</b>.<br>
+    Default: <b>0bps for 1m</b>, meaning that the current connection gets dropped after 1m of inactivity.<br>
 	See <b>/TIMEOUT</b> for <b>time</b> examples.<br>
 	<br>
-	<b>EXAMPLE:</b> [...] /LOWSPEEDLIMIT 204800 10s [...]<br>
+	<b>EXAMPLE:</b> /LOWSPEEDLIMIT 204800 10s<br>
 	</td>
 </tr>
 <tr>
@@ -197,15 +198,15 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/INSIST</td>
-	<td>NScurl will try more aggressively to connect to the webserver.<br>
-	It will keep trying to connect until a timeout is reached, even if critical errors occur (e.g. no network connection, server down, etc.)<br>
-	In addition NScurl will try to re-establish dropped <b>HTTP GET</b> transfers and resume them.<br>
-	By default any error will abort the transfer.<br>
+	<td>NScurl tries to re/connect to the webserver more aggressively.<br>
+	It will keep trying to connect until a timeout is reached, even if critical errors occur (e.g. no network connectivity, webserver down, etc.)<br>
+	In addition, NScurl will try to re-establish dropped <b>HTTP GET</b> transfers and optionally <b>/RESUME</b> them.<br>
+	Without <b>/INSIST</B> the transfer is cancelled at the first encountered error.<br>
 	</td>
 </tr>
 <tr>
 	<td>/RESUME</td>
-	<td>Resume the transfer if (part of) the destination file already exists.<br>
+	<td>Resume the transfer if (part of) the destination file already exists locally.<br>
 	By default the destination is overwritten and the transfer starts over.</td>
 </tr>
 <tr>
@@ -346,7 +347,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 </tr>
 <tr>
 	<td>/TAG tag</td>
-	<td>Assign a tag to the new HTTP request.<br>
+	<td>Assign a tag (aka group) to the new HTTP request.<br>
 	Multiple transfers can be grouped together under the same tag.<br>
 	<b>NOTE:</b> Tags are custom strings with no character restrictions.<br>
 	<br>
@@ -418,6 +419,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 	<td>Overwrite the default (English) UI strings.<br>
 	Useful to create localized installers.<br>
+	All strings may contain <a href="#keywords">query keywords</a>.<br>
 	</td>
 </tr>
 <tr>
@@ -434,9 +436,9 @@ Pop $0 ; Status text ("OK" for success)<br>
 <h2><a name="query">NScurl::query</a> [/ID id] [/TAG tag] "query_string"</h2>
 
 <h3>Description:</h3>
-Query information.<br>
-This function will replace <a href="#keywords">query keywords</a> inside <b>query_string</b> with real data.<br>
-<b>Transfer-specific keywords</b> are only available when a single transfer is matched (See /ID and /TAG).</br>
+Query information about a transfer ID.<br>
+The function replaces <a href="#keywords">query keywords</a> inside <b>query_string</b> with real runtime data.<br>
+<b>Transfer-specific keywords</b> are only available when a single transfer is matched (See /ID vs. /TAG).</br>
 <b>Global keywords</b> are always available.<br>
 
 <h3>Return value:</h3>
@@ -447,6 +449,7 @@ This function will replace <a href="#keywords">query keywords</a> inside <b>quer
 <i>; Query information about a specific HTTP request</i><br>
 <b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" <a href="#end">/END</a><br>
 Pop $0 ; <i>Transfer ID</i><br>
+<br>
 <b><a href="#query">NScurl::query</a></b> /ID $0 "Status: @ERROR@, Headers: @RECVHEADERS@"<br>
 Pop $1 ; <i>Server response headers</i>
 </div>
@@ -490,14 +493,13 @@ Pop $0
 <tr>
 	<td>@ID@</td>
 	<td>Unique transfer ID<br>
-	Value: (Integer) &gt;= 1<br>
+	Value: Integer number &gt;= 1<br>
 	Useful for <a href="#http">NScurl::http</a> /return "@ID@"
 	</td>
 </tr>
 <tr>
 	<td>@STATUS@</td>
-	<td>Transfer status.<br>
-	Value: (String) One of "Waiting", "Running" or "Complete"
+	<td>Transfer status: <b>Waiting</b>, <b>Running</b> or <b>Complete</b>
 	</td>
 </tr>
 <tr>
@@ -518,7 +520,7 @@ Pop $0
 <tr>
 	<td>@OUT@</td>
 	<td>Transfer destination.<br>
-	Can be a file path, or the special term "Memory".
+	Can be a local file path or <b>Memory</b>.
 	</td>
 </tr>
 <tr>
@@ -546,8 +548,8 @@ Pop $0
 	@FILESIZE_B@<br>
 	</td>
 	<td>Remote file size extracted from <b>Content-Length</b> HTTP header.<br>
-	Value: (String) Nicely formatted file size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)<br>
-	<b>NOTE:</b> It may be unknown during the transfer. Some servers don't report this value.<br>
+	Value: Nicely formatted file size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)<br>
+	<b>NOTE:</b> Some servers don't provide this information.<br>
 	<b>NOTE:</b> @FILESIZE_B@ returns the same value in bytes.<br>
 	</td>
 </tr>
@@ -556,15 +558,15 @@ Pop $0
 	@XFERSIZE_B@<br>
 	</td>
 	<td>The amount of data actually transferred.<br>
-	<b>NOTE:</b> It's usually the same value as @FILESIZE@, but it can be smaller if the transfer got cancelled.<br>
+	<b>NOTE:</b> It's usually the same value as @FILESIZE@, but it can be smaller for failed/cancelled transfers.<br>
 	<b>NOTE:</b> @XFERSIZE_B@ returns the same value in bytes.<br>
 	</td>
 </tr>
 <tr>
 	<td>@PERCENT@</td>
 	<td>Transfer progress.<br>
-	Value: (Integer) 0-100, or -1 if the percent is unknown.<br>
-	<b>NOTE:</b> The percent might be unknown if the webserver doesn't send Content-Length header.
+	Value: Integer number <b>0-100</b>, or <b>-1</b> if the percent is unknown.<br>
+	<b>NOTE:</b> The percent is unknown if the webserver doesn't send the <b>Content-Length</b> header.
 	</td>
 </tr>
 <tr>
@@ -588,30 +590,30 @@ Pop $0
 	<td>@TIMEREMAINING@<br>
 	@TIMEREMAINING_MS@<br>
 	</td>
-	<td>The estimated time required by this transfer to complete. Formatted as [d.][hh:]mm:ss<br>
+	<td>The estimated time required for this transfer to complete. Formatted as [d.][hh:]mm:ss<br>
 	<b>NOTE:</b> @TIMEREMAINING_MS@ returns the same value in milliseconds.<br>
 	</td>
 </tr>
 <tr>
 	<td>@SENTHEADERS@<br>
-	@SENTHEADERS:Header-Name@<br>
 	@SENTHEADERS_RAW@<br>
+	@SENTHEADERS:Header-Name@<br>
 	</td>
 	<td>HTTP request headers.<br>
 	Some special characters such as \t, \r, \n are replaced by their string representation "\t", "\r", "\n"<br>
-	<b>NOTE:</b> @SENTHEADERS:Header-Name@ extracts the value of a specific header.<br>
 	<b>NOTE:</b> @SENTHEADERS_RAW@ returns the same value with no characters replaced.<br>
+	<b>NOTE:</b> @SENTHEADERS:Header-Name@ returns the value of a specific header. (e.g. "@SENTHEADERS:<b>Accept-Encoding</b>@")<br>
 	</td>
 </tr>
 <tr>
 	<td>@RECVHEADERS@<br>
-	@RECVHEADERS:Header-Name@<br>
 	@RECVHEADERS_RAW@<br>
+	@RECVHEADERS:Header-Name@<br>
 	</td>
 	<td>HTTP response headers.<br>
 	Some special characters such as \t, \r, \n are replaced by their string representation "\t", "\r", "\n"<br>
-	<b>NOTE:</b> @RECVHEADERS:Header-Name@ extracts the value of a specific header.<br>
 	<b>NOTE:</b> @RECVHEADERS_RAW@ returns the same value with no characters replaced.<br>
+	<b>NOTE:</b> @RECVHEADERS:Header-Name@ returns the value of a specific header. (e.g. "@SENTHEADERS:<b>Content-Type</b>@")<br>
 	</td>
 </tr>
 <tr>
@@ -641,13 +643,13 @@ Pop $0
 	<td>@ERRORCODE@</td>
 	<td>The numeric status code.<br>
 	It can be either an HTTP status code, a libcurl error code, or a Win32 error code.<br>
-	Value: (Integer) 200, 206, 404, 0x2a, etc.<br>
+	Value: 200, 206, 404, 0x2a, etc.<br>
 	</td>
 </tr>
 <tr>
 	<td>@ERRORTYPE@</td>
 	<td>Returns @ERRORCODE@ error type.<br>
-	Value: (String) "win32", "curl" or "http"<br>
+	Value: <b>win32</b>, <b>curl</b> or <b>http</b><br>
 	</td>
 </tr>
 <tr>
@@ -670,19 +672,19 @@ Pop $0
 <tr>
 	<td>@PLUGINVERSION@</td>
 	<td>Plugin's version.<br>
-	Returns the "FileVersion" value from Version Information resource block.<br>
+	Returns the <b>FileVersion</b> value from Version Information resource block.<br>
 	</td>
 </tr>
 <tr>
 	<td>@PLUGINAUTHOR@</td>
 	<td>Author's name.<br>
-	Returns the "CompanyName" value from Version Information resource block.<br>
+	Returns the <b>CompanyName</b> value from Version Information resource block.<br>
 	</td>
 </tr>
 <tr>
 	<td>@PLUGINWEB@</td>
 	<td>Project's website.<br>
-	Returns the "LegalTrademarks" value from Version Information resource block.<br>
+	Returns the <b>LegalTrademarks</b> value from Version Information resource block.<br>
 	</td>
 </tr>
 <tr>
@@ -713,32 +715,32 @@ Pop $0
 <tr>
 	<td>@TOTALCOUNT@</td>
 	<td>The number of HTTP requests in the queue.<br>
-	Includes all "Waiting", "Running" and "Complete" requests.<br>
+	Includes all <b>Waiting</b>, <b>Running</b> and <b>Complete</b> requests.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TOTALWAITING@</td>
-	<td>The number of "Waiting" requests in the queue.<br>
+	<td>The number of <b>Waiting</b> requests in the queue.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TOTALRUNNING@</td>
-	<td>The number of "Running" requests in the queue.<br>
+	<td>The number of <b>Running</b> requests in the queue.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TOTALCOMPLETE@</td>
-	<td>The number of "Complete" requests in the queue.<br>
+	<td>The number of <b>Complete</b> requests in the queue.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TOTALACTIVE@</td>
-	<td>The number of "Waiting" + "Running" requests in the queue.<br>
+	<td>The number of <b>Waiting</b> + <b>Running</b> requests in the queue.<br>
 	</td>
 </tr>
 <tr>
 	<td>@TOTALSTARTED@</td>
-	<td>The number of "Running" + "Completed" requests in the queue.<br>
+	<td>The number of <b>Running</b> + <b>Completed</b> requests in the queue.<br>
 	</td>
 </tr>
 <tr>
@@ -750,7 +752,7 @@ Pop $0
 	<td>@TOTALSPEED@<br>
 	@TOTALSPEED_B@<br>
 	</td>
-	<td>The aggregated speed of "Running" transfers (e.g. "120 KB/s", "1.2 MB/s", etc.)<br>
+	<td>The aggregated speed of <b>Running</b> transfers (e.g. "120 KB/s", "1.2 MB/s", etc.)<br>
 	<b>NOTE:</b> @TOTALSPEED_B@ returns the same value in bytes/s.<br>
 	</td>
 </tr>
@@ -797,9 +799,8 @@ Pop $0
 <h2><a name="wait">NScurl::wait</a> [/ID id] [/TAG tag] &lt;params&gt; /END</h2>
 
 <h3>Description:</h3>
-Wait synchronously for <b>background</b> transfer(s) to complete.<br>
+Wait synchronously for one or more <b>background</b> transfers to complete.<br>
 Depending on parameters visual progress may or may not be displayed.<br>
-You can either wait for a specific transfer, or wait for multiple transfers in one go.<br>
 
 <h3>Return value:</h3>
 <b>None</b>
@@ -882,7 +883,7 @@ Enumerate HTTP transfers from the internal transfer queue.<br>
 
 <h3>Return value:</h3>
 Transfer ID's are pushed one by one to the stack.<br>
-An empty string ("") is pushed to the stack to mark the end of the enumeration.<br>
+An empty string ("") is pushed to mark the end of the enumeration.<br>
 
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
@@ -962,10 +963,11 @@ None.
 <a name="unescape">NScurl::unescape</a> &lt;string&gt;</h2>
 
 <h3>Description:</h3>
-Un/Escape URL strings (converts all illegal URLs characters to/from their %XX format).<br>
+Utility function to un/escape URL strings.<br>
+Illegal URLs characters are converted to/from their hexadecimal %XX code.<br>
 
 <h3>Return value:</h3>
-Un/Escaped string is pushed to the stack.<br>
+The un/escaped string is pushed to the stack.<br>
 
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
@@ -984,7 +986,7 @@ Pop $0	; Returns the original string<br>
 <a name="sha256">NScurl::sha256</a> [-string|file|memory] &lt;data&gt;</h2>
 
 <h3>Description:</h3>
-Compute MD5 / SHA1 / SHA256 hashes.<br>
+Utility functions that compute MD5 / SHA1 / SHA256 hashes.<br>
 The data can be read either from a file or directly from memory.<br>
 <b>NOTE:</b> See <a href="#data">/DATA</a> to learn how <b>data</b> is interpreted.<br>
 
