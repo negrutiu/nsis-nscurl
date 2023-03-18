@@ -90,6 +90,7 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 	LPTSTR psz;
 	IDATA data;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -125,6 +126,7 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	LPTSTR psz;
 	IDATA data;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -160,6 +162,7 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 	LPTSTR psz;
 	IDATA data;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -194,6 +197,7 @@ void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 {
 	LPTSTR psz, psz2;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -230,6 +234,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	PCURL_REQUEST pReq = NULL;
 	PGUI_REQUEST  pGui = NULL;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 	if (!extra) return;
@@ -310,6 +315,7 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	LPTSTR psz = NULL;
 	PGUI_REQUEST pGui = NULL;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -362,6 +368,7 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 	LPTSTR psz = NULL;
 	QUEUE_SELECTION qsel = {0};
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -409,6 +416,7 @@ void __cdecl cancel( HWND parent, int string_size, TCHAR *variables, stack_t **s
 	QUEUE_SELECTION qsel = {0};
 	BOOLEAN bRemove = FALSE;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -457,6 +465,7 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 	LPTSTR psz = NULL;
 	QUEUE_SELECTION qsel = {0};
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -525,6 +534,7 @@ void __cdecl escape( HWND parent, int string_size, TCHAR *variables, stack_t **s
 {
 	LPTSTR psz = NULL;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 
@@ -555,6 +565,7 @@ void __cdecl unescape( HWND parent, int string_size, TCHAR *variables, stack_t *
 {
 	LPTSTR psz = NULL;
 
+	EXDLL_VALID_PARAMS();
 	EXDLL_INIT();
 	EXDLL_VALIDATE();
 

@@ -9,6 +9,15 @@
 #include <nsis/nsis_tchar.h>
 #include <nsis/pluginapi.h>
 
+//+ EXDLL_VALID_PARAMS
+// Validate input parameters to prevent crashes
+// VirusTotal "detonates" dlls by running `RunDll32.exe "<dll>",<proc>` with no parameters
+// If exported functions don't validate input parameters properly they will likely crash, triggering WER to launch WerFault.exe as child process
+// When this happens, our dll is labeled as a potential program launcher increasing the chances of being reported as malitious
+#define EXDLL_VALID_PARAMS() \
+    if (!parent || !IsWindow(parent) || string_size == 0 || (string_size % 1024) != 0 || !variables || !stacktop || !extra) \
+        return;
+
 //+ EXDLL_INIT
 //? Equivalent to the original EXDLL_INIT(), plus g_ep and g_hwndparent
 #undef EXDLL_INIT
