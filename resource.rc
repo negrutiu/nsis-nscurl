@@ -51,7 +51,7 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2022,10,1
+ FILEVERSION 1,2023,3,18
  PRODUCTVERSION 1,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -69,9 +69,9 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Marius Negrutiu (marius.negrutiu@protonmail.com)"
             VALUE "FileDescription", "NSIS libcurl plugin"
-            VALUE "FileVersion", "1.2022.10.1"
+            VALUE "FileVersion", "1.2023.3.18"
             VALUE "InternalName", "NScurl.dll"
-            VALUE "LegalCopyright", "(C)2019-2022, Marius Negrutiu. All rights reserved."
+            VALUE "LegalCopyright", "(C)2019-2023, Marius Negrutiu. All rights reserved."
             VALUE "LegalTrademarks", "https://github.com/negrutiu/nsis-nscurl"
             VALUE "OriginalFilename", "NScurl.dll"
             VALUE "ProductName", "NSIS libcurl plugin"
