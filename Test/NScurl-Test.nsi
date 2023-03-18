@@ -310,7 +310,7 @@ Section "Big file (100MB)"
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
-	NScurl::http GET "${LINK}" "${FILE}" /INSIST /CANCEL /RESUME /TIMEOUT 1m /TITLEWND $HWNDPARENT /END
+	NScurl::http GET "${LINK}" "${FILE}" /STRING TEXT "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, @SPEED@" /INSIST /CANCEL /RESUME /TIMEOUT 1m /TITLEWND $HWNDPARENT /END
 	Pop $0
 	DetailPrint "Status: $0"
 
