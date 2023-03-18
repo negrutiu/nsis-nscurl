@@ -475,15 +475,18 @@ Section "Big file (100MB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push 30000
-	Push "/TIMEOUT"
-	Push "/INSIST"
+    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, @SPEED@"
+    Push "TEXT"
+    Push "/STRING"
 
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
 
+	Push "1m"
+	Push "/TIMEOUT"
 	Push "/RESUME"
 	Push "/CANCEL"
+	Push "/INSIST"
 
 	Push "${FILE}"
 	Push "${LINK}"
@@ -506,15 +509,18 @@ Section "Big file (10GB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-	Push 30000
-	Push "/TIMEOUT"
-	Push "/INSIST"
+    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, @SPEED@"
+    Push "TEXT"
+    Push "/STRING"
 
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
 
+	Push "1m"
+	Push "/TIMEOUT"
 	Push "/RESUME"
 	Push "/CANCEL"
+	Push "/INSIST"
 
 	Push "${FILE}"
 	Push "${LINK}"
