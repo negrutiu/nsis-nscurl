@@ -80,7 +80,7 @@ Function .onInit
 /*
 	; .onInit download demo
 	; NOTE: Transfers from .onInit can be either Silent or Popup (no Page!)
-	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_onInit.zip"
 	NScurl::http GET "${LINK}" "${FILE}" /POPUP /CANCEL /END
 	Pop $0
@@ -138,7 +138,7 @@ Section "sysinternals.com/get (Page)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /INSIST /Zone.Identifier /END
@@ -152,7 +152,7 @@ Section "sysinternals.com/get (Popup)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Popup.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /POPUP /INSIST /Zone.Identifier /END
@@ -166,7 +166,7 @@ Section "sysinternals.com/get (Silent)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Silent.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /SILENT /INSIST /Zone.Identifier /END
@@ -180,7 +180,7 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK  "http://live.sysinternals.com/Files/SysinternalsSuite.zip"
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
 	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_SpeedCap.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /RESUME /CANCEL /INSIST /SPEEDCAP 307200 /Zone.Identifier /END

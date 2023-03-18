@@ -10,10 +10,10 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 
 ### Features:
 - **Modern**: supports modern SSL protocols and cyphers including HTTPS/2, TLS1.3, etc.
-- **Compatible**: works well on Windows NT4, Windows 10 and everything in between
+- **Compatible**: works well on Windows NT4, Windows 11 and everything in between
 - **Multi-threaded**: download/upload multiple files in parallel
 - **Asynchronous**: start multiple background transfers, check on them later
-- **Insistent**: multiple attempts to connect and resume interrupted transfers
+- **Insistent**: multiple attempts to connect and resume failed/dropped transfers
 - **NSIS aware**: download files at any installation stage (from `.onInit`, from `Sections`, from custom pages, silent installers, etc)
 - **Verbose**: plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc)
 - Supports HTTP and TLS authentication
@@ -22,7 +22,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - Supports custom HTTP headers and data
 - Supports proxy servers (both authenticated and open)
 - Supports files larger than 4GB
-- Can download remote content to RAM instead of a file
+- Can download remote content directly to Memory (NSIS string) instead of file
 - Works well in **64-bit** [NSIS builds](https://github.com/negrutiu/nsis)
 - A lot more... Check out the included [documentation](NScurl.Readme.htm)
 
@@ -30,7 +30,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started/) wiki page
 - Quick transfer:
 ```nsis
-NScurl::http GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME /END
+NScurl::http GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /INSIST /CANCEL /RESUME /INSIST /END
 Pop $0 ; Status text ("OK" for success)
 ```
 - Quick transfer (custom GET parameters + custom request headers):

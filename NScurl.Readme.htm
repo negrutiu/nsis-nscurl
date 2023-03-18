@@ -93,7 +93,7 @@ If <b>/RETURN "query_string"</b> is specified, the function returns the specifie
 
 <div style="background-color: #dddddd">
 <b># Quick transfer (with Cancel and resume)</b><br>
-<a href="#http">NScurl::http</a> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME <a href="#end">/END</a><br>
+<a href="#http">NScurl::http</a> GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /CANCEL /RESUME <a href="#end">/END</a><br>
 Pop $0 ; Status text ("OK" for success)<br>
 </div>
 <br>
@@ -447,7 +447,7 @@ The function replaces <a href="#keywords">query keywords</a> inside <b>query_str
 <h3>Examples:</h3>
 <div style="background-color: #dddddd">
 <i>; Query information about a specific HTTP request</i><br>
-<b><a href="#http">NScurl::http</a></b> GET "http://live.sysinternals.com/Files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" <a href="#end">/END</a><br>
+<b><a href="#http">NScurl::http</a></b> GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN "<a href="#keywords">@ID@</a>" <a href="#end">/END</a><br>
 Pop $0 ; <i>Transfer ID</i><br>
 <br>
 <b><a href="#query">NScurl::query</a></b> /ID $0 "Status: @ERROR@, Headers: @RECVHEADERS@"<br>
