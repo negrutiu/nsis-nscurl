@@ -30,7 +30,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started/) wiki page
 - Quick transfer:
 ```nsis
-NScurl::http GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /INSIST /CANCEL /RESUME /INSIST /END
+NScurl::http GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /INSIST /CANCEL /RESUME /END
 Pop $0 ; Status text ("OK" for success)
 ```
 - Quick transfer (custom GET parameters + custom request headers):
