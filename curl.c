@@ -1176,8 +1176,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			// Transfer retries loop
 			{
 				BOOLEAN bSuccess;
-				ULONG i, iConnectionTimeStart, iTimeout, e;
-				for (i = 0, iConnectionTimeStart = GetTickCount(); ; i++) {
+				const ULONG iEffectiveTimeout = pReq->iConnectTimeout > 0 ? pReq->iConnectTimeout : 300000;	// Default built-in libcurl timeout is 300s (5m)
+				ULONG i, iConnectionTimeStart, e;
+
+			    for (i = 0, iConnectionTimeStart = GetTickCount(); ; i++) {
 
 					pReq->Runtime.iTimeElapsed = GetTickCount() - pReq->Runtime.iTimeStart;			/// Refresh elapsed time
 					if (i > 0) {
@@ -1206,6 +1208,16 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 					// Finished?
 					CurlRequestFormatError( pReq, NULL, 0, &bSuccess, &e );
+					TRACE(_T("[%hs:%d] curl_easy_perform() = {win32:0x%x \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%us/%us, insist:%s\n"),
+						__FUNCTION__, __LINE__,
+						pReq->Error.iWin32, pReq->Error.pszWin32 ? pReq->Error.pszWin32 : _T(""),
+						pReq->Error.iCurl, pReq->Error.pszCurl ? pReq->Error.pszCurl : "",
+						pReq->Error.iHttp, pReq->Error.pszHttp ? pReq->Error.pszHttp : "",
+						(GetTickCount() - iConnectionTimeStart) / 1000,
+						iEffectiveTimeout / 1000,
+						pReq->bInsist ? _T("true") : _T("false")
+					);
+
 					if (bSuccess)
 						break;		/// Transfer successful
 					if (pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK || pReq->Error.iWin32 == ERROR_CANCELLED)
@@ -1222,14 +1234,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					}
 
 					// Timeout?
-					iTimeout = pReq->iConnectTimeout > 0 ? pReq->iConnectTimeout : 300000;		/// Default built-in libcurl timeout is 300s (5m)
 					pReq->Runtime.iTimeElapsed = GetTickCount() - pReq->Runtime.iTimeStart;		/// Refresh elapsed time
 					if (pReq->Runtime.iUlXferred > 0 || pReq->Runtime.iDlXferred > 0)
 						iConnectionTimeStart = GetTickCount();	/// The previous connection was successful. Some data has been transferred. Reset connection startup time
 
 					if (!pReq->bInsist)
 						break;		/// Don't insist
-					if ((GetTickCount() >= iConnectionTimeStart + iTimeout) ||										/// Enforce "Connect" timeout
+					if ((GetTickCount() >= iConnectionTimeStart + iEffectiveTimeout) ||								/// Enforce "Connect" timeout
 						((pReq->iCompleteTimeout > 0) && (pReq->Runtime.iTimeElapsed >= pReq->iCompleteTimeout)))	/// Enforce "Complete" timeout
 					{
 						// NOTE: Don't overwrite previous error codes
