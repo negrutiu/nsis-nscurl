@@ -980,6 +980,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_LOW_SPEED_LIMIT, (long)pReq->iLowSpeedLimit );
 				if (pReq->iLowSpeedTime > 0)
 					curl_easy_setopt( curl, CURLOPT_LOW_SPEED_TIME, (long)pReq->iLowSpeedTime );
+			} else {
+				curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+				curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 60L);		/// Drop the current connection after this many seconds of inactivity
 			}
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
