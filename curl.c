@@ -726,28 +726,34 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 	if (CurlRequestGetAbortFlag( pReq ) != FALSE)
 		return CURLE_ABORTED_BY_CALLBACK;
 
-//x	TRACE( _T( "%hs( DL:%I64u/%I64u, UL:%I64u/%I64u )\n" ), __FUNCTION__, dlnow, dltotal, ulnow, ultotal );
-
 	curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_TOTAL_TIME_T, &iTimeElapsed );
+	iTimeElapsed /= 1000;  // us -> ms
+
 	if (dlnow > 0) {
 		/// Downloading (phase 2)
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_DOWNLOAD_T, &iSpeed );
-		iTimeRemaining = (dltotal * iTimeElapsed) / dlnow - iTimeElapsed;
+		iTimeRemaining = (curl_off_t)(((double)dltotal / (double)dlnow) * (double)iTimeElapsed - (double)iTimeElapsed);
 	} else {
 		/// Uploading (phase 1)
 		curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_SPEED_UPLOAD_T, &iSpeed );
 		if (ulnow > 0)
-			iTimeRemaining = (ultotal * iTimeElapsed) / ulnow - iTimeElapsed;
+			iTimeRemaining = (curl_off_t)(((double)ultotal / (double)ulnow) * (double)iTimeElapsed - (double)iTimeElapsed);
 	}
 
 	pReq->Runtime.iTimeElapsed = GetTickCount() - pReq->Runtime.iTimeStart;		/// Aggregated elapsed time
-	pReq->Runtime.iTimeRemaining = iTimeRemaining / 1000;						/// us -> ms
+	pReq->Runtime.iTimeRemaining = iTimeRemaining;
 	pReq->Runtime.iDlTotal = dltotal;
 	pReq->Runtime.iDlXferred = dlnow;
 	pReq->Runtime.iUlTotal = ultotal;
 	pReq->Runtime.iUlXferred = ulnow;
 	pReq->Runtime.iSpeed = iSpeed;
 	MemoryBarrier();
+
+	{
+		SHORT percent = 0;
+		CurlRequestComputeNumbers(pReq, NULL, NULL, &percent, NULL);
+		TRACE(_T("%hs( [%hd%%] Dl:%lld/%lld, Up:%lld/%lld, ElapsedT:%lld, SpeedT:%lld => EtaT:%lld )\n"), __FUNCTION__, percent, dlnow, dltotal, ulnow, ultotal, iTimeElapsed, iSpeed, iTimeRemaining);
+	}
 
 	return CURLE_OK;
 }
