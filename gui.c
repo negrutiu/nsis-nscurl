@@ -185,7 +185,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 			QueueStatistics( &pGui->qsel, &qs );
 			QueueUnlock();
 
-			TRACE( _T( "Waiting( Count:%u )\n" ), qs.iWaiting + qs.iRunning );
+			TRACE2( _T( "Waiting( Count:%u )\n" ), qs.iWaiting + qs.iRunning );
 			if (qs.iWaiting + qs.iRunning > 0) {
 
 				// Display latest info

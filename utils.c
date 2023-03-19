@@ -24,7 +24,7 @@ VOID UtilsDestroy()
 
 //++ TraceImpl
 #if defined (TRACE_ENABLED)
-VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... )
+VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... )
 {
 	DWORD err = ERROR_SUCCESS;
 	if ( pszFormat && *pszFormat ) {

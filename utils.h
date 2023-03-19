@@ -17,7 +17,7 @@ VOID UtilsDestroy();
 #if defined (TRACE_ENABLED)
 	#define TRACE TraceImpl
 	#define TRACE2(...)			/// More verbose tracing
-	VOID TraceImpl( _In_ LPCTSTR pszFormat, _In_ ... );
+	VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... );
 #else
 	#define TRACE(...)
 	#define TRACE2(...)
