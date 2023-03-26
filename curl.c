@@ -413,8 +413,12 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/USERAGENT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
-			MyFree( pReq->pszAgent );
-			pReq->pszAgent = MyStrDup( eT2A, pszParam );
+			TCHAR strBuffer[512];
+			lstrcpyn(strBuffer, pszParam, ARRAYSIZE(strBuffer));
+			if (CurlQuery(pReq, strBuffer, ARRAYSIZE(strBuffer)) != -1) {
+				MyFree(pReq->pszAgent);
+				pReq->pszAgent = MyStrDup(eT2A, strBuffer);
+			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/NOREDIRECT" ) ) == 0) {
 		pReq->bNoRedirect = TRUE;

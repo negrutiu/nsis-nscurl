@@ -479,6 +479,9 @@ Section "Big file (100MB)"
     Push "TEXT"
     Push "/STRING"
 
+    Push "curl/@CURLVERSION@"
+    Push "/USERAGENT"
+
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
 
@@ -515,6 +518,9 @@ Section "Big file (10GB)"
 
 	Push "$HWNDPARENT"
 	Push "/TITLEWND"
+
+    Push "curl/@CURLVERSION@"
+    Push "/USERAGENT"
 
 	Push "1m"
 	Push "/TIMEOUT"

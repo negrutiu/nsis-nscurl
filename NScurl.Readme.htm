@@ -216,7 +216,8 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>/USERAGENT agent</td>
 	<td>Overwrite the default user agent.<br>
-	Default is <b>nscurl/&lt;version&gt;</b>
+	Default is "<b>nscurl/@PLUGINVERSION@</b>"<br>
+    <a href="#keywords">Global keywords</a> are accepted (e.g. "curl/@CURLVERSION@").
 	</td>
 </tr>
 <tr>
@@ -702,7 +703,7 @@ Pop $0
 </tr>
 <tr>
 	<td>@CURLSSLVERSION@</td>
-	<td>SSL backend version (e.g. "7.68.0")<br>
+	<td>SSL backend version (e.g. "OpenSSL/1.1.1t")<br>
 	</td>
 </tr>
 <tr>
