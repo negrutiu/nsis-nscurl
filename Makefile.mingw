@@ -57,7 +57,7 @@ CFLAGS += -D__USE_MINGW_ANSI_STDIO=0
 CFLAGS += \
 	-mdll \
 	-s \
-	-Os \
+	-O3 \
 	-fPIE \
 	-ffunction-sections \
 	-fdata-sections \
