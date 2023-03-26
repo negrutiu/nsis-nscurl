@@ -1112,7 +1112,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			} else if (lstrcmpiA( pReq->pszMethod, "PUT" ) == 0) {
 
 				// PUT
-				curl_easy_setopt( curl, CURLOPT_PUT, TRUE );
+				curl_easy_setopt( curl, CURLOPT_UPLOAD, TRUE );
 				curl_easy_setopt( curl, CURLOPT_INFILESIZE_LARGE, pReq->Data.Size );		/// "Content-Length: <filesize>" header is mandatory in HTTP/1.x
 
 			} else {
