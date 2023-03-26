@@ -383,7 +383,7 @@ void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats 
 				pStats->iWaiting++;
 			} else if (p->Queue.iStatus == STATUS_RUNNING) {
 				pStats->iRunning++, iLastRunningId = p->Queue.iId;
-				pStats->iSpeed += (ULONG)p->Runtime.iSpeed;
+				pStats->iSpeed += (ULONG)p->Runtime.Speed.average;
 			} else if (p->Queue.iStatus == STATUS_COMPLETE) {
 				pStats->iComplete++;
 			} else {

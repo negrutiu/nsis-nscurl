@@ -3,6 +3,7 @@
 //? Make HTTP/S requests using libcurl
 
 #pragma once
+#include <curl/curl.h>
 #include "utils.h"
 
 #define STATUS_WAITING		0
@@ -68,7 +69,12 @@ typedef struct _CURL_REQUEST {
 		curl_off_t	iTimeRemaining;		/// Milliseconds
 		curl_off_t	iDlXferred, iDlTotal;
 		curl_off_t	iUlXferred, iUlTotal;
-		curl_off_t	iSpeed;
+		struct {
+			ULONG measureStartTime;
+			curl_off_t measureStartSize;
+			curl_off_t current;			// Current speed (measured by us)
+    		curl_off_t average;			// Average speed (reported by curl)
+		} Speed;
 	} Runtime;
 	struct {
 		ULONG		iWin32;

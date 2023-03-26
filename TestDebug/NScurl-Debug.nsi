@@ -475,7 +475,7 @@ Section "Big file (100MB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, @SPEED@"
+    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, Average @AVGSPEED@, Speed @SPEED@"
     Push "TEXT"
     Push "/STRING"
 
@@ -509,7 +509,7 @@ Section "Big file (10GB)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, @SPEED@"
+    Push "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, Average @AVGSPEED@, Speed @SPEED@"
     Push "TEXT"
     Push "/STRING"
 

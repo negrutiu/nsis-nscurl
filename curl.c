@@ -18,7 +18,8 @@ typedef struct {
 
 CURL_GLOBALS g_Curl = {0};
 #define DEFAULT_HEADERS_VIRTUAL_SIZE	CURL_MAX_HTTP_HEADER	/// 100KB
-#define DEFAULT_UKNOWN_VIRTUAL_SIZE		1024 * 1024 * 200		/// 200MB
+#define DEFAULT_UKNOWN_VIRTUAL_SIZE		(200u * 1024 * 1024)	/// 200MB
+#define INTERVAL_SPEED_MEASUREMENT      (1u * 1000)
 //x #define DEBUG_TRANSFER_SLOWDOWN		50						/// Delays during transfer
 
 
@@ -746,7 +747,17 @@ int CurlProgressCallback( void *clientp, curl_off_t dltotal, curl_off_t dlnow, c
 	pReq->Runtime.iDlXferred = dlnow;
 	pReq->Runtime.iUlTotal = ultotal;
 	pReq->Runtime.iUlXferred = ulnow;
-	pReq->Runtime.iSpeed = iSpeed;
+
+	if (GetTickCount() - pReq->Runtime.Speed.measureStartTime >= INTERVAL_SPEED_MEASUREMENT || pReq->Runtime.Speed.current == 0) {
+		double measureInterval = (double)(GetTickCount() - pReq->Runtime.Speed.measureStartTime) / 1000. + .1; // Milliseconds (non zero!)
+		pReq->Runtime.Speed.current = (curl_off_t)((double)(dlnow + ulnow - pReq->Runtime.Speed.measureStartSize) / measureInterval); // bytes/s
+	}
+	if (GetTickCount() - pReq->Runtime.Speed.measureStartTime >= INTERVAL_SPEED_MEASUREMENT) {
+		pReq->Runtime.Speed.measureStartTime = GetTickCount();
+		pReq->Runtime.Speed.measureStartSize = dlnow + ulnow;
+	}
+	pReq->Runtime.Speed.average = iSpeed;
+
 	MemoryBarrier();
 
 	{
@@ -1446,10 +1457,15 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			CurlRequestComputeNumbers( pReq, NULL, NULL, &iPercent, NULL );
 			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), iPercent );	/// Can be -1
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED@" ) ) == 0) {
-			MyFormatBytes( pReq->Runtime.iSpeed, pszKeyword, iMaxLen );
+			MyFormatBytes( pReq->Runtime.Speed.current, pszKeyword, iMaxLen );
 			_tcscat( pszKeyword, _T( "/s" ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED_B@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iSpeed );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.Speed.current );
+		} else if (lstrcmpi( pszKeyword, _T( "@AVGSPEED@" ) ) == 0) {
+			MyFormatBytes( pReq->Runtime.Speed.average, pszKeyword, iMaxLen );
+			_tcscat( pszKeyword, _T( "/s" ) );
+		} else if (lstrcmpi( pszKeyword, _T( "@AVGSPEED_B@" ) ) == 0) {
+			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.Speed.average );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED@" ) ) == 0) {
 			MyFormatMilliseconds( pReq->Runtime.iTimeElapsed, pszKeyword, iMaxLen, FALSE );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEELAPSED_MS@" ) ) == 0) {
