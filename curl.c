@@ -411,6 +411,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			MyFree( pReq->pszReferrer );
 			pReq->pszReferrer = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/HTTP1.1" ) ) == 0) {
+		pReq->bHttp11 = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/USERAGENT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			TCHAR strBuffer[512];
@@ -1009,6 +1011,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
 			curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );			/// Send Accept-Encoding header with all supported encodings
+
+			if (pReq->bHttp11)
+				curl_easy_setopt(curl, CURLOPT_SSL_ENABLE_ALPN, 0L);        /// Disable ALPN. No negotiation for HTTP2 takes place
 
 			/// SSL
 			if (!StringIsEmpty(pReq->pszCacert) || pReq->pCertList) {

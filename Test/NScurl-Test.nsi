@@ -176,6 +176,20 @@ Section "sysinternals.com/get (Silent)"
 SectionEnd
 
 
+Section "sysinternals.com/get (HTTP/1.1)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuite_http1.zip"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http get "${LINK}" "${FILE}" /HTTP1.1 /INSIST /CANCEL /Zone.Identifier /END
+	Pop $0
+	DetailPrint "Status: $0"
+
+SectionEnd
+
+
 Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
