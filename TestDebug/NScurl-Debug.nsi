@@ -110,6 +110,17 @@ Function .onInit
 	Pop $0
 	!insertmacro STACK_VERIFY_END
 */
+
+    ; Quick .onInit plugin test
+	Push "/END"
+	Push "@PLUGINWEB@"
+	CallInstDLL $DLL query
+    Pop $0
+    StrCpy $1 $0 8
+    ${If} $1 != "https://"
+        MessageBox MB_ICONSTOP '[.onInit]$\nFailed to query plugin webpage$\nReturn value: "$0"'
+    ${EndIf}
+
 FunctionEnd
 
 

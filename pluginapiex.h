@@ -14,8 +14,9 @@
 // VirusTotal "detonates" dlls by running `RunDll32.exe "<dll>",<proc>` with no parameters
 // If exported functions don't validate input parameters properly they will likely crash, triggering WER to launch WerFault.exe as child process
 // When this happens, our dll is labeled as a potential program launcher increasing the chances of being reported as malitious
+// NOTE: Functions called from .onInit receive parent=NULL
 #define EXDLL_VALID_PARAMS() \
-    if (!parent || !IsWindow(parent) || string_size == 0 || (string_size % 1024) != 0 || !variables || !stacktop || !extra) \
+    if ((parent && !IsWindow(parent)) || string_size == 0 || (string_size % 1024) != 0 || !variables || !stacktop || !extra) \
         return;
 
 //+ EXDLL_INIT

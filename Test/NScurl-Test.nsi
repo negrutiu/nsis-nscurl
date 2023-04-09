@@ -85,6 +85,15 @@ Function .onInit
 	NScurl::http GET "${LINK}" "${FILE}" /POPUP /CANCEL /END
 	Pop $0
 */
+
+    ; Quick .onInit plugin test
+    NScurl::query "@PLUGINWEB@" /END
+    Pop $0
+    StrCpy $1 $0 8
+    ${If} $1 != "https://"
+        MessageBox MB_ICONSTOP '[.onInit]$\nFailed to query plugin webpage$\nReturn value: "$0"'
+    ${EndIf}
+
 FunctionEnd
 
 
