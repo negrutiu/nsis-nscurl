@@ -24,7 +24,7 @@ This plugin is included in my unofficial [NSIS builds](https://github.com/negrut
 - Supports files larger than 4GB
 - Can download remote content directly to Memory (NSIS string) instead of file
 - Works well in **64-bit** [NSIS builds](https://github.com/negrutiu/nsis)
-- A lot more... Check out the included [documentation](NScurl.Readme.htm)
+- A lot more... Check out the included [documentation](https://rawcdn.githack.com/negrutiu/nsis-nscurl/6c9f7c02b050f5db62963d6a9962d6b791e4c7a4/NScurl.Readme.htm)
 
 ### Basic usage:
 - Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started/) wiki page
@@ -48,7 +48,7 @@ Pop $0
 NScurl::http POST "https://httpbin.org/post" Memory /POST "User" "My user name" /POST "Password" "My password" /POST FILENAME=maiden.json TYPE=application/json "Details" '{ "number_of_the_beast" : 666 }' /END
 Pop $0
 ```
-- More complex examples in the [documentation](NScurl.Readme.htm)
+- More complex examples in the [documentation](https://rawcdn.githack.com/negrutiu/nsis-nscurl/6c9f7c02b050f5db62963d6a9962d6b791e4c7a4/NScurl.Readme.htm)
 
 ### Licenses:
 Project|License
