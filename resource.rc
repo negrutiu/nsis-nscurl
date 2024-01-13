@@ -71,7 +71,7 @@ BEGIN
             VALUE "FileDescription", "NSIS libcurl plugin"
             VALUE "FileVersion", "1.2023.10.11"
             VALUE "InternalName", "NScurl.dll"
-            VALUE "LegalCopyright", "(C)2019-2023, Marius Negrutiu. All rights reserved."
+            VALUE "LegalCopyright", "(C)2019-2024, Marius Negrutiu. All rights reserved."
             VALUE "LegalTrademarks", "https://github.com/negrutiu/nsis-nscurl"
             VALUE "OriginalFilename", "NScurl.dll"
             VALUE "ProductName", "NSIS libcurl plugin"
