@@ -1464,7 +1464,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@PERCENT@" ) ) == 0) {
 			SHORT iPercent;
 			CurlRequestComputeNumbers( pReq, NULL, NULL, &iPercent, NULL );
-			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), iPercent );	/// Can be -1
+			if (iPercent < 0)
+				iPercent = 0;	// -1 -> 0
+			_sntprintf( pszKeyword, iMaxLen, _T( "%hd" ), iPercent );
 		} else if (lstrcmpi( pszKeyword, _T( "@SPEED@" ) ) == 0) {
 			MyFormatBytes( pReq->Runtime.Speed.current, pszKeyword, iMaxLen );
 			_tcscat( pszKeyword, _T( "/s" ) );
