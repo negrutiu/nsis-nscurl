@@ -4,19 +4,19 @@
 #pragma once
 
 //+ Initialization
-VOID UtilsInitialize();
-VOID UtilsDestroy();
+VOID UtilsInitialize(void);
+VOID UtilsDestroy(void);
 
 
 //+ TRACE
-#if DBG || _DEBUG
+#if defined(DBG) || defined(_DEBUG)
 	#define TRACE_ENABLED
 #endif
 #define TRACE_NO_PREFIX _T("\x0001")
 
 #if defined (TRACE_ENABLED)
-	#define TRACE TraceImpl
-	#define TRACE2(...)			/// More verbose tracing
+	#define TRACE _tprintf
+	#define TRACE2 _tprintf
 	VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... );
 #else
 	#define TRACE(...)
@@ -25,12 +25,12 @@ VOID UtilsDestroy();
 
 
 //+ assert
-#if DBG || _DEBUG
+#if defined(DBG) || defined(_DEBUG)
 	#define assert(expr) \
 		if ( !(expr)) { \
 			TCHAR szMsg[512]; \
-			TRACE( _T("  [!] %s, %s:%u\n"), _T(#expr), _T( __FILE__ ), __LINE__ ); \
-			_sntprintf( szMsg, (int)ARRAYSIZE( szMsg ), _T("%s\n%s : %u\n"), _T(#expr), _T( __FILE__ ), __LINE__ ); \
+			TRACE( _T("  [!] %s, %s:%ld\n"), _T(#expr), _T( __FILE__ ), __LINE__ ); \
+			_sntprintf( szMsg, (int)ARRAYSIZE( szMsg ), _T("%s\n%s : %ld\n"), _T(#expr), _T( __FILE__ ), __LINE__ ); \
 			if (MessageBox( NULL, szMsg, _T("ASSERT"), MB_ICONERROR|MB_OKCANCEL ) != IDOK) \
 				ExitProcess( 666 ); \
 		}

@@ -20,7 +20,7 @@ void QueueCreateThreads( _In_ LONG iCount );
 
 
 //++ QueueInitialize
-void QueueInitialize()
+void QueueInitialize(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
@@ -40,7 +40,7 @@ void QueueInitialize()
 
 
 //++ QueueDestroy
-void QueueDestroy()
+void QueueDestroy(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
@@ -66,8 +66,8 @@ void QueueDestroy()
 
 
 //++ QueueLock/Unlock
-void QueueLock()   { EnterCriticalSection( &g_Queue.Lock ); }
-void QueueUnlock() { LeaveCriticalSection( &g_Queue.Lock ); }
+void QueueLock(void)   { EnterCriticalSection( &g_Queue.Lock ); }
+void QueueUnlock(void) { LeaveCriticalSection( &g_Queue.Lock ); }
 
 
 //++ QueueAdd
@@ -84,9 +84,6 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 	}
 
 	if (pReq) {
-
-		HANDLE hThread = NULL;
-
 		QueueLock();
 		{
 			// Append to queue
@@ -101,7 +98,7 @@ ULONG QueueAdd( _In_ PCURL_REQUEST pReq )
 			pReq->Queue.iStatus = STATUS_WAITING;
 			pReq->Queue.pNext = NULL;
 
-			TRACE( _T( "%hs( Id:%u, Url:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL );
+			TRACE( _T( "%hs( Id:%lu, Url:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL );
 
 			// New worker thread
 			QueueCreateThreads( 1 );
@@ -161,7 +158,8 @@ void QueueRemove( _In_opt_ PQUEUE_SELECTION pSel )
 		}
 		QueueUnlock();
 
-		TRACE( _T( "%hs( Id:%u, Url:%hs ), %ums\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL, GetTickCount() - t0 );
+		DBG_UNREFERENCED_LOCAL_VARIABLE(t0);
+		TRACE( _T( "%hs( Id:%lu, Url:%hs ), %lums\n" ), __FUNCTION__, pReq->Queue.iId, pReq->pszURL, GetTickCount() - t0 );
 
 		// Free
 		CurlRequestDestroy( pReq );
@@ -174,7 +172,7 @@ void QueueRemove( _In_opt_ PQUEUE_SELECTION pSel )
 void QueueAbort( _In_opt_ PQUEUE_SELECTION pSel )
 {
 	PCURL_REQUEST pReq;
-	TRACE( _T( "%hs( Id:%d, Tag:\"%hs\" )\n" ), __FUNCTION__, pSel ? pSel->iId : 0, pSel ? pSel->pszTag : "" );
+	TRACE( _T( "%hs( Id:%ld, Tag:\"%hs\" )\n" ), __FUNCTION__, pSel ? pSel->iId : 0, pSel ? pSel->pszTag : "" );
 	QueueLock();
 	for (pReq = g_Queue.Head; pReq; pReq = pReq->Queue.pNext) {
 
@@ -189,14 +187,14 @@ void QueueAbort( _In_opt_ PQUEUE_SELECTION pSel )
 				pReq->Error.iWin32 = ERROR_CANCELLED;
 				pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );
 
-				TRACE( _T( "%hs( Id:%u, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Waiting" );
+				TRACE( _T( "%hs( Id:%lu, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Waiting" );
 
 			} else if (pReq->Queue.iStatus == STATUS_RUNNING) {
 
 				// Set the Abort flag and let the transfer terminate itself
 				CurlRequestSetAbortFlag( pReq );
 
-				TRACE( _T( "%hs( Id:%u, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Running" );
+				TRACE( _T( "%hs( Id:%lu, Status:%hs )\n" ), __FUNCTION__, pReq->Queue.iId, "Running" );
 			}
 		}
 	}
@@ -205,13 +203,13 @@ void QueueAbort( _In_opt_ PQUEUE_SELECTION pSel )
 
 
 //++ QueueHead
-PCURL_REQUEST QueueHead()
+PCURL_REQUEST QueueHead(void)
 {
 	return g_Queue.Head;
 }
 
 //++ QueueTail
-PCURL_REQUEST QueueTail()
+PCURL_REQUEST QueueTail(void)
 {
 	if (g_Queue.Head) {
 		PCURL_REQUEST pTail;
@@ -233,7 +231,7 @@ PCURL_REQUEST QueueFind( _In_ ULONG iId )
 }
 
 //++ QueueFirstWaiting
-PCURL_REQUEST QueueFirstWaiting()
+PCURL_REQUEST QueueFirstWaiting(void)
 {
 	if (g_Queue.Head) {
 		PCURL_REQUEST p;
@@ -246,7 +244,7 @@ PCURL_REQUEST QueueFirstWaiting()
 							return p;		/// Dependency satisfied
 						} else {
 							/// Continue looking for the next WAITING
-							TRACE( _T( "%hs( Id:%u/Waiting <-> Id:%u/Incomplete ) = Skip\n" ), __FUNCTION__, p->Queue.iId, pReqDep->Queue.iId );
+							TRACE( _T( "%hs( Id:%lu/Waiting <-> Id:%lu/Incomplete ) = Skip\n" ), __FUNCTION__, p->Queue.iId, pReqDep->Queue.iId );
 						}
 					} else {
 						return p;		/// Depends on inexistent/removed request
@@ -291,7 +289,7 @@ void QueueCreateThreads( _In_ LONG iCount )
 			CloseHandle( h );			//? Thread handle is no longer needed. The thread will continue to run until its procedure exits
 		} else {
 			g_Queue.ThreadCount--;
-			TRACE( _T( "%hs::CreateThread(..) = 0x%x\n" ), __FUNCTION__, GetLastError() );
+			TRACE( _T( "%hs::CreateThread(..) = 0x%lx\n" ), __FUNCTION__, GetLastError() );
 		}
 	}
 }
@@ -304,7 +302,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 	PCURL_REQUEST pReq = NULL;
 	LONG iThreadCount = PtrToUlong(pParam);
 
-	TRACE( _T( "%hs( Count:%d/%d )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
+	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
 
 	while (TRUE) {
 
@@ -325,11 +323,12 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 		t0 = GetTickCount();
 		CurlTransfer( pReq );
 
+		DBG_UNREFERENCED_LOCAL_VARIABLE(t0);
 	#ifdef TRACE_ENABLED
 		{
 			TCHAR szErr[256] = {0};
 			CurlRequestFormatError( pReq, szErr, ARRAYSIZE( szErr ), NULL, NULL );
-			TRACE( _T( "%hs( Id:%u, Url:%hs ) = %s, %ums\n" ), "CurlTransfer", pReq->Queue.iId, pReq->pszURL, szErr, GetTickCount() - t0 );
+			TRACE( _T( "%hs( Id:%lu, Url:%hs ) = %s, %lums\n" ), "CurlTransfer", pReq->Queue.iId, pReq->pszURL, szErr, GetTickCount() - t0 );
 		}
 	#endif
 
@@ -356,7 +355,7 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 	assert( g_Queue.ThreadCount >= 0 );
 	QueueUnlock();
 
-	TRACE( _T( "%hs( Count:%d/%d )\n" ), "ExitThread", iThreadCount, g_Queue.ThreadMax );
+	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "ExitThread", iThreadCount, g_Queue.ThreadMax );
 
 	return e;
 }
@@ -435,42 +434,42 @@ void CALLBACK QueueQueryKeywordCallback( _Inout_ LPTSTR pszKeyword, _In_ ULONG i
 		lstrcpyn( pszKeyword, _T( "win32" ), iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0) {
 		// NOTE: For single-transfer queries this keyword is resolved by CurlQuery(..)
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iCancelled );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iCancelled );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOUNT@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning + qs.iComplete );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iWaiting + qs.iRunning + qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALWAITING@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iWaiting );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALRUNNING@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iRunning );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALCOMPLETE@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iComplete );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALACTIVE@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iWaiting + qs.iRunning );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iWaiting + qs.iRunning );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSTARTED@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iRunning + qs.iComplete );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iRunning + qs.iComplete );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALERRORS@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iErrors );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iErrors );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSPEED@" ) ) == 0) {
 		MyFormatBytes( qs.iSpeed, pszKeyword, iMaxLen );
 		_tcscat( pszKeyword, _T( "/s" ) );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSPEED_B@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), qs.iSpeed );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), qs.iSpeed );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZE@" ) ) == 0) {
 		MyFormatBytes( qs.iUlXferred + qs.iDlXferred, pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZE_B@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iUlXferred + qs.iDlXferred );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%llu" ), qs.iUlXferred + qs.iDlXferred );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEUP@" ) ) == 0) {
 		MyFormatBytes( qs.iUlXferred, pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEUP_B@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iUlXferred );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%llu" ), qs.iUlXferred );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEDOWN@" ) ) == 0) {
 		MyFormatBytes( qs.iDlXferred, pszKeyword, iMaxLen );
 	} else if (lstrcmpi( pszKeyword, _T( "@TOTALSIZEDOWN_B@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), qs.iDlXferred );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%llu" ), qs.iDlXferred );
 	} else if (lstrcmpi( pszKeyword, _T( "@THREADS@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), g_Queue.ThreadCount );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%ld" ), g_Queue.ThreadCount );
 	} else if (lstrcmpi( pszKeyword, _T( "@MAXTHREADS@" ) ) == 0) {
-		_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), g_Queue.ThreadMax );
+		_sntprintf( pszKeyword, iMaxLen, _T( "%ld" ), g_Queue.ThreadMax );
 	}
 }
 
@@ -515,7 +514,7 @@ struct curl_slist* QueueEnumerate( _In_opt_ PQUEUE_SELECTION pSel, _In_ BOOLEAN 
 				(bComplete && p->Queue.iStatus == STATUS_COMPLETE))
 			{
 				CHAR sz[16];
-				_snprintf( sz, ARRAYSIZE( sz ), "%u", p->Queue.iId );
+				_snprintf( sz, ARRAYSIZE( sz ), "%lu", p->Queue.iId );
 				sl = curl_slist_append( sl, sz );
 			}
 		}

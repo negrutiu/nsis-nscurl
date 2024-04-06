@@ -33,11 +33,11 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 
 # ARCH
 ifeq ($(ARCH), X64)
-	CFLAGS  += -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib
+	CFLAGS  += -Wall -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib -march=pentium2
+	CFLAGS  += -Wall -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib -march=pentium2
 	LDFLAGS += -Wl,-e'_DllMain'
 	RCFLAGS += -F pe-i386
 endif

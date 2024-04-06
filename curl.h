@@ -91,7 +91,7 @@ typedef struct _CURL_REQUEST {
 static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
-	pReq->Runtime.iRootCertFlags = -1;	/// Uninitialized
+	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
 }
 
 //+ CurlRequestDestroy
@@ -153,12 +153,10 @@ ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq );		//? e.g. 404
 //                                                                                                                                      //
 
 //+ Initialization
-ULONG CurlInitialize();
-void  CurlDestroy();
+ULONG CurlInitialize(void);
+void  CurlDestroy(void);
 
-ULONG CurlInitializeLibcurl();	//! Must be called only when starting transfers. This will lock NScurl.dll in memory until the process exists
-
-ULONG CurlExtractCacert();		/// Called automatically
+ULONG CurlInitializeLibcurl(void);	//! Must be called only when starting transfers. This will lock NScurl.dll in memory until the process exists
 
 //+ CurlParseRequestParam
 BOOL CurlParseRequestParam(

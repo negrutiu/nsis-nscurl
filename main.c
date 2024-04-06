@@ -41,7 +41,7 @@ BOOL PluginInit( _In_ HINSTANCE hInst )
 
 //++ PluginUninit
 //?  Called at DLL_PROCESS_DETACH
-BOOL PluginUninit()
+BOOL PluginUninit(void)
 {
 	if ( g_hInst ) {
 
@@ -599,5 +599,6 @@ BOOL WINAPI DllMain( HMODULE hInst, UINT iReason, LPVOID lpReserved )
 	} else if ( iReason == DLL_PROCESS_DETACH ) {
 		PluginUninit();
 	}
+	UNREFERENCED_PARAMETER( lpReserved );
 	return TRUE;
 }

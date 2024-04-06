@@ -92,7 +92,7 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
 			// Win32 error code
 			if (pbSuccess) *pbSuccess = FALSE;
-			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%x \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
+			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%lx \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
 			if (piErrorCode) *piErrorCode = pReq->Error.iWin32;
 		} else if (pReq->Error.iCurl != CURLE_OK) {
 			// CURL error
@@ -172,7 +172,7 @@ ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq )
 
 
 //++ CurlInitialize
-ULONG CurlInitialize()
+ULONG CurlInitialize(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
@@ -192,7 +192,7 @@ ULONG CurlInitialize()
 
 
 //++ CurlDestroy
-void CurlDestroy()
+void CurlDestroy(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
@@ -201,7 +201,7 @@ void CurlDestroy()
 
 
 //++ CurlInitializeLibcurl
-ULONG CurlInitializeLibcurl()
+ULONG CurlInitializeLibcurl(void)
 {
 	if (InterlockedCompareExchangePointer( (void*)&g_Curl.hPinnedModule, NULL, NULL ) == NULL) {
 
@@ -538,6 +538,8 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	//x X509_NAME_oneline( X509_get_subject_name( cert ), szSubject, ARRAYSIZE( szSubject ) );
 	//x X509_NAME_oneline( X509_get_issuer_name( cert ), szIssuer, ARRAYSIZE( szIssuer ) );
 
+	DBG_UNREFERENCED_LOCAL_VARIABLE(err);
+
 	// Extract certificate SHA1 fingerprint
 	X509_digest( cert, EVP_sha1(), Thumbprint, NULL );
 	MyFormatBinaryHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
@@ -576,9 +578,10 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 //? This callback function gets called by libcurl just before the initialization of an SSL connection
 CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
 {
-	SSL_CTX *pssl = (SSL_CTX*)ssl_ctx;
+	SSL_CTX *pssl = ssl_ctx;
 	SSL_CTX_set_app_data( pssl, userptr );
 	SSL_CTX_set_verify( pssl, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
+	UNREFERENCED_PARAMETER( curl );
 	return CURLE_OK;
 }
 
@@ -957,12 +960,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 	// Debug file
 	if (pReq->pszDebugFile && *pReq->pszDebugFile) {
-		ULONG e = ERROR_SUCCESS;
 		MyCreateDirectory( pReq->pszDebugFile, TRUE );		// Create intermediate directories
 		pReq->Runtime.hDebugFile = CreateFile( pReq->pszDebugFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
 		if (!MyValidHandle( pReq->Runtime.hOutFile )) {
-			e = GetLastError();
-			TRACE( _T( "[!] CreateFile( DebugFile:%s ) = 0x%x\n" ), pReq->pszDebugFile, e );
+			TRACE( _T( "[!] CreateFile( DebugFile:%s ) = 0x%lx\n" ), pReq->pszDebugFile, GetLastError() );
 		}
 	}
 
@@ -1234,7 +1235,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 					// Finished?
 					CurlRequestFormatError( pReq, NULL, 0, &bSuccess, &e );
-					TRACE(_T("curl_easy_perform() = {win32:0x%x \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%us/%us, insist:%s\n"),
+					TRACE(_T("curl_easy_perform() = {win32:0x%lx \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%lus/%lus, insist:%s\n"),
 						pReq->Error.iWin32, pReq->Error.pszWin32 ? pReq->Error.pszWin32 : _T(""),
 						pReq->Error.iCurl, pReq->Error.pszCurl ? pReq->Error.pszCurl : "",
 						pReq->Error.iHttp, pReq->Error.pszHttp ? pReq->Error.pszHttp : "",
@@ -1396,7 +1397,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	} else if (pReq) {
 
 		if (lstrcmpi( pszKeyword, _T( "@ID@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), pReq->Queue.iId );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), pReq->Queue.iId );
 		} else if (lstrcmpi( pszKeyword, _T( "@STATUS@" ) ) == 0) {
 			switch (pReq->Queue.iStatus) {
 				case STATUS_WAITING:  lstrcpyn( pszKeyword, _T( "Waiting" ), iMaxLen ); break;
@@ -1444,7 +1445,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@SERVERIP@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.pszServerIP );
 		} else if (lstrcmpi( pszKeyword, _T( "@SERVERPORT@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%d" ), pReq->Runtime.iServerPort );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%ld" ), pReq->Runtime.iServerPort );
 		} else if (lstrcmpi( pszKeyword, _T( "@FILESIZE@" ) ) == 0) {
 			ULONG64 iTotal;
 			CurlRequestComputeNumbers( pReq, &iTotal, NULL, NULL, NULL );
@@ -1548,7 +1549,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				pszKeyword[0] = 0;
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@RECVDATA_RAW@" ) ) == 0) {
-			BOOL bEscape = (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0) ? TRUE : FALSE;
+			BOOLEAN bEscape = (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0) ? TRUE : FALSE;
 			pszKeyword[0] = 0;
 			if (pReq->pszPath) {
 				// Downloaded to file
@@ -1572,7 +1573,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
 			CurlRequestFormatError( pReq, pszKeyword, iMaxLen, NULL, NULL );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORCODE@" ) ) == 0) {
-			_sntprintf( pszKeyword, iMaxLen, _T( "%u" ), CurlRequestErrorCode( pReq ) );
+			_sntprintf( pszKeyword, iMaxLen, _T( "%lu" ), CurlRequestErrorCode( pReq ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERRORTYPE@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, CurlRequestErrorType( pReq ) );
 		} else if (lstrcmpi( pszKeyword, _T( "@CANCELLED@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@CANCELED@" ) ) == 0) {

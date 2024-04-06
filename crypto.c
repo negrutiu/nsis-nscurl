@@ -124,7 +124,7 @@ LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
 	if (ctx) {
 		int lOut = 4 * ((iSize + 2) / 3) + 1;
 		if ((pszBase64 = (LPSTR)MyAlloc( lOut )) != NULL) {
-			LPSTR psz = pszBase64;
+			unsigned char* psz = (unsigned char*)pszBase64;
 			int len;
 			EVP_EncodeInit( ctx );
 			evp_encode_ctx_set_flags( ctx, EVP_ENCODE_CTX_NO_NEWLINES );
@@ -147,13 +147,15 @@ PVOID DecBase64( _In_ LPCSTR pszBase64, _Out_opt_ size_t *piSize )
 		int lIn = lstrlenA( pszBase64 );
 		int lOut = (3 * lIn) / 4;
 		if ((pPtr = (LPSTR)MyAlloc( lOut )) != NULL) {
-			LPSTR psz = pPtr;
+			unsigned char* psz = (unsigned char*)pPtr;
 			int len1 = 0, len2 = 0;
 			EVP_DecodeInit( ctx );
-			if (EVP_DecodeUpdate( ctx, psz, &len1, pszBase64, lIn ) != -1 &&
+			if (EVP_DecodeUpdate( ctx, psz, &len1, (const unsigned char*)pszBase64, lIn ) != -1 &&
 				EVP_DecodeFinal( ctx, (psz += len1), &len2 ) != -1)
 			{
-				if (piSize) *piSize += len1 + len2;
+				if (piSize) {
+				    *piSize += len1 + len2;
+				}
 			} else {
 				MyFree( pPtr );
 			}

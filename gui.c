@@ -25,14 +25,14 @@
 
 
 //++ GuiInitialize
-void GuiInitialize()
+void GuiInitialize(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 }
 
 
 //++ GuiDestroy
-void GuiDestroy()
+void GuiDestroy(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 }
@@ -185,7 +185,7 @@ void GuiWaitLoop( _Inout_ PGUI_REQUEST pGui )
 			QueueStatistics( &pGui->qsel, &qs );
 			QueueUnlock();
 
-			TRACE2( _T( "Waiting( Count:%u )\n" ), qs.iWaiting + qs.iRunning );
+			TRACE2( _T( "Waiting( Count:%lu )\n" ), qs.iWaiting + qs.iRunning );
 			if (qs.iWaiting + qs.iRunning > 0) {
 
 				// Display latest info
@@ -235,7 +235,7 @@ LRESULT CALLBACK GuiNsisWindowProc( _In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM 
 //++ GuiSilentWait
 BOOLEAN GuiSilentWait( _Inout_ PGUI_REQUEST pGui )
 {
-	BOOLEAN bCancelEnabled = FALSE;
+	BOOL bCancelEnabled = FALSE;
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
 
 	// Cancel
@@ -403,7 +403,7 @@ BOOLEAN GuiPopupWait( _Inout_ PGUI_REQUEST pGui )
 BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 {
 	HWND hDetailsBtn = NULL, hDetailsList = NULL;
-	RECT rcDetailsBtn, rcDetailsList;
+	RECT rcDetailsBtn = { 0 }, rcDetailsList = { 0 };
 	int iDetailsOffsetY = 0;
 
 	TRACE( _T( "%hs\n" ), __FUNCTION__ );
@@ -525,7 +525,7 @@ BOOLEAN GuiPageWait( _Inout_ PGUI_REQUEST pGui )
 	// Can we wait in Page-mode ?
 	if (pGui->Runtime.hText || pGui->Runtime.hProgress) {
 
-		BOOLEAN bCancelEnabled = FALSE;
+		BOOL bCancelEnabled = FALSE;
 
 		// Cancel
 		if ((pGui->Runtime.hCancel = pGui->hCancel ? pGui->hCancel : GetDlgItem( g_hwndparent, IDCANCEL )) != NULL) {
@@ -627,7 +627,7 @@ void GuiWait( _Inout_ PGUI_REQUEST pGui, _Out_ LPTSTR pszResult, _In_ int iResul
 		//? Background transfer, no waiting. Always return transfer ID
 		assert( pGui->qsel.iId != 0 );
 		if (pGui->qsel.iId != 0) {
-			_sntprintf( pszResult, iResultMaxLen, _T( "%u" ), pGui->qsel.iId );
+			_sntprintf( pszResult, iResultMaxLen, _T( "%lu" ), pGui->qsel.iId );
 		} else {
 			lstrcpyn( pszResult, _T( "0" ), iResultMaxLen );		// 0 == invalid ID
 		}

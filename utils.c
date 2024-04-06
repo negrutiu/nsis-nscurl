@@ -8,14 +8,14 @@ MEMORY_STATS g_MemStats = { 0 };
 
 
 //++ UtilsInitialize
-VOID UtilsInitialize()
+VOID UtilsInitialize(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 }
 
 
 //++ UtilsDestroy
-VOID UtilsDestroy()
+VOID UtilsDestroy(void)
 {
 	TRACE( _T( "%hs( Alloc: #%u/%I64u bytes, Free: #%u/%I64u bytes )\n" ), __FUNCTION__, g_MemStats.AllocCalls, g_MemStats.AllocBytes, g_MemStats.FreeCalls, g_MemStats.FreeBytes );
 	assert( g_MemStats.AllocBytes == g_MemStats.FreeBytes );
@@ -26,7 +26,6 @@ VOID UtilsDestroy()
 #if defined (TRACE_ENABLED)
 VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... )
 {
-	DWORD err = ERROR_SUCCESS;
 	if ( pszFormat && *pszFormat ) {
 
 		TCHAR szStr[1024];
@@ -39,7 +38,7 @@ VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... )
 			pszFormat++;
 			iLen1 = 0;
 		} else {
-			iLen1 = _sntprintf( szStr, ARRAYSIZE( szStr ), _T( "[nscurl.th%04x] " ), GetCurrentThreadId() );
+			iLen1 = _sntprintf( szStr, ARRAYSIZE( szStr ), _T( "[nscurl.th%04lx] " ), GetCurrentThreadId() );
 		}
 
 		iLen2 = _vsntprintf( szStr + iLen1, (int)ARRAYSIZE( szStr ) - iLen1, pszFormat, args );
@@ -66,9 +65,9 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 	// One-time initialization
 	static TfnSetThreadDescription fnSetThreadDescription = NO_INIT;
 	if (fnSetThreadDescription == NO_INIT)
-		fnSetThreadDescription = (TfnSetThreadDescription)GetProcAddress( GetModuleHandle( _T("kernel32") ), "SetThreadDescription" );
+		fnSetThreadDescription = (TfnSetThreadDescription)(void*)GetProcAddress( GetModuleHandle( _T("kernel32") ), "SetThreadDescription" );
 
-	if (fnSetThreadDescription > NO_INIT)
+	if (fnSetThreadDescription != NO_INIT && fnSetThreadDescription != NULL)
 		fnSetThreadDescription( hThread, pszName );
 	#undef NO_INIT
 }
@@ -756,7 +755,7 @@ void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ UL
 #ifdef _UNICODE
 #pragma warning(suppress: 4996)
 			DWORD winVer = GetVersion();
-			BYTE majorVer = LOBYTE(LOWORD(winVer)), minorVer = HIBYTE(LOWORD(winVer));
+			BYTE majorVer = LOBYTE(LOWORD(winVer));
 			if (majorVer >= 6 && bUseInfinitySign) {
 				lstrcpyn(pszStr, _T("\x221e"), (int)iStrMaxLen);  // infinity sign
 			} else {
@@ -766,11 +765,11 @@ void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ UL
 			lstrcpyn(pszStr, _T("--:--"), (int)iStrMaxLen);
 #endif
 		} else if (iDays > 0) {
-			_sntprintf( pszStr, iStrMaxLen, _T( "%u.%02u:%02u:%02u" ), iDays, iHours, iMins, iSecs );
+			_sntprintf( pszStr, iStrMaxLen, _T( "%lu.%02lu:%02lu:%02lu" ), iDays, iHours, iMins, iSecs );
 		} else if (iHours > 0) {
-			_sntprintf( pszStr, iStrMaxLen, _T( "%02u:%02u:%02u" ), iHours, iMins, iSecs );
+			_sntprintf( pszStr, iStrMaxLen, _T( "%02lu:%02lu:%02lu" ), iHours, iMins, iSecs );
 		} else {
-			_sntprintf( pszStr, iStrMaxLen, _T( "%02u:%02u" ), iMins, iSecs );
+			_sntprintf( pszStr, iStrMaxLen, _T( "%02lu:%02lu" ), iMins, iSecs );
 		}
 	}
 }
@@ -814,10 +813,10 @@ ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
 }
 
 //++ VirtualMemoryAppend
-SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T size )
+SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size )
 {
 	ULONG e = ERROR_SUCCESS;
-	if (pMem && pMem->pMem && buf && size) {
+	if (pMem && pMem->pMem && mem && size) {
 
 		/// Commit more virtual memory as needed
 		if (pMem->iSize + size > pMem->iCommitted) {
@@ -832,7 +831,7 @@ SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID buf, _In_ SIZE_T siz
 		if (e == ERROR_SUCCESS) {
 			SIZE_T n = __min( size, pMem->iReserved - pMem->iSize );
 			if (n > 0) {
-				CopyMemory( (LPVOID)(pMem->pMem + pMem->iSize), buf, n );
+				CopyMemory( (LPVOID)(pMem->pMem + pMem->iSize), mem, n );
 				pMem->iSize += n;
 			}
 			return n;

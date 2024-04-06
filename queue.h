@@ -16,12 +16,12 @@ typedef struct {
 
 
 //+ Initialization
-void QueueInitialize();
-void QueueDestroy();
+void QueueInitialize(void);
+void QueueDestroy(void);
 
 //+ Lock/Unlock
-void QueueLock();
-void QueueUnlock();
+void QueueLock(void);
+void QueueUnlock(void);
 
 //+ Add/Remove
 //? The queue *must not* be locked
@@ -58,8 +58,8 @@ void QueueStatistics( _In_opt_ PQUEUE_SELECTION pSel, _Out_ PQUEUE_STATS pStats 
 
 //+ Find
 //! The queue must be locked by the caller
-PCURL_REQUEST QueueHead();
-PCURL_REQUEST QueueTail();
+PCURL_REQUEST QueueHead(void);
+PCURL_REQUEST QueueTail(void);
 PCURL_REQUEST QueueFind( _In_ ULONG iId );
-PCURL_REQUEST QueueFirstWaiting();
+PCURL_REQUEST QueueFirstWaiting(void);
 BOOL          QueueRequestMatch( _In_ PCURL_REQUEST pReq, _In_opt_ PQUEUE_SELECTION pSel );

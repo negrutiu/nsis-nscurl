@@ -56,8 +56,8 @@ static void GuiRequestDestroy( _In_opt_ PGUI_REQUEST pGui ) {
 //                                                                                                                                      //
 
 //+ Initialization
-void GuiInitialize();
-void GuiDestroy();
+void GuiInitialize(void);
+void GuiDestroy(void);
 
 //+ GuiParseRequestParam
 BOOL GuiParseRequestParam(
