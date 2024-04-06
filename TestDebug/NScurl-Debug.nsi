@@ -1133,7 +1133,7 @@ Section Hashes
 
 	StrLen $R1 "${S1}"
 	System::Call '*(&m128 "${S1}") p.r10'
-	IntFmt $R0 "0x%Ix" $R0
+	; IntFmt $R0 "0x%Ix" $R0    ; not working in nt4
 
 	Push $R1
 	Push $R0
