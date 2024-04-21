@@ -1243,6 +1243,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						iEffectiveTimeout / 1000,
 						pReq->bInsist ? _T("true") : _T("false")
 					);
+					TRACE2(_T("Send Headers -------------------------------------\n%hs"), pReq->Runtime.OutHeaders.iSize ? pReq->Runtime.OutHeaders.pMem : "");
+					TRACE2(_T("Recv Headers -------------------------------------\n%hs\n-------------------------------------\n"), pReq->Runtime.InHeaders.iSize ? pReq->Runtime.InHeaders.pMem : "");
 
 					if (bSuccess)
 						break;		/// Transfer successful
