@@ -121,8 +121,20 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Found" );
 						} else if (pReq->Error.iHttp == 405) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Method Not Allowed" );
+						} else if (pReq->Error.iHttp == 406) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Acceptable" );
+						} else if (pReq->Error.iHttp == 407) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Proxy Authentication Required" );
+						} else if (pReq->Error.iHttp == 416) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Range Not Satisfiable" );
 						} else if (pReq->Error.iHttp == 500) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Internal Server Error" );
+						} else if (pReq->Error.iHttp == 501) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Implemented" );
+						} else if (pReq->Error.iHttp == 502) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Bad Gateway" );
+						} else if (pReq->Error.iHttp == 503) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Service Unavailable" );
 						} else {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Error" );
 						}
