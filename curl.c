@@ -44,7 +44,7 @@ void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSi
 		if (pbDown)
 			*pbDown = TRUE;
 		if (piSizeTotal)
-			*piSizeTotal = 0;
+			*piSizeTotal = pReq->Runtime.iResumeFrom;
 		if (piSizeXferred)
 			*piSizeXferred = pReq->Runtime.iResumeFrom;
 		if (piPercent)
