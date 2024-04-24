@@ -102,8 +102,11 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 		} else {
 			// HTTP status
 			if (piErrorCode) *piErrorCode = pReq->Error.iHttp;
-			if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
-				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "OK" ) );
+			if (pReq->bResume && (pReq->Error.iHttp == 206 || pReq->Error.iHttp == 416)) {
+				// 206 Partial Content, 416 Range Not Satisfiable
+				if (pszError)  _sntprintf(pszError, iErrorLen, _T("OK"));
+			} else if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
+				if (pszError)  _sntprintf(pszError, iErrorLen, _T("OK"));
 			} else {
 				if (pbSuccess) *pbSuccess = FALSE;
 				if (pszError) {
