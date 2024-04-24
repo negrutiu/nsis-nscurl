@@ -33,7 +33,7 @@ CURL_GLOBALS g_Curl = {0};
 // TODO: Query SSL info (certificate chain, cypher, etc.)
 // ----------------------------------------------------------------------
 
-//+ CurlRequestSizes
+//+ CurlRequestComputeNumbers
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown )
 {
 	assert( pReq );
