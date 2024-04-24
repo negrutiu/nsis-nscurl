@@ -517,6 +517,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			if (*pszParam)
 				pReq->pszDOH = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
+		pReq->bEncoding = TRUE;
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}
@@ -1026,7 +1028,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
-			curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );			/// Send Accept-Encoding header with all supported encodings
+			if (pReq->bEncoding && !pReq->bResume)
+			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings
 
 			if (pReq->bHttp11)
 				curl_easy_setopt(curl, CURLOPT_SSL_ENABLE_ALPN, 0L);        /// Disable ALPN. No negotiation for HTTP2 takes place
