@@ -26,31 +26,37 @@ VOID UtilsDestroy(void)
 #if defined (TRACE_ENABLED)
 VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... )
 {
-	if ( pszFormat && *pszFormat ) {
+	if (pszFormat && *pszFormat)
+	{
+		const int bufsize = 1024 * 16;
+		LPTSTR buf = malloc(bufsize * sizeof(TCHAR));
+		assert(buf);
+		if (buf) 
+		{
+			int iLen1, iLen2;
+			va_list args;
 
-		TCHAR szStr[1024];
-		int iLen1, iLen2;
-		va_list args;
+			va_start(args, pszFormat);
 
-		va_start( args, pszFormat );
+			if (pszFormat[0] == TRACE_NO_PREFIX[0]) {
+				pszFormat++;
+				iLen1 = 0;
+			} else {
+				iLen1 = _sntprintf(buf, bufsize, _T("[nscurl.th%04lx] "), GetCurrentThreadId());
+			}
 
-		if (pszFormat[0] == TRACE_NO_PREFIX[0]) {
-			pszFormat++;
-			iLen1 = 0;
-		} else {
-			iLen1 = _sntprintf( szStr, ARRAYSIZE( szStr ), _T( "[nscurl.th%04lx] " ), GetCurrentThreadId() );
+			iLen2 = _vsntprintf(buf + iLen1, bufsize - iLen1, pszFormat, args);
+			if (iLen2 > 0) {
+				if (iLen1 + iLen2 < bufsize)
+					buf[iLen1 + iLen2] = 0;	// The string is not guaranteed to be null terminated
+			} else {
+				buf[bufsize - 1] = 0;
+			}
+			OutputDebugString(buf);
+
+			va_end(args);
+			free(buf);
 		}
-
-		iLen2 = _vsntprintf( szStr + iLen1, (int)ARRAYSIZE( szStr ) - iLen1, pszFormat, args );
-		if ( iLen2 > 0 ) {
-			if ( iLen1 + iLen2 < ARRAYSIZE( szStr ) )
-				szStr[iLen1 + iLen2] = 0;	/// The string is not guaranteed to be null terminated
-		} else {
-			szStr[ARRAYSIZE( szStr ) - 1] = 0;
-		}
-		OutputDebugString( szStr );
-
-		va_end( args );
 	}
 }
 #endif

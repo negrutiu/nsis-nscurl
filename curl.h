@@ -33,6 +33,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bNoDebugData  : 1;
 	BOOLEAN		bMarkOfTheWeb : 1;
 	BOOLEAN     bHttp11       : 1;
+	BOOLEAN     bEncoding     : 1;
 	LPCSTR		pszCacert;				/// can be NULL. If valid and empty ("") no cacert.pem is used
 	struct curl_slist *pCertList;		/// can be NULL. If pszCacert=="" and pCertList==NULL, the SSL validation is turned off
 	LPCTSTR		pszDebugFile;			/// can be NULL

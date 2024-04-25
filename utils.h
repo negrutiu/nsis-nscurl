@@ -15,8 +15,8 @@ VOID UtilsDestroy(void);
 #define TRACE_NO_PREFIX _T("\x0001")
 
 #if defined (TRACE_ENABLED)
-	#define TRACE _tprintf
-	#define TRACE2 _tprintf
+	#define TRACE TraceImpl
+    #define TRACE2 TraceImpl	// More verbosity
 	VOID TraceImpl( _In_z_ _Printf_format_string_ LPCTSTR pszFormat, _In_ ... );
 #else
 	#define TRACE(...)

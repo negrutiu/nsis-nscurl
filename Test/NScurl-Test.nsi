@@ -213,6 +213,24 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 SectionEnd
 
 
+Section "github.com/get (Encoding)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK  "https://raw.githubusercontent.com/negrutiu/nsis-nscurl/master/curl.c"
+	!define /redef FILE  "$EXEDIR\_curl.c"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	; note: /Accept-Encoding is ignored if /RESUME is specified too
+	; note: Notice that content-lenght indicates the size of the gzip-compressed data (15kb) and not the actual data size (60kb)
+	;NScurl::http get "${LINK}" "${FILE}" /Accept-Encoding /CANCEL /INSIST /Zone.Identifier /DEBUG nodata "${FILE}.debug.txt" /END
+	NScurl::http get "${LINK}" "${FILE}" /Accept-Encoding /CANCEL /INSIST /Zone.Identifier /END
+	Pop $0
+	DetailPrint "Status: $0"
+
+SectionEnd
+
+
 Section "httpbin.org/post (multipart/form-data)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

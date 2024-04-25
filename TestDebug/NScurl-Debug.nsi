@@ -326,6 +326,38 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 SectionEnd
 
 
+Section "github.com/get (Encoding)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "https://raw.githubusercontent.com/negrutiu/nsis-nscurl/master/curl.c"
+	!define /redef FILE  "$EXEDIR\_curl.c"
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+
+    Push "${FILE}.debug.txt"
+    Push "nodata"
+    Push "/DEBUG"
+
+	Push "/Zone.Identifier"
+	Push "/INSIST"
+	;Push "/RESUME"
+	Push "/CANCEL"
+	Push "/ENCODING"	; ignored if /RESUME specified too
+
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+
+	Pop $0
+	DetailPrint "Status: $0"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section "httpbin.org/post (multipart/form-data)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

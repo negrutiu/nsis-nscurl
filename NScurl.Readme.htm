@@ -163,6 +163,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>/DOH &lt;url&gt;</td>
 	<td>Specify a <a href="https://en.wikipedia.org/wiki/DNS_over_HTTPS">DNS over HTTPS</a> server to resolve DNS requests securely.<br>
 	<b>NOTE:</b> This DoH server is used for the current transfer only. It's not a global setting.<br>
+	<b>EXAMPLE:</b> /DOH "<a href="https://dns.quad9.net/dns-query">https://dns.quad9.net/dns-query</a>"<br>
 	<b>EXAMPLE:</b> /DOH "<a href="https://cloudflare-dns.com/dns-query">https://cloudflare-dns.com/dns-query</a>"<br>
 	<b>EXAMPLE:</b> /DOH "<a href="https://doh.opendns.com/dns-query">https://doh.opendns.com/dns-query</a>"<br>
 	<b>EXAMPLE:</b> /DOH "<a href="https://dns.google/dns-query">https://dns.google/dns-query</a>"<br>
@@ -327,13 +328,24 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
+	<td>/accept-encoding<br>
+	/ENCODING<br>
+	</td>
+	<td>Send the &quot;<b>Accept-Encoding: deflate, gzip</b>&quot; request header to the webserver.<br>
+	Servers that support encoding may decide to send the compressed data.<br>
+	Be aware that during the transfer, the <b>content length</b> indicates the compressed length and not the actual data size.<br>
+	Incompatible with <b>/RESUME</b>.
+	</td>
+</tr>
+<tr>
 	<td>/CACERT "path\cacert.pem"</td>
 	<td>Validate webserver identity using a custom <b>cacert.pem</b> certificate database.<br>
 	By default a built-in <b>cacert.pem</b> is extracted and used at runtime.<br>
-	SSL validation can be turned off by specifying an empty ("") path.<br>
+	An empty path (/CACERT "") disables SSL validation (insecure).<br>
 	<br>
-	<b>NOTE:</b> The embedded <b>cacert.pem</b> can rapidly become obsolete. That would lead to legitimate websites being treated as untrusted.<br>
-	<b>NOTE:</b> The libcurl project maintains a <b>cacert.pem</b> database that is considered trusted. You can <a href="https://curl.haxx.se/docs/caextract.html">download it</a> from their website and feed it to NScurl as custom certificate store.<br>
+	<b>NOTE:</b> The embedded <b>cacert.pem</b> can rapidly become obsolete. That would lead to legitimate websites failing the SSL validation.<br>
+	<b>NOTE:</b> The <b>libcurl project</b> maintains an online <a href="https://curl.haxx.se/docs/caextract.html">cacert.pem</a> database that is considered trusted.
+	Feel free to embed the latest version into your installer and feed it to NScurl.
 	</td>
 </tr>
 <tr>
@@ -341,8 +353,8 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<td>Specify an additional trusted certificate SHA1 thumbprint (e.g. /CERT 917e732d330f9a12404f73d8bea36948b929dffc).<br>
 	Trusted thumbprints are used for SSL validation in addition to the <b>cacert.pem</b> database.<br>
 	<br>
-	<b>NOTE:</b> Multiple /CERT parameters are accepted. All thumbprints are aggregated into a big certificate whitelist.<br>
-	<b>NOTE:</b> <b>cacert.pem</b> database can be turned off by specifying an empty path (<b>/CACERT ""</b>), leaving the thumbprint list the only certificate store used for validation.<br>
+	<b>NOTE:</b> Multiple /CERT parameters are accepted.<br>
+	<b>NOTE:</b> The original <b>cacert.pem</b> database can be disabled by specifying an empty path (<b>/CACERT ""</b>).
 	</td>
 </tr>
 <tr>
@@ -363,7 +375,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<a href="#http">NScurl::http</a> GET ${URL2} ${File2} <b>/TAG "SecondTag"</b> /BACKGROUND /END<br>
 	<a href="#http">NScurl::http</a> GET ${URL3} ${File3} <b>/TAG "FirstTag"</b> /BACKGROUND /END<br>
 	<a href="#wait">NScurl::wait</a> <b>/TAG "FirstTag"</b> /END<br>
-	<a href="#cancel">NScurl::cancel</a> <b>/TAG "FirstTag"</b> /REMOVE<br>
+	<a href="#cancel">NScurl::cancel</a> <b>/TAG "FirstTag"</b> /REMOVE /END<br>
 	</td>
 </tr>
 <tr>

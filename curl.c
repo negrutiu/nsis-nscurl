@@ -33,7 +33,7 @@ CURL_GLOBALS g_Curl = {0};
 // TODO: Query SSL info (certificate chain, cypher, etc.)
 // ----------------------------------------------------------------------
 
-//+ CurlRequestSizes
+//+ CurlRequestComputeNumbers
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown )
 {
 	assert( pReq );
@@ -44,7 +44,7 @@ void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSi
 		if (pbDown)
 			*pbDown = TRUE;
 		if (piSizeTotal)
-			*piSizeTotal = 0;
+			*piSizeTotal = pReq->Runtime.iResumeFrom;
 		if (piSizeXferred)
 			*piSizeXferred = pReq->Runtime.iResumeFrom;
 		if (piPercent)
@@ -102,8 +102,11 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 		} else {
 			// HTTP status
 			if (piErrorCode) *piErrorCode = pReq->Error.iHttp;
-			if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
-				if (pszError)  _sntprintf( pszError, iErrorLen, _T( "OK" ) );
+			if (pReq->bResume && (pReq->Error.iHttp == 206 || pReq->Error.iHttp == 416)) {
+				// 206 Partial Content, 416 Range Not Satisfiable
+				if (pszError)  _sntprintf(pszError, iErrorLen, _T("OK"));
+			} else if ((pReq->Error.iHttp == 0) || (pReq->Error.iHttp >= 200 && pReq->Error.iHttp < 300)) {
+				if (pszError)  _sntprintf(pszError, iErrorLen, _T("OK"));
 			} else {
 				if (pbSuccess) *pbSuccess = FALSE;
 				if (pszError) {
@@ -121,8 +124,20 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Found" );
 						} else if (pReq->Error.iHttp == 405) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Method Not Allowed" );
+						} else if (pReq->Error.iHttp == 406) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Acceptable" );
+						} else if (pReq->Error.iHttp == 407) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Proxy Authentication Required" );
+						} else if (pReq->Error.iHttp == 416) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Range Not Satisfiable" );
 						} else if (pReq->Error.iHttp == 500) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Internal Server Error" );
+						} else if (pReq->Error.iHttp == 501) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Implemented" );
+						} else if (pReq->Error.iHttp == 502) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Bad Gateway" );
+						} else if (pReq->Error.iHttp == 503) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Service Unavailable" );
 						} else {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Error" );
 						}
@@ -502,6 +517,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			if (*pszParam)
 				pReq->pszDOH = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
+		pReq->bEncoding = TRUE;
 	} else {
 		bRet = FALSE;	/// This parameter is not valid for Request
 	}
@@ -1011,7 +1028,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
-			curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );			/// Send Accept-Encoding header with all supported encodings
+			if (pReq->bEncoding && !pReq->bResume)
+			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings
 
 			if (pReq->bHttp11)
 				curl_easy_setopt(curl, CURLOPT_SSL_ENABLE_ALPN, 0L);        /// Disable ALPN. No negotiation for HTTP2 takes place
@@ -1243,6 +1261,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						iEffectiveTimeout / 1000,
 						pReq->bInsist ? _T("true") : _T("false")
 					);
+					TRACE2(_T("Send Headers -------------------------------------\n%hs"), pReq->Runtime.OutHeaders.iSize ? pReq->Runtime.OutHeaders.pMem : "");
+					TRACE2(_T("Recv Headers -------------------------------------\n%hs\n-------------------------------------\n"), pReq->Runtime.InHeaders.iSize ? pReq->Runtime.InHeaders.pMem : "");
 
 					if (bSuccess)
 						break;		/// Transfer successful
