@@ -1363,6 +1363,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLPROTOCOLS@" ) ) == 0) {
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		ULONG i, len;
+		pszKeyword[0] = 0;
 		for (i = 0, len = 0, pszKeyword[0] = 0; ver->protocols && ver->protocols[i]; i++) {
 			if (pszKeyword[0])
 				pszKeyword[len++] = _T( ' ' ), pszKeyword[len] = _T( '\0' );
@@ -1370,47 +1371,15 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			len += lstrlen( pszKeyword + len );
 		}
 	} else if (lstrcmpi( pszKeyword, _T( "@CURLFEATURES@" ) ) == 0) {
-		static struct { const char* name; int mask; } const features[] = {
-			{"alt-svc",        CURL_VERSION_ALTSVC},
-			{"AsynchDNS",      CURL_VERSION_ASYNCHDNS},
-			{"brotli",         CURL_VERSION_BROTLI},
-			{"CharConv",       CURL_VERSION_CONV},
-			{"Debug",          CURL_VERSION_DEBUG},
-			{"gsasl",          CURL_VERSION_GSASL},
-			{"GSS-API",        CURL_VERSION_GSSAPI},
-			{"HSTS",           CURL_VERSION_HSTS},
-			{"HTTP2",          CURL_VERSION_HTTP2},
-			{"HTTP3",          CURL_VERSION_HTTP3},
-			{"HTTPS-proxy",    CURL_VERSION_HTTPS_PROXY},
-			{"IDN",            CURL_VERSION_IDN},
-			{"IPv6",           CURL_VERSION_IPV6},
-			{"Kerberos",       CURL_VERSION_KERBEROS5},
-			{"Largefile",      CURL_VERSION_LARGEFILE},
-			{"libz",           CURL_VERSION_LIBZ},
-			{"MultiSSL",       CURL_VERSION_MULTI_SSL},
-			{"NTLM",           CURL_VERSION_NTLM},
-			{"NTLM_WB",        CURL_VERSION_NTLM_WB},
-			{"PSL",            CURL_VERSION_PSL},
-			{"SPNEGO",         CURL_VERSION_SPNEGO},
-			{"SSL",            CURL_VERSION_SSL},
-			{"SSPI",           CURL_VERSION_SSPI},
-			{"threadsafe",     CURL_VERSION_THREADSAFE},
-			{"TLS-SRP",        CURL_VERSION_TLSAUTH_SRP},
-			{"TrackMemory",    CURL_VERSION_CURLDEBUG},
-			{"Unicode",        CURL_VERSION_UNICODE},
-			{"UnixSockets",    CURL_VERSION_UNIX_SOCKETS},
-			{"zstd",           CURL_VERSION_ZSTD},
-			{NULL,             0}
-		};
 		curl_version_info_data *ver = curl_version_info( CURLVERSION_NOW );
 		ULONG i, len;
-		for (i = 0, len = 0, pszKeyword[0] = 0; i < ARRAYSIZE( features ); i++) {
-			if (ver->features & features[i].mask) {
-				if (pszKeyword[0])
-					pszKeyword[len++] = _T( ' ' ), pszKeyword[len] = _T( '\0' );
-				MyStrCopy( eA2T, pszKeyword + len, iMaxLen - len, features[i].name );
-				len += lstrlen( pszKeyword + len );
-			}
+		pszKeyword[0] = 0;
+		for (i = 0, len = 0; ver->feature_names[i]; i++)
+		{
+			if (pszKeyword[0])
+				pszKeyword[len++] = _T(' '), pszKeyword[len] = _T('\0');
+			MyStrCopy(eA2T, pszKeyword + len, iMaxLen - len, ver->feature_names[i]);
+			len += lstrlen(pszKeyword + len);
 		}
 	} else if (lstrcmpi( pszKeyword, _T( "@USERAGENT@" ) ) == 0) {
 		MyStrCopy( eA2T, pszKeyword, iMaxLen, g_Curl.szUserAgent );
