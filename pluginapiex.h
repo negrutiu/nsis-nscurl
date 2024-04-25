@@ -33,7 +33,7 @@
 //+ EXDLL_VALIDATE
 //? Validate NSIS framework version
 #define EXDLL_VALIDATE() \
-	if (g_ep && g_ep->exec_flags && (g_ep->exec_flags->plugin_api_version != NSISPIAPIVER_CURR))  \
+	if (g_ep && g_ep->exec_flags && (g_ep->exec_flags->plugin_api_version < NSISPIAPIVER_CURR))  \
 		return;
 
 // Additional variables, not exported by the NSIS API
