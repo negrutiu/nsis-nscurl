@@ -959,8 +959,12 @@ ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA 
 	} else if (pData->Type == IDATA_TYPE_FILE) {
 		// Clone the filename (TCHAR)
 		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
-			if ((pData->File = MyCanonicalizePath(pszParam)) != NULL) {
-				pData->Size = lstrlen( pData->File );
+		    if ((pData->File = MyCanonicalizePath(pszParam)) != NULL) {
+				if (MyFileExists(pData->File)) {
+					pData->Size = lstrlen( pData->File );
+				} else {
+					err = ERROR_FILE_NOT_FOUND;
+				}
 			} else {
 				err = ERROR_INVALID_NAME;
 			}
