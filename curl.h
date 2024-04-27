@@ -10,6 +10,8 @@
 #define STATUS_RUNNING		'r'
 #define STATUS_COMPLETE		'c'
 
+/// \brief Filename reserved for in-memory transfers.
+#define FILENAME_MEMORY		_T("Memory")
 
 //+ struct CURL_REQUEST
 typedef struct _CURL_REQUEST {

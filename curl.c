@@ -321,8 +321,11 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (iParamIndex == 2) {
 		//? Params[2] is always the output file/memory
 		MyFree( pReq->pszPath );
-		if (lstrcmpi( pszParam, _T( "MEMORY" ) ) != 0)
+		if (lstrcmpi(pszParam, FILENAME_MEMORY) == 0) {
+			pReq->pszPath = MyStrDup(eT2T, FILENAME_MEMORY);
+		} else {
 			pReq->pszPath = MyStrDup( eT2T, pszParam );
+		}
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			// The string may contain multiple headers delimited by \r\n
@@ -933,7 +936,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	}
 
 	// Output file
-	if (pReq->pszPath && *pReq->pszPath) {
+	if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 		ULONG e = ERROR_SUCCESS;
 		MyCreateDirectory( pReq->pszPath, TRUE );	// Create intermediate directories
 		pReq->Runtime.hOutFile = CreateFile( pReq->pszPath, GENERIC_WRITE, FILE_SHARE_READ, NULL, (pReq->bResume ? OPEN_ALWAYS : CREATE_ALWAYS), FILE_ATTRIBUTE_NORMAL, NULL );
@@ -1401,9 +1404,9 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@FINALURL@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.pszFinalURL ? pReq->Runtime.pszFinalURL : "" );
 		} else if (lstrcmpi( pszKeyword, _T( "@OUT@" ) ) == 0) {
-			MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath ? pReq->pszPath : _T( "Memory" ) );
+			MyStrCopy( eT2T, pszKeyword, iMaxLen, lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0 ? pReq->pszPath : FILENAME_MEMORY);
 		} else if (lstrcmpi( pszKeyword, _T( "@OUTFILE@" ) ) == 0) {
-			if (pReq->pszPath) {
+			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
 					if (*psz == '\\')
@@ -1414,10 +1417,10 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
 				}
 			} else {
-				MyStrCopy( eT2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+				MyStrCopy( eT2T, pszKeyword, iMaxLen, FILENAME_MEMORY );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@OUTDIR@" ) ) == 0) {
-			if (pReq->pszPath) {
+			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
 					if (*psz == '\\')
@@ -1429,7 +1432,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
 				}
 			} else {
-				MyStrCopy( eT2T, pszKeyword, iMaxLen, _T( "Memory" ) );
+				MyStrCopy( eT2T, pszKeyword, iMaxLen, FILENAME_MEMORY );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@SERVERIP@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.pszServerIP );
@@ -1540,7 +1543,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@RECVDATA_RAW@" ) ) == 0) {
 			BOOLEAN bEscape = (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0) ? TRUE : FALSE;
 			pszKeyword[0] = 0;
-			if (pReq->pszPath) {
+			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				// Downloaded to file
 				LPSTR buf = (LPSTR)MyAlloc( iMaxLen );
 				if (buf) {
