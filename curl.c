@@ -1031,7 +1031,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
-			if (pReq->bEncoding && !pReq->bResume)
+			if (pReq->bEncoding && !pReq->bResume && lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0)
 			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings
 
 			if (pReq->bHttp11)

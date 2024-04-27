@@ -345,7 +345,7 @@ Section "github.com/get (Encoding)"
 	Push "/INSIST"
 	;Push "/RESUME"
 	Push "/CANCEL"
-	Push "/ENCODING"	; ignored if /RESUME specified too
+	Push "/ENCODING"	; incompatible with /RESUME or MEMORY transfers
 
 	Push "${FILE}"
 	Push "${LINK}"
