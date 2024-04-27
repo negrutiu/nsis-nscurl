@@ -979,7 +979,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 	if (pReq->pszDebugFile && *pReq->pszDebugFile) {
 		MyCreateDirectory( pReq->pszDebugFile, TRUE );		// Create intermediate directories
 		pReq->Runtime.hDebugFile = CreateFile( pReq->pszDebugFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
-		if (!MyValidHandle( pReq->Runtime.hOutFile )) {
+		if (!MyValidHandle( pReq->Runtime.hDebugFile)) {
 			TRACE( _T( "[!] CreateFile( DebugFile:%s ) = 0x%lx\n" ), pReq->pszDebugFile, GetLastError() );
 		}
 	}
