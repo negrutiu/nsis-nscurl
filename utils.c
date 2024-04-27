@@ -94,14 +94,14 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 		TCHAR *psz, ch;
 		ULONG len = lstrlen( pszBuf );
 		// Strip trailing backslashes
-		for (psz = pszBuf + len - 1; (psz > pszBuf) && IsPathSeparator(*psz); psz--)
+		for (psz = pszBuf + len - 1; (psz >= pszBuf) && IsPathSeparator(*psz); psz--)
 			*psz = _T( '\0' ), len--;
 		if (bHasFilename) {
 			// Strip filename
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && !IsPathSeparator(*psz); psz--)
+			for (psz = pszBuf + len - 1; (psz >= pszBuf) && !IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 			// Strip trailing backslashes
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && IsPathSeparator(*psz); psz--)
+			for (psz = pszBuf + len - 1; (psz >= pszBuf) && IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 		}
 		psz = pszBuf;
