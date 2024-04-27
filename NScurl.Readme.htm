@@ -133,8 +133,12 @@ Pop $0 ; Status text ("OK" for success)<br>
 <tr>
 	<td>filename|MEMORY</td>
 	<td>Transfer destination.<br>
+	Absolute and relative file paths are both accepted. Relative paths use the <a href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory">current directory</a> as base.<br>
+	The current directory might change in unpredictable ways, therefore using absolute paths is recommended.<br>
+	<br>
 	If <b>MEMORY</b> is specified the remote content is downloaded directly to RAM. It can be retrieved later using the <b>@RECVDATA@</b> <a href="#keywords">query keyword</a>.<br>
-	<b>NOTE:</b> The data downloaded to MEMORY is truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build). If you expect larger data, it's recommended to download it to a file on disk.<br>
+	<br>
+	<b>NOTE:</b> The data downloaded to MEMORY is truncated to NSIS' maximum string length (1KB, 4KB, 8KB, depending on the NSIS build). If you expect larger data, it's recommended to download to a file on disk.<br>
 	<b>NOTE: This parameter is mandatory.</b><br>
 	</td>
 </tr>
