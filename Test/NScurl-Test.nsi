@@ -117,7 +117,7 @@ Section "Background (50 * put)"
 
 	StrCpy $1 ""
 	${For} $R0 1 50
-		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA (file) "${TEST_FILE}" /BACKGROUND /INSIST /TAG "parallels" /END
+		NScurl::http PUT "https://httpbin.org/put" "Memory" /DATA -file "${TEST_FILE}" /BACKGROUND /INSIST /TAG "parallels" /END
 		Pop $0
 		IntCmp $R0 1 +2 +1 +1
 			StrCpy $1 "$1, "
@@ -252,9 +252,9 @@ Section "httpbin.org/post (multipart/form-data)"
 		/POST "filename=maiden.json" "type=application/json" "maiden.json" '{ "number_of_the_beast" : 666 }' \
 		/POST "Name" "<Your name here>" \
 		/POST "Password" "<Your password here>" \
-		/POST "filename=test.bin" "test.bin" (file) "${TEST_FILE}" \
-		/POST "filename=test2.bin" "test2.bin" (file) "${TEST_FILE}" \
-		/POST "type=application/octet-stream" "Binary" (memory) $R0 $R1 \
+		/POST "filename=test.bin" "test.bin" -file "${TEST_FILE}" \
+		/POST "filename=test2.bin" "test2.bin" -file "${TEST_FILE}" \
+		/POST "type=application/octet-stream" "Binary" -memory $R0 $R1 \
 		/INSIST \
 		/REFERER "https://test.com" \
 		/END
@@ -671,36 +671,36 @@ Section Hashes
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!define S1 "Hash this string"
 
-	; NScurl::md5 (file) filename
-	NScurl::md5 (file) $EXEPATH
+	; NScurl::md5 -file filename
+	NScurl::md5 -file $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::md5 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::md5 -file "$EXEFILE" = "$0"'
 
-	; NScurl::md5 (string) string
-	NScurl::md5 (string) "${S1}"
+	; NScurl::md5 -string string
+	NScurl::md5 -string "${S1}"
 	Pop $0
-	DetailPrint 'NScurl::md5 (string) "${S1}" = "$0"'
+	DetailPrint 'NScurl::md5 -string "${S1}" = "$0"'
 
-	; NScurl::md5 (memory) ptr size
+	; NScurl::md5 -memory ptr size
 	StrLen $R1 "${S1}"
 	System::Call '*(&m128 "${S1}") p.r10'
 	; IntFmt $R0 "0x%Ix" $R0    ; not working in nt4
 
-	NScurl::md5 (memory) $R0 $R1
+	NScurl::md5 -memory $R0 $R1
 	Pop $0
-	DetailPrint 'NScurl::md5 (memory) ($R0:"${S1}", $R1) = "$0"'
+	DetailPrint 'NScurl::md5 -memory ($R0:"${S1}", $R1) = "$0"'
 
 	System::Free $R0
 
 	; NScurl::sha1
-	NScurl::sha1 (file) $EXEPATH
+	NScurl::sha1 -file $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha1 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha1 -file "$EXEFILE" = "$0"'
 
 	; NScurl::sha256
-	NScurl::sha256 (file) $EXEPATH
+	NScurl::sha256 -file $EXEPATH
 	Pop $0
-	DetailPrint 'NScurl::sha256 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha256 -file "$EXEFILE" = "$0"'
 
 	!undef S1
 SectionEnd

@@ -268,7 +268,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	</td>
 </tr>
 <tr>
-	<td><a name="data">/DATA</a> [-string|file|memory] &lt;data&gt;</td>
+	<td><a name="data">/DATA</a> [-string|-file|-memory] &lt;data&gt;</td>
 	<td>Upload local data to the server.<br>
 	<br>
 	The data is read either from a file or directly from memory.<br>
@@ -282,7 +282,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 	<a href="#http"><b>NScurl::http</b></a> PUT ${url} ${file} /DATA <b>-memory 0xdeadbeef 256</b> <a href="#end">/END</a><br>
 	<br>
 	<b>NOTE:</b> The <b>-memory</b> hint must be followed by two parameters: address and size.<br>
-	<b>NOTE:</b> Although optional, it's recommended that you always specify the <b>-string|file|memory</b> hint.<br>
+	<b>NOTE:</b> Although optional, it's recommended that you always specify the <b>-string|-file|-memory</b> hint.<br>
 	<b>NOTE:</b> Requires POST or PUT methods. Ignored otherwise.<br>
 	</td>
 </tr>
@@ -292,7 +292,7 @@ Pop $0 ; Status text ("OK" for success)<br>
 		[FILENAME=remote_filename]<br>
 		[TYPE=mime_type]<br>
 		&lt;name&gt;<br>
-		[-string|file|memory] &lt;data&gt;<br>
+		[-string|-file|-memory] &lt;data&gt;<br>
 	</p>
 	</td>
 	<td>Upload a multipart form to the server.<br>
@@ -1008,9 +1008,9 @@ Pop $0	; Returns the original string<br>
 
 <hr>
 
-<h2><a name="md5">NScurl::md5</a> [-string|file|memory] &lt;data&gt;<br>
-<a name="sha1">NScurl::sha1</a> [-string|file|memory] &lt;data&gt;<br>
-<a name="sha256">NScurl::sha256</a> [-string|file|memory] &lt;data&gt;</h2>
+<h2><a name="md5">NScurl::md5</a> [-string|-file|-memory] &lt;data&gt;<br>
+<a name="sha1">NScurl::sha1</a> [-string|-file|-memory] &lt;data&gt;<br>
+<a name="sha256">NScurl::sha256</a> [-string|-file|-memory] &lt;data&gt;</h2>
 
 <h3>Description:</h3>
 Utility functions that compute MD5 / SHA1 / SHA256 hashes.<br>

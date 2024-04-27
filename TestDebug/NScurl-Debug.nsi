@@ -150,7 +150,7 @@ Section "Background (50 * put)"
 		Push /INSIST
 		Push /BACKGROUND
 		Push "${TEST_FILE}"
-		Push "(file)"
+		Push "-file"
 		Push /DATA
 		Push "Memory"
 		Push "https://httpbin.org/put"
@@ -380,19 +380,19 @@ Section "httpbin.org/post (multipart/form-data)"
 
 	Push $R1
 	Push $R0
-	Push "(memory)"
+	Push "-memory"
 	Push "Binary"
 	Push "type=application/octet-stream"
 	Push "/POST"
 
 	Push "${TEST_FILE}"
-	Push "(file)"
+	Push "-file"
 	Push "test2.bin"
 	Push "filename=test2.bin"
 	Push "/POST"
 
 	Push "${TEST_FILE}"
-	Push "(file)"
+	Push "-file"
 	Push "test.bin"
 	Push "filename=test.bin"
 	Push "/POST"
@@ -1140,25 +1140,25 @@ Section Hashes
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!define S1 "Hash this string"
 
-	; NScurl::md5 (file) filename
+	; NScurl::md5 -file filename
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push "(file)"
+	Push "-file"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::md5 -file "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
-	; NScurl::md5 (strint) string
+	; NScurl::md5 -string string
 	!insertmacro STACK_VERIFY_START
 	Push "${S1}"
-	Push "(string)"
+	Push "-string"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 (string) "${S1}" = "$0"'
+	DetailPrint 'NScurl::md5 -string "${S1}" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
-	; NScurl::md5 (memory) ptr size
+	; NScurl::md5 -memory ptr size
 	!insertmacro STACK_VERIFY_START
 	Push $R0
 	Push $R1
@@ -1169,10 +1169,10 @@ Section Hashes
 
 	Push $R1
 	Push $R0
-	Push "(memory)"
+	Push "-memory"
 	CallInstDLL $DLL md5
 	Pop $0
-	DetailPrint 'NScurl::md5 (memory) ($R0:"${S1}", $R1) = "$0"'
+	DetailPrint 'NScurl::md5 -memory ($R0:"${S1}", $R1) = "$0"'
 
 	System::Free $R0
 
@@ -1183,19 +1183,19 @@ Section Hashes
 	; NScurl::sha1
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push "(file)"
+	Push "-file"
 	CallInstDLL $DLL sha1
 	Pop $0
-	DetailPrint 'NScurl::sha1 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha1 -file "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	; NScurl::sha256
 	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
-	Push "(file)"
+	Push "-file"
 	CallInstDLL $DLL sha256
 	Pop $0
-	DetailPrint 'NScurl::sha256 (file) "$EXEFILE" = "$0"'
+	DetailPrint 'NScurl::sha256 -file "$EXEFILE" = "$0"'
 	!insertmacro STACK_VERIFY_END
 
 	!undef S1
