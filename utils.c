@@ -94,14 +94,14 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 		TCHAR *psz, ch;
 		ULONG len = lstrlen( pszBuf );
 		// Strip trailing backslashes
-		for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+		for (psz = pszBuf + len - 1; (psz > pszBuf) && IsPathSeparator(*psz); psz--)
 			*psz = _T( '\0' ), len--;
 		if (bHasFilename) {
 			// Strip filename
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz != _T( '\\' )) && (*psz != _T( '/' )); psz--)
+			for (psz = pszBuf + len - 1; (psz > pszBuf) && !IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 			// Strip trailing backslashes
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+			for (psz = pszBuf + len - 1; (psz > pszBuf) && IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 		}
 		psz = pszBuf;
@@ -120,8 +120,8 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 		}
 		// Create intermediate directories
 		for (; (e == ERROR_SUCCESS) && *psz; ) {
-			for (; *psz == _T( '\\' ); psz++);
-			for (; *psz != _T( '\\' ) && *psz != _T( '\0' ); psz++);
+			for (; IsPathSeparator(*psz); psz++);
+			for (; !IsPathSeparator(*psz) && *psz != _T( '\0' ); psz++);
 			ch = *psz, *psz = _T( '\0' );
 			e = CreateDirectory( pszBuf, NULL ) ? ERROR_SUCCESS : GetLastError();
 			if (e == ERROR_ALREADY_EXISTS || e == ERROR_ACCESS_DENIED)

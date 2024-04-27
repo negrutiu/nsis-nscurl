@@ -81,6 +81,9 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 #define MyValidHandle(h) \
 	((h) != NULL) && ((h) != INVALID_HANDLE_VALUE)
 
+/// \brief Check if a character is a valid path separator (backslash or forward slash).
+#define IsPathSeparator(ch) \
+    ((ch) == _T('\\') || (ch) == _T('/'))
 
 // ANSI (multi byte) <-> Unicode (wide char)
 typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } Encodings;

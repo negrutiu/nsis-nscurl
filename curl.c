@@ -1409,7 +1409,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
-					if (*psz == '\\')
+					if (IsPathSeparator(*psz))
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pszLastSep + 1 );
@@ -1423,10 +1423,10 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
-					if (*psz == '\\')
+					if (IsPathSeparator(*psz))
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
-					for (; pszLastSep > pReq->pszPath && *pszLastSep == '\\'; pszLastSep--);	/// Move before '\\'
+					for (; pszLastSep > pReq->pszPath && IsPathSeparator(*pszLastSep); pszLastSep--);	/// Move before '\\'
 					lstrcpyn( pszKeyword, pReq->pszPath, (int)__min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
 				} else {
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
