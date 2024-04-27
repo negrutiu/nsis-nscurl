@@ -79,6 +79,31 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 }
 
 
+LPTSTR MyCanonicalizePath(_In_ LPCTSTR pszPath)
+{
+	LPTSTR canonicalPath = NULL;
+	if (pszPath && pszPath[0]) {
+		const ULONG bufLen = 32768;
+		LPTSTR bufPtr = MyAlloc(bufLen * sizeof(TCHAR));
+		if (bufPtr) {
+			ULONG len;
+			if (!(pszPath[0] == _T('\\') || pszPath[1] == _T('\\') && !IsPathSeparator(pszPath[2]))) {
+				for (; IsPathSeparator(*pszPath); pszPath++);	// strip leading separators for !network paths
+			}
+			len = GetFullPathName(pszPath, bufLen, bufPtr, NULL);
+			if (len != 0 && len < bufLen) {
+				canonicalPath = MyStrDup(eT2T, bufPtr);
+			}
+			MyFree(bufPtr);
+		}
+	}
+	if (!canonicalPath) {
+		canonicalPath = MyStrDup(eT2T, pszPath ? pszPath : _T(""));
+	}
+	return canonicalPath;
+}
+
+
 //++ MyCreateDirectory
 ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 {
@@ -930,7 +955,7 @@ BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *
 	} else if (pData->Type == IDATA_TYPE_FILE) {
 		// Clone the filename (TCHAR)
 		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
-			if ((pData->File = MyStrDup( eT2T, pszParam )) != NULL) {
+			if ((pData->File = MyCanonicalizePath(pszParam)) != NULL) {
 				pData->Size = lstrlen( pData->File );
 				bRet = TRUE;
 			}

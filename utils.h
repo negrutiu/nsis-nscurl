@@ -105,6 +105,12 @@ LPVOID MyStrCopyN( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMax
 // The caller must MyFree(..) the string
 LPCTSTR MyFormatError( _In_ ULONG err );
 
+/// \brief Canonicalize path (see \c GetFullPathName).
+/// \param pszPath Absolute or relative path.
+/// \return New buffer with the canonical path. \n
+///         In case of errors, a copy of the original path is returned. \n
+///         The caller must call \c MyFree to release it.
+LPTSTR MyCanonicalizePath(_In_ LPCTSTR pszPath);
 
 //+ MyFileExists
 BOOL MyFileExistsW( _In_ LPCWSTR pszFile );

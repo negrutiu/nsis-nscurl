@@ -324,7 +324,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		if (lstrcmpi(pszParam, FILENAME_MEMORY) == 0) {
 			pReq->pszPath = MyStrDup(eT2T, FILENAME_MEMORY);
 		} else {
-			pReq->pszPath = MyStrDup( eT2T, pszParam );
+			pReq->pszPath = MyCanonicalizePath(pszParam);
+			assert(pReq->pszPath != NULL);
 		}
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -478,8 +479,10 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
+			LPTSTR path = MyCanonicalizePath(pszParam);
 			MyFree( pReq->pszCacert );
-			pReq->pszCacert = MyStrDup( eT2A, pszParam );
+			pReq->pszCacert = MyStrDup( eT2A, path );
+			MyFree(path);
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -504,7 +507,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 		if (e == NOERROR && *pszParam) {
 			MyFree( pReq->pszDebugFile );
-			pReq->pszDebugFile = MyStrDup( eT2T, pszParam );
+			pReq->pszDebugFile = MyCanonicalizePath( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/TAG" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
