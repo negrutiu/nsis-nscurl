@@ -293,9 +293,9 @@ void CurlFindHeader( _In_ LPCSTR pszHeaders, _In_ LPCSTR pszHeaderName, _Out_ LP
 
 
 //++ CurlParseRequestParam
-BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
+ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
 {
-	BOOL bRet = TRUE;
+	ULONG err = ERROR_SUCCESS;
 	assert( iParamMaxLen && pszParam && pReq );
 
 	if (iParamIndex == 0) {
@@ -324,7 +324,8 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		if (lstrcmpi(pszParam, FILENAME_MEMORY) == 0) {
 			pReq->pszPath = MyStrDup(eT2T, FILENAME_MEMORY);
 		} else {
-			pReq->pszPath = MyStrDup( eT2T, pszParam );
+			pReq->pszPath = MyCanonicalizePath(pszParam);
+			assert(pReq->pszPath != NULL);
 		}
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -363,8 +364,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		if (e == NOERROR) {
 			pszName = MyStrDup( eT2A, pszParam );
 			if ((e = popstring( pszParam )) == NOERROR) {
-				if (IDataParseParam( pszParam, iParamMaxLen, &Data )) {
-
+				if ((err = IDataParseParam(pszParam, iParamMaxLen, &Data)) == ERROR_SUCCESS) {
 					// Store 5-tuple MIME form part
 					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
 					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszType ? pszType : "" );
@@ -401,8 +401,9 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			pReq->pszProxy = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam)
-			IDataParseParam( pszParam, iParamMaxLen, &pReq->Data );
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			err = IDataParseParam(pszParam, iParamMaxLen, &pReq->Data);
+		}
 	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
 		pReq->bResume = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/INSIST" ) ) == 0) {
@@ -478,8 +479,10 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
+			LPTSTR path = MyCanonicalizePath(pszParam);
 			MyFree( pReq->pszCacert );
-			pReq->pszCacert = MyStrDup( eT2A, pszParam );
+			pReq->pszCacert = MyStrDup( eT2A, path );
+			MyFree(path);
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -504,7 +507,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		}
 		if (e == NOERROR && *pszParam) {
 			MyFree( pReq->pszDebugFile );
-			pReq->pszDebugFile = MyStrDup( eT2T, pszParam );
+			pReq->pszDebugFile = MyCanonicalizePath( pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/TAG" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
@@ -523,10 +526,10 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
 		pReq->bEncoding = TRUE;
 	} else {
-		bRet = FALSE;	/// This parameter is not valid for Request
+		err = ERROR_NOT_SUPPORTED;
 	}
 
-	return bRet;
+	return err;
 }
 
 
@@ -1409,7 +1412,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
-					if (*psz == '\\')
+					if (IsPathSeparator(*psz))
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pszLastSep + 1 );
@@ -1423,10 +1426,10 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
 				LPCTSTR psz, pszLastSep = NULL;
 				for (psz = pReq->pszPath; *psz; psz++)
-					if (*psz == '\\')
+					if (IsPathSeparator(*psz))
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
-					for (; pszLastSep > pReq->pszPath && *pszLastSep == '\\'; pszLastSep--);	/// Move before '\\'
+					for (; pszLastSep > pReq->pszPath && IsPathSeparator(*pszLastSep); pszLastSep--);	/// Move before '\\'
 					lstrcpyn( pszKeyword, pReq->pszPath, (int)__min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
 				} else {
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );

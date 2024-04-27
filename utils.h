@@ -81,6 +81,9 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 #define MyValidHandle(h) \
 	((h) != NULL) && ((h) != INVALID_HANDLE_VALUE)
 
+/// \brief Check if a character is a valid path separator (backslash or forward slash).
+#define IsPathSeparator(ch) \
+    ((ch) == _T('\\') || (ch) == _T('/'))
 
 // ANSI (multi byte) <-> Unicode (wide char)
 typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } Encodings;
@@ -102,6 +105,12 @@ LPVOID MyStrCopyN( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMax
 // The caller must MyFree(..) the string
 LPCTSTR MyFormatError( _In_ ULONG err );
 
+/// \brief Canonicalize path (see \c GetFullPathName).
+/// \param pszPath Absolute or relative path.
+/// \return New buffer with the canonical path. \n
+///         In case of errors, a copy of the original path is returned. \n
+///         The caller must call \c MyFree to release it.
+LPTSTR MyCanonicalizePath(_In_ LPCTSTR pszPath);
 
 //+ MyFileExists
 BOOL MyFileExistsW( _In_ LPCWSTR pszFile );
@@ -208,7 +217,7 @@ typedef struct {
 } IDATA;
 void IDataInitialize( _Inout_ IDATA *pData );
 void IDataDestroy( _Inout_ IDATA *pData );
-BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData );
+ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData );	/// Return Win32 error
 
 
 //+ Unicode

@@ -162,7 +162,8 @@ void  CurlDestroy(void);
 ULONG CurlInitializeLibcurl(void);	//! Must be called only when starting transfers. This will lock NScurl.dll in memory until the process exists
 
 //+ CurlParseRequestParam
-BOOL CurlParseRequestParam(
+// Returns Win32 error code (ERROR_NOT_SUPPORTED for unknown parameters)
+ULONG CurlParseRequestParam(
 	_In_ ULONG iParamIndex,
 	_In_ LPTSTR pszParam,		/// Working buffer with the current parameter
 	_In_ int iParamMaxLen,

@@ -79,6 +79,31 @@ void MySetThreadName( _In_ HANDLE hThread, _In_ LPCWSTR pszName )
 }
 
 
+LPTSTR MyCanonicalizePath(_In_ LPCTSTR pszPath)
+{
+	LPTSTR canonicalPath = NULL;
+	if (pszPath && pszPath[0]) {
+		const ULONG bufLen = 32768;
+		LPTSTR bufPtr = MyAlloc(bufLen * sizeof(TCHAR));
+		if (bufPtr) {
+			ULONG len;
+			if (!(pszPath[0] == _T('\\') || pszPath[1] == _T('\\') && !IsPathSeparator(pszPath[2]))) {
+				for (; IsPathSeparator(*pszPath); pszPath++);	// strip leading separators for !network paths
+			}
+			len = GetFullPathName(pszPath, bufLen, bufPtr, NULL);
+			if (len != 0 && len < bufLen) {
+				canonicalPath = MyStrDup(eT2T, bufPtr);
+			}
+			MyFree(bufPtr);
+		}
+	}
+	if (!canonicalPath) {
+		canonicalPath = MyStrDup(eT2T, pszPath ? pszPath : _T(""));
+	}
+	return canonicalPath;
+}
+
+
 //++ MyCreateDirectory
 ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 {
@@ -94,14 +119,14 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 		TCHAR *psz, ch;
 		ULONG len = lstrlen( pszBuf );
 		// Strip trailing backslashes
-		for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+		for (psz = pszBuf + len - 1; (psz >= pszBuf) && IsPathSeparator(*psz); psz--)
 			*psz = _T( '\0' ), len--;
 		if (bHasFilename) {
 			// Strip filename
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz != _T( '\\' )) && (*psz != _T( '/' )); psz--)
+			for (psz = pszBuf + len - 1; (psz >= pszBuf) && !IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 			// Strip trailing backslashes
-			for (psz = pszBuf + len - 1; (psz > pszBuf) && (*psz == _T( '\\' ) || *psz == _T( '/' )); psz--)
+			for (psz = pszBuf + len - 1; (psz >= pszBuf) && IsPathSeparator(*psz); psz--)
 				*psz = _T( '\0' ), len--;
 		}
 		psz = pszBuf;
@@ -120,8 +145,8 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 		}
 		// Create intermediate directories
 		for (; (e == ERROR_SUCCESS) && *psz; ) {
-			for (; *psz == _T( '\\' ); psz++);
-			for (; *psz != _T( '\\' ) && *psz != _T( '\0' ); psz++);
+			for (; IsPathSeparator(*psz); psz++);
+			for (; !IsPathSeparator(*psz) && *psz != _T( '\0' ); psz++);
 			ch = *psz, *psz = _T( '\0' );
 			e = CreateDirectory( pszBuf, NULL ) ? ERROR_SUCCESS : GetLastError();
 			if (e == ERROR_ALREADY_EXISTS || e == ERROR_ACCESS_DENIED)
@@ -888,9 +913,10 @@ void IDataDestroy( _Inout_ IDATA *pData )
 //++ IDataParseParam
 //? Syntax: [-string|-file|-memory] <data>
 //? Syntax: [(string)|(file)|(memory)] <data> -> still accepted for backward compatibility
-BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
+ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
 {
-	BOOL bRet = FALSE, bDataPopped = FALSE;
+	ULONG err = ERROR_SUCCESS;
+	BOOL bDataPopped = FALSE;
 	assert( pszParam && iParamMaxLen && pData );
 
 	//? Possible combinations:
@@ -924,35 +950,49 @@ BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *
 			// Clone the string (utf8)
 			if ((pData->Str = MyStrDup( eT2A, pszParam )) != NULL) {
 				pData->Size = lstrlenA( pData->Str );
-				bRet = TRUE;
+			} else {
+				err = ERROR_OUTOFMEMORY;
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else if (pData->Type == IDATA_TYPE_FILE) {
 		// Clone the filename (TCHAR)
 		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
-			if ((pData->File = MyStrDup( eT2T, pszParam )) != NULL) {
-				pData->Size = lstrlen( pData->File );
-				bRet = TRUE;
+		    if ((pData->File = MyCanonicalizePath(pszParam)) != NULL) {
+				if (MyFileExists(pData->File)) {
+					pData->Size = lstrlen( pData->File );
+				} else {
+					err = ERROR_FILE_NOT_FOUND;
+				}
+			} else {
+				err = ERROR_INVALID_NAME;
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else if (pData->Type == IDATA_TYPE_MEM) {
 		// Clone the buffer (PVOID)
 		LPCVOID ptr;
-		size_t size;
 		if ((ptr = (LPCVOID)(bDataPopped ? nsishelper_str_to_ptr( pszParam ) : popint())) != NULL) {
+			size_t size;
 			if ((size = (ULONG_PTR)popintptr()) != 0) {
 				if ((pData->Mem = MyAlloc( size )) != NULL) {
 					CopyMemory( pData->Mem, ptr, size );
 					pData->Size = size;
-					bRet = TRUE;
+				} else {
+					err = ERROR_OUTOFMEMORY;
 				}
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else {
 		assert( !"Unexpected data type" );
+		err = ERROR_INVALID_DATATYPE;
 	}
 
-	if (!bRet)
+	if (err != ERROR_SUCCESS)
 		IDataDestroy( pData );
-	return bRet;
+	return err;
 }

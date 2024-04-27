@@ -102,7 +102,7 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[16];
-		if (IDataParseParam( psz, string_size, &data )) {
+		if (IDataParseParam( psz, string_size, &data ) == ERROR_SUCCESS) {
 			if (Hash( &data, hash, NULL, NULL ) == ERROR_SUCCESS) {
 				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
 			} else {
@@ -138,7 +138,7 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[20];
-		if (IDataParseParam( psz, string_size, &data )) {
+		if (IDataParseParam( psz, string_size, &data ) == ERROR_SUCCESS) {
 			if (Hash( &data, NULL, hash, NULL ) == ERROR_SUCCESS) {
 				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
 			} else {
@@ -174,7 +174,7 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 
 	if (popstring( psz ) == NOERROR) {
 		UCHAR hash[32];
-		if (IDataParseParam( psz, string_size, &data )) {
+		if (IDataParseParam( psz, string_size, &data ) == ERROR_SUCCESS) {
 			if (Hash( &data, NULL, NULL, hash ) == ERROR_SUCCESS) {
 				MyFormatBinaryHex( hash, sizeof( hash ), psz, string_size );
 			} else {
@@ -230,6 +230,7 @@ void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 EXTERN_C __declspec(dllexport)
 void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **stacktop, extra_parameters *extra )
 {
+	ULONG err = ERROR_SUCCESS;
 	LPTSTR psz = NULL;
 	PCURL_REQUEST pReq = NULL;
 	PGUI_REQUEST  pGui = NULL;
@@ -255,45 +256,61 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	if (psz && pReq && pGui) {
 
 		ULONG i;
+
 		CurlRequestInit( pReq );
 		GuiRequestInit( pGui );
 
 		// Parameters
 		for (i = 0; ; i++) {
 
+			ULONG err2;
 			if (popstring( psz ) != 0)
 				break;
+
 			if (lstrcmpi( psz, _T( "/END" ) ) == 0)
 				break;
 
-			if (!CurlParseRequestParam( i, psz, string_size, pReq ) &&
-				!GuiParseRequestParam( psz, string_size, pGui ))
-			{
-				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
-				assert( !"Unknown parameter" );
+			err2 = CurlParseRequestParam(i, psz, string_size, pReq);
+			if (err2 == ERROR_NOT_SUPPORTED)
+				err2 = GuiParseRequestParam(psz, string_size, pGui);
+
+		    if (err2 != ERROR_SUCCESS) {
+				LPCTSTR message;
+				TRACE(_T("  [!] Parameter \"%s\" : 0x%x \"%s\"\n"), psz, err2, (message = MyFormatError(err2)));
+				MyFree(message);
+				if (err == ERROR_SUCCESS && err2 != ERROR_NOT_SUPPORTED)	// ignore ERROR_NOT_SUPPORTED for backward compatibility
+					err = err2;
+				assert( !"Invalid parameter" );
 			}
 		}
 
-		// Append to the queue
-		if (QueueAdd( pReq ) == ERROR_SUCCESS) {
+		if (err == ERROR_SUCCESS) {
 
-			// Wait for this particular ID
-			pGui->qsel.iId = pReq->Queue.iId;
-			pGui->qsel.pszTag = NULL;
-
-			// Wait
-			// In /background mode the call returns immediately
-			GuiWait( pGui, psz, string_size );
-			pushstringEx( psz );
-
-			// Don't destroy pReq
-			pReq = NULL;
+			// Append to the queue
+			err = QueueAdd(pReq);
+			if (err == ERROR_SUCCESS) {
 			
-		} else {
-			pushstringEx( _T( "Error" ) );
+				// Wait for a worker thread to complete the request
+				pGui->qsel.iId = pReq->Queue.iId;
+				pGui->qsel.pszTag = NULL;
+			
+				// Wait
+				// In /background mode the call returns immediately
+				GuiWait( pGui, psz, string_size );
+				pushstringEx( psz );
+			
+				// Don't destroy pReq
+				pReq = NULL;
+			}
 		}
 	} else {
-		pushstringEx( _T( "Error" ) );
+		err = ERROR_OUTOFMEMORY;
+	}
+
+    if (err != ERROR_SUCCESS) {
+		LPCTSTR message = MyFormatError(err);
+		pushstringEx(message);
+		MyFree(message);
 	}
 
 	if (pReq) {
@@ -344,7 +361,7 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 					MyFree( pGui->qsel.pszTag );
 					pGui->qsel.pszTag = MyStrDup( eT2A, psz );
 				}
-			} else if (!GuiParseRequestParam( psz, string_size, pGui )) {
+			} else if (GuiParseRequestParam( psz, string_size, pGui ) != ERROR_SUCCESS) {
 				TRACE( _T( "  [!] Unknown parameter \"%s\"\n" ), psz );
 				assert( !"Unknown parameter" );
 			}

@@ -60,7 +60,8 @@ void GuiInitialize(void);
 void GuiDestroy(void);
 
 //+ GuiParseRequestParam
-BOOL GuiParseRequestParam(
+// Returns Win32 error code (ERROR_NOT_SUPPORTED for unknown parameters)
+ULONG GuiParseRequestParam(
 	_In_ LPTSTR pszParam,		/// Working buffer with the current parameter
 	_In_ int iParamMaxLen,
 	_Out_ PGUI_REQUEST pGui
