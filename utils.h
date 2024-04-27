@@ -217,7 +217,7 @@ typedef struct {
 } IDATA;
 void IDataInitialize( _Inout_ IDATA *pData );
 void IDataDestroy( _Inout_ IDATA *pData );
-BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData );
+ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData );	/// Return Win32 error
 
 
 //+ Unicode

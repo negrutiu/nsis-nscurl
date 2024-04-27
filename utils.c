@@ -913,9 +913,10 @@ void IDataDestroy( _Inout_ IDATA *pData )
 //++ IDataParseParam
 //? Syntax: [-string|-file|-memory] <data>
 //? Syntax: [(string)|(file)|(memory)] <data> -> still accepted for backward compatibility
-BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
+ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *pData )
 {
-	BOOL bRet = FALSE, bDataPopped = FALSE;
+	ULONG err = ERROR_SUCCESS;
+	BOOL bDataPopped = FALSE;
 	assert( pszParam && iParamMaxLen && pData );
 
 	//? Possible combinations:
@@ -949,35 +950,45 @@ BOOL IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA *
 			// Clone the string (utf8)
 			if ((pData->Str = MyStrDup( eT2A, pszParam )) != NULL) {
 				pData->Size = lstrlenA( pData->Str );
-				bRet = TRUE;
+			} else {
+				err = ERROR_OUTOFMEMORY;
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else if (pData->Type == IDATA_TYPE_FILE) {
 		// Clone the filename (TCHAR)
 		if (bDataPopped || popstring( pszParam ) == NO_ERROR) {
 			if ((pData->File = MyCanonicalizePath(pszParam)) != NULL) {
 				pData->Size = lstrlen( pData->File );
-				bRet = TRUE;
+			} else {
+				err = ERROR_INVALID_NAME;
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else if (pData->Type == IDATA_TYPE_MEM) {
 		// Clone the buffer (PVOID)
 		LPCVOID ptr;
-		size_t size;
 		if ((ptr = (LPCVOID)(bDataPopped ? nsishelper_str_to_ptr( pszParam ) : popint())) != NULL) {
+			size_t size;
 			if ((size = (ULONG_PTR)popintptr()) != 0) {
 				if ((pData->Mem = MyAlloc( size )) != NULL) {
 					CopyMemory( pData->Mem, ptr, size );
 					pData->Size = size;
-					bRet = TRUE;
+				} else {
+					err = ERROR_OUTOFMEMORY;
 				}
 			}
+		} else {
+			err = ERROR_BAD_ARGUMENTS;
 		}
 	} else {
 		assert( !"Unexpected data type" );
+		err = ERROR_INVALID_DATATYPE;
 	}
 
-	if (!bRet)
+	if (err != ERROR_SUCCESS)
 		IDataDestroy( pData );
-	return bRet;
+	return err;
 }

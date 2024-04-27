@@ -293,9 +293,9 @@ void CurlFindHeader( _In_ LPCSTR pszHeaders, _In_ LPCSTR pszHeaderName, _Out_ LP
 
 
 //++ CurlParseRequestParam
-BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
+ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PCURL_REQUEST pReq )
 {
-	BOOL bRet = TRUE;
+	ULONG err = ERROR_SUCCESS;
 	assert( iParamMaxLen && pszParam && pReq );
 
 	if (iParamIndex == 0) {
@@ -364,8 +364,7 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 		if (e == NOERROR) {
 			pszName = MyStrDup( eT2A, pszParam );
 			if ((e = popstring( pszParam )) == NOERROR) {
-				if (IDataParseParam( pszParam, iParamMaxLen, &Data )) {
-
+				if ((err = IDataParseParam(pszParam, iParamMaxLen, &Data)) == ERROR_SUCCESS) {
 					// Store 5-tuple MIME form part
 					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszFilename ? pszFilename : "" );
 					pReq->pPostVars = curl_slist_append( pReq->pPostVars, pszType ? pszType : "" );
@@ -402,8 +401,9 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 			pReq->pszProxy = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
-		if (popstring( pszParam ) == NOERROR && *pszParam)
-			IDataParseParam( pszParam, iParamMaxLen, &pReq->Data );
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			err = IDataParseParam(pszParam, iParamMaxLen, &pReq->Data);
+		}
 	} else if (lstrcmpi( pszParam, _T( "/RESUME" ) ) == 0) {
 		pReq->bResume = TRUE;
 	} else if (lstrcmpi( pszParam, _T( "/INSIST" ) ) == 0) {
@@ -526,10 +526,10 @@ BOOL CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ i
 	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
 		pReq->bEncoding = TRUE;
 	} else {
-		bRet = FALSE;	/// This parameter is not valid for Request
+		err = ERROR_NOT_SUPPORTED;
 	}
 
-	return bRet;
+	return err;
 }
 
 

@@ -39,9 +39,9 @@ void GuiDestroy(void)
 
 
 //++ GuiParseRequestParam
-BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PGUI_REQUEST pGui )
+ULONG GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PGUI_REQUEST pGui )
 {
-	BOOL bRet = TRUE;
+	ULONG err = ERROR_SUCCESS;
 	assert( iParamMaxLen && pszParam && pGui );
 
 	if (lstrcmpi( pszParam, _T( "/RETURN" ) ) == 0) {
@@ -91,10 +91,10 @@ BOOL GuiParseRequestParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ PG
 			}
 		}
 	} else {
-		bRet = FALSE;
+		err = ERROR_NOT_SUPPORTED;
 	}
 
-	return bRet;
+	return err;
 }
 
 
