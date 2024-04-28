@@ -55,6 +55,6 @@ Project|License
 :---|:---
 This project itself|[BSD3](LICENSE.md)
 libcurl|[MIT/X inspired](https://curl.haxx.se/docs/copyright.html)
-OpenSSL|[Dual License](https://www.openssl.org/source/license.html)
+OpenSSL|[Apache v2](https://www.openssl.org/source/license.html)
 nghttp2|[MIT](https://github.com/nghttp2/nghttp2/blob/master/COPYING)
 zlib|[zlib](https://www.zlib.net/zlib_license.html)
