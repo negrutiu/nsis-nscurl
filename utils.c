@@ -287,7 +287,7 @@ LPVOID MyStrCopyN( _In_ Encodings iEnc, _In_ LPVOID pszDest, _In_ ULONG iDestMax
 
 	// Copy
 	iDestLen = (iSrcMaxLen < 0 ? INT_MAX : (iSrcMaxLen + 1));		/// Reserve room for \0
-	iDestLen = __min( iDestLen, (int)iDestMaxLen );
+	iDestLen = min( iDestLen, (int)iDestMaxLen );
 
 	if (iEnc == eW2W) {
 		lstrcpynW( (LPWSTR)pszDest, pszSrc ? (LPCWSTR)pszSrc : L"", iDestLen );
@@ -496,7 +496,7 @@ ULONG MyFormatBinaryHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR 
 	if (pszStr && iStrLen)
 		pszStr[0] = 0;
 
-	n = __min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
+	n = min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
 	for (i = 0, j = 0; i < n; i++, j = i << 1) {
 		pszStr[j] = (WCHAR)Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
 		pszStr[j + 1] = (WCHAR)Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
@@ -515,7 +515,7 @@ ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR p
 	if (pszStr && iStrLen)
 		pszStr[0] = 0;
 
-	n = __min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
+	n = min( iDataSize, (iStrLen - 1) / 2 );		/// Total input bytes that fit in the output buffer, not including \0
 	for (i = 0, j = 0; i < n; i++, j = i << 1) {
 		pszStr[j] = (CHAR)Dec2Hex( ((PUCHAR)pData)[i] >> 4 );
 		pszStr[j + 1] = (CHAR)Dec2Hex( ((PUCHAR)pData)[i] & 0xf );
@@ -578,11 +578,11 @@ LONG MyReplaceMem(
 	iBufMaxSize -= (ULONG)((PCCH)pReplace - (PCCH)pBuf);
 
 	LONG iMoveSize = (LONG)(iBufSize - iReplaceSize);
-	iMoveSize = __min( iMoveSize, (LONG)(iBufMaxSize - iWithSize) );
-	iMoveSize = __max( iMoveSize, 0 );
+	iMoveSize = min( iMoveSize, (LONG)(iBufMaxSize - iWithSize) );
+	iMoveSize = max( iMoveSize, 0 );
 	MoveMemory( (PCH)pReplace + iWithSize, (PCH)pReplace + iReplaceSize, iMoveSize );
 
-	ULONG iCopySize = __min( iWithSize, iBufMaxSize );
+	ULONG iCopySize = min( iWithSize, iBufMaxSize );
 	CopyMemory( pReplace, pWith, iCopySize );
 
 	return (LONG)(iCopySize + iMoveSize - iBufSize);
@@ -854,13 +854,13 @@ SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T siz
 			SYSTEM_INFO si;
 			GetSystemInfo( &si );
 			SIZE_T n = ((size + si.dwPageSize) / si.dwPageSize) * si.dwPageSize;
-			pMem->iCommitted = __min( pMem->iCommitted + n, pMem->iReserved );
+			pMem->iCommitted = min( pMem->iCommitted + n, pMem->iReserved );
 			e = VirtualAlloc( (LPVOID)pMem->pMem, pMem->iCommitted, MEM_COMMIT, PAGE_READWRITE ) ? ERROR_SUCCESS : GetLastError();
 		}
 
 		/// Write
 		if (e == ERROR_SUCCESS) {
-			SIZE_T n = __min( size, pMem->iReserved - pMem->iSize );
+			SIZE_T n = min( size, pMem->iReserved - pMem->iSize );
 			if (n > 0) {
 				CopyMemory( (LPVOID)(pMem->pMem + pMem->iSize), mem, n );
 				pMem->iSize += n;

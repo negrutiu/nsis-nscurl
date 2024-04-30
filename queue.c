@@ -32,8 +32,8 @@ void QueueInitialize(void)
 		SYSTEM_INFO si;
 		GetSystemInfo( &si );
 		g_Queue.ThreadMax = si.dwNumberOfProcessors * 2;
-		g_Queue.ThreadMax = __max( g_Queue.ThreadMax, 4 );
-		g_Queue.ThreadMax = __min( g_Queue.ThreadMax, 64 );
+		g_Queue.ThreadMax = max( g_Queue.ThreadMax, 4 );
+		g_Queue.ThreadMax = min( g_Queue.ThreadMax, 64 );
 	}
 	g_Queue.ThreadCount = 0;
 }
@@ -282,7 +282,7 @@ void QueueCreateThreads( _In_ LONG iCount )
 {
 	HANDLE h;
 	LONG i, n;
-	n = __min( iCount, g_Queue.ThreadMax - g_Queue.ThreadCount );
+	n = min( iCount, g_Queue.ThreadMax - g_Queue.ThreadCount );
 	for (i = 0; i < n; i++) {
 		if ((h = CreateThread( NULL, 0, QueueThreadProc, UlongToPtr(++g_Queue.ThreadCount), 0, NULL )) != NULL) {
 			MySetThreadName( h, L"NScurl" );

@@ -281,7 +281,7 @@ void CurlFindHeader( _In_ LPCSTR pszHeaders, _In_ LPCSTR pszHeaderName, _Out_ LP
 		for (psz1 = pszHeaders; psz1 && *psz1; ) {
 			for (psz2 = psz1; *psz2 != '\0' && *psz2 != '\r' && *psz2 != '\n'; psz2++);
 			iLineLen = (int)(psz2 - psz1);
-			if (iLineLen > iHeaderLen && psz1[iHeaderLen] == ':' && CompareStringA( CP_ACP, NORM_IGNORECASE, psz1, __min( iLineLen, iHeaderLen ), pszHeaderName, -1 ) == CSTR_EQUAL) {
+			if (iLineLen > iHeaderLen && psz1[iHeaderLen] == ':' && CompareStringA( CP_ACP, NORM_IGNORECASE, psz1, min( iLineLen, iHeaderLen ), pszHeaderName, -1 ) == CSTR_EQUAL) {
 				for (psz1 += iHeaderLen + 1; *psz1 == ' ' || *psz1 == '\t'; psz1++);
 				MyStrCopyN( eA2T, pszHeaderValue, iMaxLen, psz1, (int)(psz2 - psz1) );
 				break;
@@ -419,7 +419,7 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			pReq->iLowSpeedLimit = bps;
 			pReq->iLowSpeedTime = (ULONG)MyStringToMilliseconds( pszParam ) / 1000;
-			pReq->iLowSpeedTime = __max( pReq->iLowSpeedTime, 3 );		/// seconds
+			pReq->iLowSpeedTime = max( pReq->iLowSpeedTime, 3 );		/// seconds
 		}
 	} else if (lstrcmpi( pszParam, _T( "/SPEEDCAP" ) ) == 0) {
 		pReq->iSpeedCap = popint();
@@ -684,7 +684,7 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 	if (pReq->Data.Type == IDATA_TYPE_STRING || pReq->Data.Type == IDATA_TYPE_MEM) {
 		// Input string/memory buffer
 		assert( pReq->Runtime.iDataPos <= pReq->Data.Size );
-		l = __min( size * nitems, pReq->Data.Size - pReq->Runtime.iDataPos );
+		l = min( size * nitems, pReq->Data.Size - pReq->Runtime.iDataPos );
 		CopyMemory( buffer, (PCCH)pReq->Data.Str + pReq->Runtime.iDataPos, (size_t)l );
 		pReq->Runtime.iDataPos += l;
 	} else if (pReq->Data.Type == IDATA_TYPE_FILE) {
@@ -862,7 +862,7 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 			LPSTR pszLine;
 			if ((pszLine = (LPSTR)malloc( iLineLen )) != NULL) {
 				for (size_t iOutLen = 0; iOutLen < iMaxLen; ) {
-					size_t i, n = __min( iLineLen, size - iOutLen );
+					size_t i, n = min( iLineLen, size - iOutLen );
 					if (n == 0)
 						break;
 					for (i = 0; i < n; i++) {
@@ -1239,7 +1239,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						// Timeouts
 						if (pReq->iCompleteTimeout > 0) {
 							curl_off_t to = pReq->iCompleteTimeout - pReq->Runtime.iTimeElapsed;	/// Remaining complete timeout
-							to = __max( to, 1 );
+							to = max( to, 1 );
 							curl_easy_setopt( curl, CURLOPT_TIMEOUT_MS, (ULONG)to );
 						}
 						// Resume size
@@ -1430,7 +1430,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 						pszLastSep = psz;		/// Last '\\'
 				if (pszLastSep) {
 					for (; pszLastSep > pReq->pszPath && IsPathSeparator(*pszLastSep); pszLastSep--);	/// Move before '\\'
-					lstrcpyn( pszKeyword, pReq->pszPath, (int)__min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
+					lstrcpyn( pszKeyword, pReq->pszPath, (int)min( iMaxLen, (ULONG)(pszLastSep - pReq->pszPath) + 2 ) );
 				} else {
 					MyStrCopy( eT2T, pszKeyword, iMaxLen, pReq->pszPath );
 				}
