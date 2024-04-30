@@ -87,7 +87,7 @@ LPTSTR MyCanonicalizePath(_In_ LPCTSTR pszPath)
 		LPTSTR bufPtr = MyAlloc(bufLen * sizeof(TCHAR));
 		if (bufPtr) {
 			ULONG len;
-			if (!(pszPath[0] == _T('\\') || pszPath[1] == _T('\\') && !IsPathSeparator(pszPath[2]))) {
+			if (!(pszPath[0] == _T('\\') && pszPath[1] == _T('\\') && !IsPathSeparator(pszPath[2]))) {
 				for (; IsPathSeparator(*pszPath); pszPath++);	// strip leading separators for !network paths
 			}
 			len = GetFullPathName(pszPath, bufLen, bufPtr, NULL);
