@@ -275,7 +275,7 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 				err2 = GuiParseRequestParam(psz, string_size, pGui);
 
 		    if (err2 != ERROR_SUCCESS) {
-				LPCTSTR message;
+				LPCTSTR message = NULL;
 				TRACE(_T("  [!] Parameter \"%s\" : 0x%x \"%s\"\n"), psz, err2, (message = MyFormatError(err2)));
 				MyFree(message);
 				if (err == ERROR_SUCCESS && err2 != ERROR_NOT_SUPPORTED)	// ignore ERROR_NOT_SUPPORTED for backward compatibility
