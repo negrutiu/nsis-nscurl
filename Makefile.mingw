@@ -63,6 +63,7 @@ CFLAGS += \
 	-fdata-sections \
 	-fno-unwind-tables \
 	-fno-asynchronous-unwind-tables \
+    -Wno-unused-function \
 	$(INC) \
 	$(CUSTOM_CFLAGS)
 

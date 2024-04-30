@@ -15,7 +15,7 @@ struct {
 
 
 //+ Prototypes
-ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam );
+ULONG WINAPI QueueThreadProc( _In_ LPVOID piThreadIndex );
 void QueueCreateThreads( _In_ LONG iCount );
 
 
@@ -296,13 +296,12 @@ void QueueCreateThreads( _In_ LONG iCount )
 
 
 //++ QueueThreadProc
-ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
+ULONG WINAPI QueueThreadProc( _In_ LPVOID piThreadIndex )
 {
 	ULONG e = ERROR_SUCCESS, t0;
 	PCURL_REQUEST pReq = NULL;
-	LONG iThreadCount = PtrToUlong(pParam);
 
-	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "CreateThread", iThreadCount, g_Queue.ThreadMax );
+	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "CreateThread", PtrToUlong(piThreadIndex), g_Queue.ThreadMax);
 
 	while (TRUE) {
 
@@ -351,11 +350,10 @@ ULONG WINAPI QueueThreadProc( _In_ LPVOID pParam )
 
 	// Exit
 	QueueLock();
-	iThreadCount = --g_Queue.ThreadCount;
+	g_Queue.ThreadCount--;
 	assert( g_Queue.ThreadCount >= 0 );
+	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "ExitThread", g_Queue.ThreadCount, g_Queue.ThreadMax );
 	QueueUnlock();
-
-	TRACE( _T( "%hs( Count:%ld/%ld )\n" ), "ExitThread", iThreadCount, g_Queue.ThreadMax );
 
 	return e;
 }
