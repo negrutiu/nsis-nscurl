@@ -4,8 +4,11 @@
 
 Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
 
-Official project page: https://github.com/negrutiu/nsis-nscurl  
-Dependencies: https://github.com/negrutiu/libcurl-devel
+Resource              | Link
+--------------------- | ------------------------------------------------
+Project page          | https://github.com/negrutiu/nsis-nscurl  
+Dependency            | https://github.com/negrutiu/libcurl-devel
+
 
 ## Features
 
@@ -24,32 +27,27 @@ Dependencies: https://github.com/negrutiu/libcurl-devel
 - Supports proxy servers (both authenticated and open)
 - Supports files larger than 4GB
 - Can download remote content in-memory instead of a file
-- Maaany more...
+- Works well in **64-bit** installers created with [NSIS fork](https://github.com/negrutiu/nsis)
+- Many more...
 
 ## Basic usage
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
-Check out the [test NSIS project](test/NScurl-Test.nsi).
+Check out the [test NSIS project](test/NScurl-Test.nsi).  
 
 ```nsis
 ; Quick transfer
 NScurl::http GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /INSIST /CANCEL /RESUME /END
-Pop $0 ; Status text ("OK" for success)
-```
+Pop $0 ; transfer status ("OK" for success)
 
-```nsis
 ; Quick transfer with GET parameters and request headers
 NScurl::http GET "https://httpbin.org/get?param1=value1&param2=value2" "$TEMP\httpbin_get.json" /HEADER "Header1: Value1" /HEADER "Header2: Value2" /END
 Pop $0
-```
 
-```nsis
 ; POST json data
 NScurl::http POST "https://httpbin.org/post" Memory /HEADER "Content-Type: application/json" /DATA '{"number_of_the_beast":666}' /END
 Pop $0
-```
 
-```nsis
 ; POST json data as MIME multi-part form
 NScurl::http POST "https://httpbin.org/post" Memory /POST "User" "My user name" /POST "Password" "My password" /POST FILENAME=MyFile.json TYPE=application/json "Details" '{"number_of_the_beast":666}' /END
 Pop $0
@@ -60,13 +58,12 @@ Pop $0
 # NScurl::http
 
 ## Syntax
-
 ```
-NScurl::http `method` `url` `output` `parameters` /END
+NScurl::http method url output parameters /END
 ```
 
 ## Description
-Creates a new HTTP request and push it to the internal _transfer queue_.
+Create a new HTTP request and push it to the internal _transfer queue_.
 
 New requests wait in the queue until a _worker thread_ becomes available to execute them.
 Once completed, they remain in the _transfer queue_ and their data stays available for [querying](#nscurlquery).
@@ -107,7 +104,7 @@ The caller must [`NScurl::escape`](#nscurlescape) illegal URL characters.
 Syntax:
 filename | `MEMORY`
 
-Absolute and relative file names are both accepted.  
+Absolute and relative file names are both allowed.  
 Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base.
 
 > [!tip]
@@ -123,7 +120,7 @@ Data can be retrieved later by calling [`NScurl::query "@RECVDATA@"`](#transfer-
 
 ### /RETURN
 ```
-/RETURN `query string`
+/RETURN "query string"
 ```
 Request a custom return value, for example [`/RETURN "@ERRORCODE@ - @ELAPSEDTIME@"`](#transfer-keywords)   
 Default value is the _transfer status_ ([`/RETURN "@error@"`](#transfer-keywords))  
@@ -134,7 +131,7 @@ Some servers might achieve better speed over `HTTP/1.1`.
 
 ### /PROXY
 ```
-/PROXY `scheme://address.domain[:port]`
+/PROXY "scheme://address.domain[:port]"
 ```
 Connect through a web proxy server.  
 Supported schemes: `http`, `https`, `socks4`, `socks4a`, `socks5`, `socks5a`.  
@@ -142,7 +139,7 @@ For more information visit libcurl [CURLOPT_PROXY](https://curl.haxx.se/libcurl/
 
 ### /DOH
 ```
-/DOH `url`
+/DOH "https://<domain>/dns-query"
 ```
 Specify a [DNS over HTTPS](https://en.wikipedia.org/wiki/DNS_over_HTTPS) server to resolve DNS requests securely.
 
@@ -158,8 +155,8 @@ Examples:
 ### /TIMEOUT
 ### /CONNECTTIMEOUT
 ```
-/TIMEOUT `time`
-/CONNECTTIMEOUT `time`
+/TIMEOUT time
+/CONNECTTIMEOUT time
 ```
 
 Connect timeout (default: 5m)
@@ -177,35 +174,38 @@ Examples:
 
 ### /COMPLETETIMEOUT
 ```
-/COMPLETETIMEOUT `time`
+/COMPLETETIMEOUT time
 ```
 Total transfer timeout (default: _infinite_)  
 This value sets a maximum time limit that a transfer is allowed to run.  
-When the time is up the transfer is automatically cancelled.  
+When the time runs out the transfer is automatically cancelled.  
 See [`/TIMEOUT`](#timeout) for `time` syntax.
 
 ### /LOWSPEEDLIMIT
 ```
-/LOWSPEEDLIMIT `bps` `time`
+/LOWSPEEDLIMIT speed time
 ```
 Aborts the transfer if the speed falls below `bps` for a period of `time`.  
 Default value is `0bps for 1m` meaning that the current connection gets dropped after 1m of inactivity.  
+`speed` unit is bytes/s.  
 See [`/TIMEOUT`](#timeout) for `time` syntax.
 
-Examples:
-- `/LOWSPEEDLIMIT 204800 30s`
+Example: `/LOWSPEEDLIMIT 204800 30s`
 
 ### /SPEEDCAP
 ```
-/SPEEDCAP `bps`
+/SPEEDCAP speed
 ```
 Speed cap (default: _none_)  
-The transfer speed will not be allowed to exceed this value.
+The transfer speed will not be allowed to exceed this value.  
+`speed` unit is bytes/s.
+
+Example: `/SPEEDCAP 409600` for a maximum of 400kb/s
 
 ### /INSIST
 Instructs `NScurl` to re/connect to the webserver more aggressively.  
 It will continue trying to connect even if critical errors occur (e.g. no network connectivity, webserver temporarily down, etc.)  
-For `GET` requests it'll try to reestablish dropped connections and optionally `/RESUME` them.  
+For `GET` requests it'll attempt to reestablish dropped connections and optionally [`/RESUME`](#resume) them.  
 Without `/INSIST`, the transfer is cancelled at the first connection failure.
 
 ### /RESUME
@@ -221,21 +221,20 @@ They are followed by default.
 
 ### /USERAGENT
 ```
-/USERAGENT `agent`
+/USERAGENT "agent"
 ```
-Overwrite the default user agent.  
+Overwrite the default user agent ([`/USERAGENT "nscurl/@PluginVersion@"`](#global-keywords)).  
 [Global keywords](#global-keywords) are automatically expanded.  
-Default is `/USERAGENT "nscurl/@PluginVersion@"`
 
 ### /REFERER
 ```
-/REFERER `url`
+/REFERER url
 ```
-Optional referrer URL.
+Optional [referrer URL](https://en.wikipedia.org/wiki/HTTP_referer).
 
 ### /DEBUG
 ```
-/DEBUG [nodata] `file`
+/DEBUG [nodata] file
 ```
 Write transfer HTTP/SSL details to a debugging file.  
 `nodata` is optional and prevents the remote content from being written to `file`.  
@@ -243,41 +242,45 @@ Disabled by default.
 
 ### /AUTH
 ```
-/AUTH [TYPE=basic|digest|digestie] `user` `pass`
-/AUTH TYPE=bearer `token`
+/AUTH [TYPE=basic|digest|digestie] user pass
+/AUTH TYPE=bearer token
 ```
 
-* HTTP `user` and `pass` authentication.  
-`TYPE` is inferred automatically if not specified. `TYPE` is mandatory when connecting to servers with _hidden_ authentication.  
-`user` and `pass` must be cleartext and unescaped.
+* HTTP `user` and `pass` authentication  
+`TYPE` is inferred automatically if not specified. `TYPE` is mandatory when connecting to servers with _hidden_ authentication.
 
-* HTTP `token` authentication.  
-The `OAuth 2.0` token is mandatory.
+* HTTP `OAuth 2.0` token authentication  
+`TYPE=bearer` is mandatory
+
+> [!caution]
+> `user`, `pass` and `token` must be cleartext and unescaped
 
 For more information visit libcurl [CURLOPT_HTTPAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html) documentation.
 
 ### /TLSAUTH
 ```
-/TLSAUTH `user` `pass`
+/TLSAUTH user pass
 ```
 
 [TLS-SRP](https://en.wikipedia.org/wiki/TLS-SRP) (Secure Remote Password) authentication.  
-`user` and `pass` must be cleartext and unescaped.  
 For more information visit libcurl [CURLOPT_TLSAUTH_TYPE](https://curl.haxx.se/libcurl/c/CURLOPT_TLSAUTH_TYPE.html) documentation.
+
+> [!caution]
+> `user` and `pass` must be cleartext and unescaped
 
 ### /HEADER
 ```
-/HEADER `header`
+/HEADER header(s)
 ```
 
-Send additional HTTP request headers.  
+Send additional HTTP request header(s).  
 Multiple headers can be separated by CRLF (`$\r$\n` in NSIS).  
-Multiple `/HEADER` parameters are accepted.
+Multiple `/HEADER` parameters are allowed.
 
 ### /DATA
 ```
-/DATA [-string|-file] `data`
-/DATA -memory `address` `size`
+/DATA [-string|-file] data
+/DATA -memory address size
 ```
 
 Upload local data to the web server.
@@ -288,7 +291,7 @@ If unspecified, `NScurl` tries to guess whether `data` represents a file name or
 `-memory` is not automatically inferred and must be specified explicitly.
 
 > [!note]
-> `/DATA` works with `POST` or `PUT` methods. Ignored otherwise.
+> `/DATA` works with `POST` or `PUT` methods. Ignored otherwise
 
 Examples:
 ```nsis
@@ -309,13 +312,14 @@ NScurl::http PUT ${url} ${file} /DATA -memory 0xdeadbeef 256 /END
 
 Upload data as a multipart form.
 
-`FILENAME`: Optional remote file name  
-`TYPE`: Optional [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml)  
-`name`: Form part name  
-`data`: Form part data  
+Parameter  | Details
+---------- | ---------------------------------------
+`FILENAME` | Optional remote file name
+`TYPE`     | Optional [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml)
+`name`     | Form part name
+`data`     | Form part data. See [`NScurl::http /DATA`](#data) for `data` syntax
 
-See [`NScurl::http /DATA`](#data) to learn how `data` is interpreted.  
-Multiple `/POST` parameters are allowed. All individual parts are sent as one multipart form.
+Multiple `/POST` parameters are allowallowed. All individual parts are sent as one multipart form.
 
 Example:
 ```nsis
@@ -349,7 +353,7 @@ Be aware that during the transfer, the _content length_ indicates the compressed
 > Incompatible with `MEMORY` transfers
 
 ### /CACERT
-```
+```nsis
 /CACERT "path\to\cacert.pem"
 /CACERT ""
 ```
@@ -365,19 +369,19 @@ By default, a built-in `cacert.pem` is extracted and used at runtime.
 
 ### /CERT
 ```
-/CERT `sha1_thumbprint`
+/CERT "sha1 thumbprint"
 ```
 Specify an additional trusted certificate (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`)  
 Trusted certificates are used for SSL validation in addition to the `cacert.pem` database.  
 Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).  
-Multiple `/CERT` parameters are allowed to specify multiple trusted certificates.
+Multiple `/CERT` parameters are allowed.
 
 > [!tip]
 > `cacert.pem` database can be disabled (`/CACERT ""`) leaving the `/CERT` trusted certificates in charge with the SSL validation (aka _certificate pinning_)
 
 ### /DEPEND
 ```
-/DEPEND `id`
+/DEPEND id
 ```
 Make the new HTTP request dependent on another existing request.  
 The new request waits in the queue until its dependency completes.  
@@ -385,7 +389,7 @@ Useful to establish a precise download order between multiple [`/BACKGROUND`](#b
 
 ### /TAG
 ```
-/TAG `tag`
+/TAG tag
 ```
 Assign a tag (aka group) to the new HTTP request.  
 Multiple transfers can be grouped together under the same tag.  
@@ -462,22 +466,22 @@ Enable `Cancel` button when waiting in [`/PAGE`](#page) or [`/POPUP`](#popup) mo
 ### /TEXTWND
 ### /PROGRESSWND
 ### /CANCELWND
-```
-/TITLEWND `hwnd`
-/TEXTWND `hwnd`
-/PROGRESSWND `hwnd`
-/CANCELWND `hwnd`
+```nsis
+/TITLEWND hwnd
+/TEXTWND hwnd
+/PROGRESSWND hwnd
+/CANCELWND hwnd
 ```
 Optional _control handles_ (`HWND`) for `Title`, `Text/Status`, `progress bar`, `Cancel` controls.
 
 ### /STRING
-```
-/STRING TITLE `string`
-/STRING TITLE_NOSIZE `string`
-/STRING TITLE_MULTI `string`
-/STRING TEXT `string`
-/STRING TEXT_NOSIZE `string`
-/STRING TEXT_MULTI `string`
+```nsis
+/STRING TITLE "string"
+/STRING TITLE_NOSIZE "string"
+/STRING TITLE_MULTI "string"
+/STRING TEXT "string"
+/STRING TEXT_NOSIZE "string"
+/STRING TEXT_MULTI "string"
 ```
 Overwrite the default (English) GUI messages.  
 Useful to create localized installers.
@@ -485,7 +489,7 @@ Useful to create localized installers.
 [Query keywords](#transfer-keywords) are automatically expanded with runtime data.
 
 ### /END
-`/END` is the end-of-list marker for the variable parameter list.
+`/END` marks the end of the variable parameter list.
 > [!caution]
 > This parameter is mandatory
 
@@ -494,8 +498,9 @@ Useful to create localized installers.
 # NScurl::query
 
 ## Syntax
-```
-NScurl::query [/ID id] [/TAG tag] `query string`
+
+```nsis
+NScurl::query [/ID id] [/TAG tag] "query string"
 ```
 
 ## Description
@@ -513,10 +518,10 @@ The return value is pushed to the NSIS stack.
 ```nsis
 ; Query information about a specific HTTP request
 NScurl::http GET "https://download.sysinternals.com/files/SysinternalsSuite.zip" "$TEMP\SysinternalsSuite.zip" /RETURN `@id@` /END
-Pop $0 ; Transfer ID
+Pop $0 ; transfer ID
 
 NScurl::query /ID $0 "Status: @ERROR@, Headers: @RECVHEADERS@"
-Pop $1 ; Status + Response headers</font>
+Pop $1 ; status + response headers</font>
 
 ; Query global information
 NScurl::query "@TOTALSIZE@ - @TOTALSPEED@"
@@ -527,14 +532,14 @@ Pop $0
 
 ### /ID
 ```
-/ID `id`
+/ID id
 ```
 Query information about a specific transfer.  
 The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
 
-### /TAG `tag`
+### /TAG
 ```
-/TAG `tag`
+/TAG tag
 ```
 Query information about multiple transfers tagged with `tag`.  
 See [`NScurl::http /TAG`](#tag).
@@ -762,7 +767,7 @@ Maximum number of worker threads.
 
 ## Syntax
 ```
-NScurl::wait [/ID id] [/TAG tag] `parameters` /END
+NScurl::wait [/ID id] [/TAG tag] parameters /END
 ```
 
 ## Description
@@ -776,9 +781,9 @@ None.
 ```nsis
 ; Start multiple background transfers
 NScurl::http GET ${URL1} ${FILE1} /TAG "filegroup1" /BACKGROUND /END
-Pop $0	; Transfer ID
+Pop $0	; transfer ID
 NScurl::http GET ${URL2} ${FILE2} /TAG "filegroup1" /BACKGROUND /END
-Pop $1	; Transfer ID
+Pop $1	; transfer ID
 
 ; >>> do some useful work
 
@@ -790,14 +795,14 @@ NScurl::wait /TAG "filegroup1" /CANCEL /END
 
 ### /ID
 ```
-/ID `id`
+/ID id
 ```
 Wait for a specific transfer.  
 The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
 
 ### /TAG
 ```
-/TAG `tag`
+/TAG tag
 ```
 Wait for multiple transfers tagged with `tag`  
 See [`NScurl::http /TAG`](#tag)
@@ -818,27 +823,27 @@ See [`NScurl::http /CANCEL](#cancel)
 ### /TEXTWND
 ### /PROGRESSWND
 ### /CANCELWND
-```
-/TITLEWND `hwnd`
-/TEXTWND `hwnd`
-/PROGRESSWND `hwnd`
-/CANCELWND `hwnd`
+```nsis
+/TITLEWND hwnd
+/TEXTWND hwnd
+/PROGRESSWND hwnd
+/CANCELWND hwnd
 ```
 See [`NScurl /...`](#titlewnd)
 
 ### /STRING
-```
-/STRING TITLE `string`
-/STRING TITLE_NOSIZE `string`
-/STRING TITLE_MULTI `string`
-/STRING TEXT `string`
-/STRING TEXT_NOSIZE `string`
-/STRING TEXT_MULTI `string`
+```nsis
+/STRING TITLE "string"
+/STRING TITLE_NOSIZE "string"
+/STRING TITLE_MULTI "string"
+/STRING TEXT "string"
+/STRING TEXT_NOSIZE "string"
+/STRING TEXT_MULTI "string"
 ```
 See [`NScurl::http`](#string)
 
 ### /END
-Must always conclude the list of parameters.
+`/END` marks the end of the variable parameter list.
 > [!caution]
 > This parameter is mandatory
 
@@ -862,10 +867,10 @@ An empty string ("") is pushed to mark the end of the enumeration.
 ```nsis
 NScurl::enumerate /END
 _enum_loop:
-	Pop $0
-	StrCmp $0 "" _enum_end
-	DetailPrint "> Transfer ID $0"
-	Goto _enum_loop
+  Pop $0
+  StrCmp $0 "" _enum_end
+  DetailPrint "> transfer ID $0"
+  Goto _enum_loop
 _enum_end:
 ```
 
@@ -873,23 +878,23 @@ _enum_end:
 
 ### /TAG
 ```
-/TAG `tag`
+/TAG tag
 ```
-Enumerate transfers tagged with `tag`  
+Enumerate transfers tagged with `tag`.  
 See [`NScurl::http /TAG`](#tag)
 
 ### /STATUS
+```nsis
+/STATUS "Waiting|Running|Complete"
 ```
-/STATUS Waiting|Running|Complete
-```
-- `Waiting`: enumerates transfers that are still waiting in the queue
+- `Waiting`: enumerate transfers that are still waiting in the queue
 - `Running`: enumerate transfers currently in progress
 - `Complete`: enumerate complete/aborted/failed transfers
 
-Multiple `/STATUS` parameters are allowed
+Multiple `/STATUS` parameters are allowed.
 
 ### /END
-Must always conclude the list of parameters.
+`/END` marks the end of the variable parameter list.
 > [!caution]
 > This parameter is mandatory
 
@@ -911,16 +916,16 @@ None.
 
 ### /ID
 ```
-/ID `id`
+/ID id
 ```
 Cancel a specific transfer.  
 The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`
 
 ### /TAG
 ```
-/TAG `tag`
+/TAG tag
 ```
-Cancel multiple transfers tagged with `tag`  
+Cancel multiple transfers tagged with `tag`.  
 See [`NScurl::http /TAG`](#tag)
 
 ### /REMOVE
@@ -933,9 +938,9 @@ Further [`NScurl::query`](#nscurlquery) calls will fail.
 # NScurl::unescape
 
 ## Syntax
-```
-NScurl::escape `string`
-NScurl::unescape `string`
+```nsis
+NScurl::escape "string"
+NScurl::unescape "string"
 ```
 
 ## Description
@@ -961,15 +966,15 @@ Pop $0	; Returns the original string
 
 ## Syntax
 ```
-NScurl::md5 [-string|-file|-memory] `data`
-NScurl::sha1 [-string|-file|-memory] `data`
-NScurl::sha256 [-string|-file|-memory] `data`
+NScurl::md5 [-string|-file|-memory] data
+NScurl::sha1 [-string|-file|-memory] data
+NScurl::sha256 [-string|-file|-memory] data
 ```
 
 ## Description
 Utility functions that compute MD5 / SHA1 / SHA256 hashes.  
 The data can be read either from a file or directly from memory.  
-See [`NScurl::http /DATA`](#data) to learn how `data` is interpreted.
+See [`NScurl::http /DATA`](#data) for `data` syntax.
 
 ## Return
 The hash string is pushed to the NSIS stack.
