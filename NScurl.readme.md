@@ -2,7 +2,7 @@
 
 `NScurl` is a [NSIS](https://github.com/negrutiu/nsis) (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.
 
-Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl), with [OpenSSL](https://www.openssl.org) as SSL backend.
+Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
 
 Official project page: https://github.com/negrutiu/nsis-nscurl  
 Dependencies: https://github.com/negrutiu/libcurl-devel
@@ -14,8 +14,8 @@ Dependencies: https://github.com/negrutiu/libcurl-devel
 - Multi-threaded design to transfer multiple files in parallel
 - Background transfers are available, while your installer performs other installation tasks
 - Multiple attempts to connect and resume failed/dropped transfers
-- Transfers can run at any `NSIS` install stage (`.onInit` callback function, un/install sections, custom pages, silent installers, etc.)
 - Plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc.)
+- Works at any `NSIS` install stage (in `.onInit` callback function, in un/install sections, custom pages, silent installers, etc.)
 - Supports custom certificate stores and certificate pinning
 - Supports `HTTP` and `TLS` authentication
 - Supports all relevant HTTP methods (`GET`, `POST`, `PUT`, `HEAD`, etc.)
@@ -28,7 +28,7 @@ Dependencies: https://github.com/negrutiu/libcurl-devel
 
 ## Basic usage
 
-Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page. <br>
+Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
 Check out the [test NSIS project](test/NScurl-Test.nsi).
 
 ```nsis
@@ -66,17 +66,17 @@ NScurl::http `method` `url` `output` `parameters` /END
 ```
 
 ## Description
-Create a new HTTP request and push it to the internal _transfer queue_.
+Creates a new HTTP request and push it to the internal _transfer queue_.
 
 New requests wait in the queue until a _worker thread_ becomes available to execute them.
 Once completed, they remain in the _transfer queue_ and their data stays available for [querying](#nscurlquery).
 
-By default `NScurl::http` waits synchronously for the new transfer to complete, unless [`/BACKGROUND`](#background) parameter is used.
+By default, `NScurl::http` waits synchronously for the new transfer to complete, unless [`/BACKGROUND`](#background) parameter is used.
 
 ## Return value
 The return value is pushed to the NSIS stack.
 
-By default the function returns the _transfer status_ string (equivalent to [`/RETURN "@error@"`](#return)).  
+By default, the function returns the _transfer status_ string (equivalent to [`/RETURN "@error@"`](#return)).  
 Successful transfers receive _transfer status_ `"OK"`.
 Failed transfers receive various error messages (e.g `0x2a "Callback aborted"`, etc.)
 
@@ -85,7 +85,7 @@ Failed transfers receive various error messages (e.g `0x2a "Callback aborted"`, 
 
 [`/BACKGROUND`](#background) parameter can be used to request background transfers.
 The new HTTP request is pushed to the _transfer queue_ and the call returns immediately.
-An unique _transfer ID_ is returned (equivalent to [`/RETURN "@id@"`](#return)) that can later be used to query more information.
+A unique _transfer ID_ is returned (equivalent to [`/RETURN "@id@"`](#return)) which can later be used to query more information.
 
 ## Parameters
 
@@ -112,7 +112,7 @@ Relative names use the [current directory](https://learn.microsoft.com/en-us/win
 
 > [!tip]
 > The current directory might change in unpredictable ways  
-> It's recommeded to use absolute paths
+> It's recommended to use absolute paths
 
 `MEMORY` instructs the plugin to download the remote content _in-memory_.  
 Data can be retrieved later by calling [`NScurl::query "@RECVDATA@"`](#transfer-keywords)
@@ -165,7 +165,7 @@ Examples:
 Connect timeout (default: 5m)
 
 `time` applies to each re/connection attempt.  
-By default `NScurl` aborts the transfer if connecting times out. Use `/INSIST` parameter to request multiple attempts to re/connect.
+By default, `NScurl` aborts the transfer if connecting times out. Use `/INSIST` parameter to request multiple attempts to re/connect.
 
 `time` represents the timeout period in milliseconds. `s`, `m` or `h` suffixes are allowed.
 
@@ -181,7 +181,7 @@ Examples:
 ```
 Total transfer timeout (default: _infinite_)  
 This value sets a maximum time limit that a transfer is allowed to run.  
-When this timeout is reached the transfer is cancelled.  
+When the time is up the transfer is automatically cancelled.  
 See [`/TIMEOUT`](#timeout) for `time` syntax.
 
 ### /LOWSPEEDLIMIT
@@ -210,11 +210,10 @@ Without `/INSIST`, the transfer is cancelled at the first connection failure.
 
 ### /RESUME
 Resume the transfer if (part of) the output file already exists locally.  
-By default the output file is always overwritten and the transfer starts over.
+By default, the output file is always overwritten and the transfer starts over.
 
 > [!important]
-> When resuming, the local (partial) data is not validated to match the latest remote content. If the remote content has changed since
-> the last partial download, the final output file might be inconsistent. Avoid resuming arbitrary files
+> When resuming, the local (partial) data is not validated to match the latest remote content. If the remote content has changed since the last partial download, the output file might be inconsistent. Avoid resuming arbitrary files
 
 ### /NOREDIRECT
 Don't follow HTTP redirections.  
@@ -355,7 +354,7 @@ Be aware that during the transfer, the _content length_ indicates the compressed
 /CACERT ""
 ```
 Validate webserver identity using a custom `cacert.pem` certificate database.  
-By default a built-in `cacert.pem` is extracted and used at runtime.  
+By default, a built-in `cacert.pem` is extracted and used at runtime.  
 `/CACERT ""` disables SSL validation (aka _insecure transfer_).
 
 > [!caution]
@@ -412,7 +411,7 @@ By default [`NScurl::http`](#nscurlhttp) creates a new HTTP request and **waits*
 
 `/BACKGROUND` creates a new HTTP background transfer and returns immediately without waiting (aka _asynchronous transfer_).  
 No visual progress is displayed on the GUI.  
-Returns an unique _transfer ID_ (aka [`/RETURN @id@`](#return)) to the caller.
+Returns a unique _transfer ID_ (aka [`/RETURN @id@`](#return)) to the caller.
 
 Example:
 ```nsis
@@ -456,7 +455,7 @@ No visual progress is displayed.
 > `/SILENT` is incompatible with `/BACKGROUND`
 
 ### /CANCEL
-Enable the `Cancel` button when waiting in [`/PAGE`](#page) or [`/POPUP`](#popup) modes.  
+Enable `Cancel` button when waiting in [`/PAGE`](#page) or [`/POPUP`](#popup) modes.  
 `Cancel` is disabled by default.
 
 ### /TITLEWND
@@ -564,7 +563,7 @@ The final HTTP request URI, after all redirections had been followed.
 
 ### @OUT@
 Transfer output location.  
-Can be a either a local file or `MEMORY`  
+Can be either a local file or `MEMORY`  
 See [`NScurl::http output`](#output)
 
 ### @OUTFILE@
