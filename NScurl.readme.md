@@ -124,10 +124,9 @@ Some servers might achieve better speed over `HTTP/1.1`.
 
 ### /PROXY
 ```
-/PROXY `proxy`
+/PROXY `scheme://address.domain[:port]`
 ```
 Connect through a web proxy server.
-Syntax: `scheme://address.domain[:port]`.
 Supported schemes: `http`, `https`, `socks4`, `socks4a`, `socks5`, `socks5a`.
 For more information visit libcurl [CURLOPT_PROXY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html) documentation.
 
@@ -891,7 +890,7 @@ Further [NScurl::query](#nscurlquery) calls will fail.
 # NScurl::escape
 # NScurl::unescape
 
-## Syntax:
+## Syntax
 ```
 NScurl::escape `string`
 NScurl::unescape `string`
