@@ -176,7 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="curl-ca-bundle.crt" />
-    <None Include="NScurl.Readme.htm">
+    <None Include="NScurl.readme.md">
       <DeploymentContent>true</DeploymentContent>
     </None>
   </ItemGroup>
