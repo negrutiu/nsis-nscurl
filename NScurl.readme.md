@@ -73,7 +73,7 @@ Once completed, they remain in the _transfer queue_ and their data stays availab
 
 By default `NScurl::http` waits synchronously for the new transfer to complete, unless [`/BACKGROUND`](#background) parameter is used.
 
-## Return
+## Return value
 The return value is pushed to the NSIS stack.
 
 By default the function returns the _transfer status_ string (equivalent to [`/RETURN "@error@"`](#return)).  
