@@ -33,7 +33,7 @@ Dependency            | https://github.com/negrutiu/libcurl-devel
 ## Basic usage
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
-Check out the [NSIS test script](test/NScurl-Test.nsi).  
+Check out the [NSIS test script](Test/NScurl-Test.nsi).  
 
 ```nsis
 ; Quick transfer

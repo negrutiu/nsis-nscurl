@@ -35,7 +35,7 @@ Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenS
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
 Check out the [documentation](NScurl.readme.md) page.  
-Check out the [NSIS test script](test/NScurl-Test.nsi).  
+Check out the [NSIS test script](Test/NScurl-Test.nsi).  
 
 ```nsis
 ; Quick transfer
