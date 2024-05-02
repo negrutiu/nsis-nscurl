@@ -1,10 +1,10 @@
 # About
 
-[NScurl](https://github.com/negrutiu/nsis-nscurl) is a [NSIS](https://github.com/negrutiu/nsis) (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.
+`NScurl` is a [NSIS](https://github.com/negrutiu/nsis) (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.
 
 Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl), with [OpenSSL](https://www.openssl.org) as SSL backend.
 
-Official project page: https://github.com/negrutiu/nsis-nscurl
+Official project page: https://github.com/negrutiu/nsis-nscurl  
 Dependencies: https://github.com/negrutiu/libcurl-devel
 
 ## Features
@@ -28,7 +28,7 @@ Dependencies: https://github.com/negrutiu/libcurl-devel
 
 ## Basic usage
 
-Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.
+Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page. <br>
 Check out the [test NSIS project](test/NScurl-Test.nsi).
 
 ```nsis
@@ -67,41 +67,51 @@ NScurl::http `method` `url` `output` `parameters` /END
 
 ## Description
 Create a new HTTP request and push it to the internal _transfer queue_.
-The new request waits in the queue until a _worker thread_ becomes available to execute it.
-Complete transfers remain the the _transfer queue_ and can be [queried](#nscurlquery) at any time.
 
-By default the function waits synchronously for the new transfer to complete, unless `/BACKGROUND` parameter is used.
+New requests wait in the queue until a _worker thread_ becomes available to execute them.
+Once completed, they remain in the _transfer queue_ and their data stays available for [querying](#nscurlquery).
+
+By default `NScurl::http` waits synchronously for the new transfer to complete, unless [`/BACKGROUND`](#background) parameter is used.
 
 ## Return
 The return value is pushed to the NSIS stack.
 
-By default the function returns the _transfer status_ string (equivalent to `/RETURN "@error@"`).
-The `"OK"` status indicates that the transfer has completed successfully.
+By default the function returns the _transfer status_ string (equivalent to [`/RETURN "@error@"`](#return)).  
+Successful transfers receive _transfer status_ `"OK"`.
+Failed transfers receive various error messages (e.g `0x2a "Callback aborted"`, etc.)
 
-`/RETURN "query string"` parameter can be used to request custom return values.
+[`/RETURN "query string"`](#return) parameter can be used to request custom return values.
 [Query keywords](#transfer-keywords) are automatically expanded with runtime data.
 
-`/BACKGROUND` can be used to request a background transfer.
-The new request is pushed to the _transfer queue_ and the call returns immediately.
-An unique _transfer ID_ is returned (equivalent to `/RETURN "@id@"`) that can later used to query more information.
+[`/BACKGROUND`](#background) parameter can be used to request background transfers.
+The new HTTP request is pushed to the _transfer queue_ and the call returns immediately.
+An unique _transfer ID_ is returned (equivalent to [`/RETURN "@id@"`](#return)) that can later be used to query more information.
 
 ## Parameters
 
 ### `method`
 HTTP method such as `GET`, `POST`, `PUT`, `HEAD`, etc.
-NOTE: This parameter is mandatory.
+
+> [!important]
+> This parameter is mandatory
 
 ### `url`
-Full URI, including query parameters
+Full URI, including query parameters.  
+The caller must call [`NScurl::escape`](#nscurlescape) to escape illegal URL characters.
 
-NOTE: Query parameters must be escaped by the caller. [NScurl::escape](#nscurlescape) is available for that
-NOTE: This parameter is mandatory
+> [!important]
+> This parameter is mandatory
 
 ### `output`
-Can be `<filename> | MEMORY`.
+```
+filename | `MEMORY`
+```
 
-Absolute and relative file names are both accepted.
-Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base. The current directory might change in unpredictable ways, therefore using absolute paths is recommended.
+Absolute and relative file names are both accepted.  
+Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base.
+
+> [!tip]
+> The current directory might change in unpredictable ways, therefore using absolute paths is recommended
 
 `MEMORY` can be used to download remote content in-memory.
 It can be retrieved later using the `@RECVDATA@` [query keyword](#transfer-keywords).
@@ -898,7 +908,7 @@ NScurl::unescape `string`
 
 ## Description
 Utility function to un/escape URL strings.
-Illegal URLs characters are converted to/from their hexadecimal %XX code.
+Illegal URL characters are converted to/from their hexadecimal `%XX` code.
 
 ## Return
 The un/escaped string is pushed to the NSIS stack.
