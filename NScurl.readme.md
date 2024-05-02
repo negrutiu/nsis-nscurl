@@ -97,47 +97,47 @@ HTTP method such as `GET`, `POST`, `PUT`, `HEAD`, etc.
 
 ### `url`
 Full URI, including query parameters.  
-The caller must call [`NScurl::escape`](#nscurlescape) to escape illegal URL characters.
+The caller must [`NScurl::escape`](#nscurlescape) illegal URL characters.
 
 > [!important]
 > This parameter is mandatory
 
 ### `output`
-```
+
+Syntax:
 filename | `MEMORY`
-```
 
 Absolute and relative file names are both accepted.  
 Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base.
 
 > [!tip]
-> The current directory might change in unpredictable ways, therefore using absolute paths is recommended
+> The current directory might change in unpredictable ways  
+> It's recommeded to use absolute paths
 
-`MEMORY` can be used to download remote content in-memory.
-It can be retrieved later using the `@RECVDATA@` [query keyword](#transfer-keywords).
+`MEMORY` instructs the plugin to download the remote content _in-memory_.  
+Data can be retrieved later by calling [NScurl::query "@RECVDATA@"](#transfer-keywords)
 
-NOTE: `MEMORY` is truncated to the NSIS string maximum length (1KB, 4KB, 8KB, depending on the NSIS build).
-If larger data is expected, downloading to a file is recommended.
-NOTE: This parameter is mandatory.
+> [!note]
+> `MEMORY` data is truncated to the NSIS string maximum length (1KB, 4KB, 8KB, depending on the NSIS build). If larger data is expected, downloading to a file is recommended  
+> This parameter is mandatory
 
 ### /RETURN
 ```
 /RETURN `query string`
 ```
-Request a custom return value.
-Default is the _transfer status_ (`/RETURN "@error@"`).
-[Query keywords](#transfer-keywords) are automatically expanded with runtime data (e.g. `/RETURN "@ERRORCODE@ - @ELAPSEDTIME@"`).
+Request a custom return value, for example [`/RETURN "@ERRORCODE@ - @ELAPSEDTIME@"`](#transfer-keywords)   
+Default value is the _transfer status_ ([`/RETURN "@error@"`](#transfer-keywords))  
 
 ### /HTTP1.1
-Disable `ALPN` negotiation for `HTTP/2`.
+Disable `ALPN` negotiation for `HTTP/2`.  
 Some servers might achieve better speed over `HTTP/1.1`.
 
 ### /PROXY
 ```
 /PROXY `scheme://address.domain[:port]`
 ```
-Connect through a web proxy server.
-Supported schemes: `http`, `https`, `socks4`, `socks4a`, `socks5`, `socks5a`.
+Connect through a web proxy server.  
+Supported schemes: `http`, `https`, `socks4`, `socks4a`, `socks5`, `socks5a`.  
 For more information visit libcurl [CURLOPT_PROXY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html) documentation.
 
 ### /DOH
@@ -145,11 +145,15 @@ For more information visit libcurl [CURLOPT_PROXY](https://curl.haxx.se/libcurl/
 /DOH `url`
 ```
 Specify a [DNS over HTTPS](https://en.wikipedia.org/wiki/DNS_over_HTTPS) server to resolve DNS requests securely.
-NOTE: DoH server is used for the current transfer only. It's not a global setting.
-EXAMPLE: `/DOH "https://dns.quad9.net/dns-query"`
-EXAMPLE: `/DOH "https://cloudflare-dns.com/dns-query"`
-EXAMPLE: `/DOH "https://doh.opendns.com/dns-query"`
-EXAMPLE: `/DOH "https://dns.google/dns-query"`
+
+Examples:
+- `/DOH "https://dns.quad9.net/dns-query"`  
+- `/DOH "https://cloudflare-dns.com/dns-query"`  
+- `/DOH "https://doh.opendns.com/dns-query"`  
+- `/DOH "https://dns.google/dns-query"`  
+
+> [!note]
+> DoH server is used for the current transfer only, it's not a global setting
 
 ### /TIMEOUT
 ### /CONNECTTIMEOUT
@@ -160,58 +164,68 @@ EXAMPLE: `/DOH "https://dns.google/dns-query"`
 
 Connect timeout (default: 5m)
 
-`time` applies to each re/connection attempt.
+`time` applies to each re/connection attempt.  
 By default `NScurl` aborts the transfer if connecting times out. Use `/INSIST` parameter to request multiple attempts to re/connect.
 
-NOTE: `time` represents the timeout period in milliseconds. `s`, `m` or `h` suffixes are available to change the time unit.
+`time` represents the timeout period in milliseconds. `s`, `m` or `h` suffixes are allowed.
 
-EXAMPLES: `/TIMEOUT 5000`, `/TIMEOUT 5s`, `/TIMEOUT 15m`, `/TIMEOUT 24h`
+Examples:
+- `/TIMEOUT 5000`
+- `/TIMEOUT 5s`
+- `/TIMEOUT 15m`
+- `/TIMEOUT 24h`
 
 ### /COMPLETETIMEOUT
 ```
 /COMPLETETIMEOUT `time`
 ```
-Total transfer timeout (default: infinite)
-This value sets a maximum time limit that a transfer is allowed to run.
-When this timeout is reached the transfer is cancelled.
+Total transfer timeout (default: _infinite_)  
+This value sets a maximum time limit that a transfer is allowed to run.  
+When this timeout is reached the transfer is cancelled.  
 See [/TIMEOUT](#timeout) for `time` syntax.
 
 ### /LOWSPEEDLIMIT
 ```
 /LOWSPEEDLIMIT `bps` `time`
 ```
-Aborts the transfer if the speed falls below `bps` for a period of `time`.
-Default: `0bps for 1m` meaning that the current connection gets dropped after 1m of inactivity.
+Aborts the transfer if the speed falls below `bps` for a period of `time`.  
+Default value is `0bps for 1m` meaning that the current connection gets dropped after 1m of inactivity.  
 See [/TIMEOUT](#timeout) for `time` syntax.
 
-EXAMPLE: `/LOWSPEEDLIMIT 204800 30s`
+Examples:
+- `/LOWSPEEDLIMIT 204800 30s`
 
 ### /SPEEDCAP
 ```
 /SPEEDCAP `bps`
 ```
-Speed cap (default: none)
+Speed cap (default: _none_)  
 The transfer speed will not be allowed to exceed this value.
 
 ### /INSIST
-Instructs `NScurl` to re/connect to the webserver more aggressively.
-It will keep trying to re/connect until a timeout is reached, even if critical errors occur (e.g. no network connectivity, webserver temporarily down, etc.)
-In addition, `NScurl` tries to reestablish dropped `GET` transfers and optionally `/RESUME` them.
+Instructs `NScurl` to re/connect to the webserver more aggressively.  
+It will continue trying to connect even if critical errors occur (e.g. no network connectivity, webserver temporarily down, etc.)  
+For `GET` requests it'll try to reestablish dropped connections and optionally `/RESUME` them.  
 Without `/INSIST`, the transfer is cancelled at the first connection failure.
 
 ### /RESUME
-Resume the transfer if (part of) the output file already exists locally.
+Resume the transfer if (part of) the output file already exists locally.  
 By default the output file is always overwritten and the transfer starts over.
 
+> [!important]
+> When resuming, the local (partial) data is not validated to match the latest remote content. If the remote content has changed since
+> the last partial download, the final output file might be inconsistent. Avoid resuming arbitrary files
+
 ### /NOREDIRECT
-Don't follow HTTP redirections. They are followed by default.
+Don't follow HTTP redirections.  
+They are followed by default.
 
 ### /USERAGENT
 ```
 /USERAGENT `agent`
 ```
-Overwrite the default user agent.
-[Global keywords](#transfer-keywords) are automatically expanded.
+Overwrite the default user agent.  
+[Global keywords](#global-keywords) are automatically expanded.  
 Default is `/USERAGENT "nscurl/@PluginVersion@"`
 
 ### /REFERER
@@ -224,8 +238,8 @@ Optional referrer URL.
 ```
 /DEBUG [nodata] `file`
 ```
-Write transfer HTTP/SSL details to a debugging file.
-`nodata` is optional and prevents the remote content from being written to `file`.
+Write transfer HTTP/SSL details to a debugging file.  
+`nodata` is optional and prevents the remote content from being written to `file`.  
 Disabled by default.
 
 ### /AUTH
@@ -234,11 +248,11 @@ Disabled by default.
 /AUTH TYPE=bearer `token`
 ```
 
-* HTTP `user` and `pass` authentication.
-`TYPE` is inferred automatically if not specified. However, `TYPE` is required when connecting to servers with "hidden" authentication.
+* HTTP `user` and `pass` authentication.  
+`TYPE` is inferred automatically if not specified. `TYPE` is mandatory when connecting to servers with _hidden_ authentication.  
 `user` and `pass` must be cleartext and unescaped.
 
-* HTTP `token` authentication.
+* HTTP `token` authentication.  
 The `OAuth 2.0` token is mandatory.
 
 For more information visit libcurl [CURLOPT_HTTPAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html) documentation.
@@ -248,8 +262,8 @@ For more information visit libcurl [CURLOPT_HTTPAUTH](https://curl.haxx.se/libcu
 /TLSAUTH `user` `pass`
 ```
 
-[TLS-SRP](https://en.wikipedia.org/wiki/TLS-SRP) (Secure Remote Password) authentication.
-`user` and `pass` must be cleartext and unescaped.
+[TLS-SRP](https://en.wikipedia.org/wiki/TLS-SRP) (Secure Remote Password) authentication.  
+`user` and `pass` must be cleartext and unescaped.  
 For more information visit libcurl [CURLOPT_TLSAUTH_TYPE](https://curl.haxx.se/libcurl/c/CURLOPT_TLSAUTH_TYPE.html) documentation.
 
 ### /HEADER
@@ -257,10 +271,9 @@ For more information visit libcurl [CURLOPT_TLSAUTH_TYPE](https://curl.haxx.se/l
 /HEADER `header`
 ```
 
-Send additional HTTP request headers.
-
-NOTE: Multiple headers can be separated by CRLF (`$\r$\n` in NSIS).
-NOTE: Multiple `/HEADER` parameters are accepted.
+Send additional HTTP request headers.  
+Multiple headers can be separated by CRLF (`$\r$\n` in NSIS).  
+Multiple `/HEADER` parameters are accepted.
 
 ### /DATA
 ```
@@ -270,14 +283,15 @@ NOTE: Multiple `/HEADER` parameters are accepted.
 
 Upload local data to the web server.
 
-`-string` and `-file` are optional hints to indicate `data` source.
+`-string` and `-file` are optional hints to indicate `data` source.  
 If unspecified, `NScurl` tries to guess whether `data` represents a file name or a generic string.
 
 `-memory` is not automatically inferred and must be specified explicitly.
 
-NOTE: `/DATA` works with `POST` or `PUT` methods. Ignored otherwise.
+> [!note]
+> `/DATA` works with `POST` or `PUT` methods. Ignored otherwise.
 
-EXAMPLES:
+Examples:
 ```nsis
 NScurl::http PUT ${url} ${file} /DATA "Send generic string" /END
 NScurl::http PUT ${url} ${file} /DATA "C:\path\to\file.dat" /END
@@ -296,12 +310,15 @@ NScurl::http PUT ${url} ${file} /DATA -memory 0xdeadbeef 256 /END
 
 Upload data as a multipart form.
 
-`FILENAME`: Optional remote file name
-`TYPE`: Optional [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml)
-`name`: Form part name
-`data`: Form part data
+`FILENAME`: Optional remote file name  
+`TYPE`: Optional [MIME type](https://www.iana.org/assignments/media-types/media-types.xhtml)  
+`name`: Form part name  
+`data`: Form part data  
 
-EXAMPLE:
+See [NScurl::http /DATA](#data) to learn how `data` is interpreted.  
+Multiple `/POST` parameters are allowed. All individual parts are sent as one multipart form.
+
+Example:
 ```nsis
 NScurl::http POST ${url} ${file} \
     /POST "User" "My User Name" \
@@ -313,64 +330,69 @@ NScurl::http POST ${url} ${file} \
     /END
 ```
 
-NOTE: See [NScurl::http /DATA](#data) to learn how `data` is interpreted.
-NOTE: Multiple `/POST` parameters are accepted. All individual parts are sent as one multipart form.
-NOTE: Requires `POST` method. Ignored otherwise.
+> [!note]
+> `/POST` works with `POST` method only. Ignored otherwise.
 
 ### /Zone.Identifier
 ### /MARKOFTHEWEB
-Marks the output file with the [Mark of the Web](https://en.wikipedia.org/wiki/Mark_of_the_Web).
+Marks the output file with the [Mark of the Web](https://en.wikipedia.org/wiki/Mark_of_the_Web).  
 An alternate NTFS data stream named `Zone.Identifier` is attached to the output file.
 
 ### /accept-encoding
 ### /ENCODING
 
-Send the `Accept-Encoding: deflate, gzip` request header to the webserver.
-Servers that support encoding may decide to send compressed data.
+Send the `Accept-Encoding: deflate, gzip` request header to the webserver.  
+Servers that support encoding may decide to send compressed data.  
 Be aware that during the transfer, the _content length_ indicates the compressed length and not the actual data size.
-NOTE: Incompatible with `/RESUME`.
-NOTE: Incompatible with `MEMORY` transfers.
+
+> [!important]
+> Incompatible with `/RESUME`  
+> Incompatible with `MEMORY` transfers
 
 ### /CACERT
 ```
 /CACERT "path\to\cacert.pem"
 /CACERT ""
 ```
-Validate webserver identity using a custom `cacert.pem` certificate database.
-By default a built-in `cacert.pem` is extracted and used at runtime.
+Validate webserver identity using a custom `cacert.pem` certificate database.  
+By default a built-in `cacert.pem` is extracted and used at runtime.  
 `/CACERT ""` disables SSL validation (aka _insecure transfer_).
 
-NOTE: The embedded `cacert.pem` can become outdated. That would lead to legitimate websites failing the SSL validation.
-NOTE: The `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted. Feel free to embed the latest version into your installer and feed it to `NScurl`.
+> [!caution]
+> The embedded `cacert.pem` can become outdated.  
+> That would lead to legitimate websites failing the SSL validation.  
+> The `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted.
+> Feel free to embed the latest version into your installer and feed it to `NScurl`
 
 ### /CERT
 ```
 /CERT `sha1_thumbprint`
 ```
-Specify an additional trusted certificate (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`)
-Trusted certificates are used for SSL validation in addition to the `cacert.pem` database.
+Specify an additional trusted certificate (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`)  
+Trusted certificates are used for SSL validation in addition to the `cacert.pem` database.  
+Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).  
+Multiple `/CERT` parameters are allowed to specify multiple trusted certificates.
 
-NOTE: Multiple `/CERT` parameters are allowed to specify multiple trusted certificates.
-NOTE: Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).
-NOTE: `cacert.pem` database can be disabled (`/CACERT ""`) leaving the `/CERT` trusted certificates in charge with the SSL validation (aka _certificate pinning_).
+> [!tip]
+> `cacert.pem` database can be disabled (`/CACERT ""`) leaving the `/CERT` trusted certificates in charge with the SSL validation (aka _certificate pinning_)
 
 ### /DEPEND
 ```
 /DEPEND `id`
 ```
-Make the new HTTP request dependent on another existing request.
-The new request waits in the queue until its dependency completes.
+Make the new HTTP request dependent on another existing request.  
+The new request waits in the queue until its dependency completes.  
 Useful to establish a precise download order between multiple [/BACKGROUND](#background) transfers.
 
 ### /TAG
 ```
 /TAG `tag`
 ```
-Assign a tag (aka group) to the new HTTP request.
-Multiple transfers can be grouped together under the same tag.
+Assign a tag (aka group) to the new HTTP request.  
+Multiple transfers can be grouped together under the same tag.  
 NOTE: Tags are arbitrary strings with no character restrictions.
 
-EXAMPLE:
+Example:
 ```nsis
 NScurl::http GET ${URL1} ${File1} /BACKGROUND /TAG "most important" /END
 Pop $0  ; transfer ID, not used in this example
@@ -386,11 +408,11 @@ NScurl::wait /TAG "less important" /END         ; wait for the remaining files..
 ```
 
 ### /BACKGROUND
-By default `NScurl::http` creates a new HTTP request and waits for its completion (aka _synchronous transfer_).
+By default [`NScurl::http`](#nscurlhttp) creates a new HTTP request and waits for its completion (aka _synchronous transfer_).
 
-`/BACKGROUND` instructs `NScurl::http` to start a background HTTP transfer and return immediately (aka _asynchronous transfer_).
-No visual progress is displayed on the GUI.
-An unique _transfer ID_ (aka `/RETURN @id@`) is returned to the caller.
+`/BACKGROUND` creates a new HTTP background transfer and returns immediately (aka _asynchronous transfer_).  
+No visual progress is displayed on the GUI.  
+Returns an unique _transfer ID_ (aka [`/RETURN @id@`](#return)) to the caller.
 
 Example:
 ```nsis
@@ -414,24 +436,27 @@ DetailPrint $0
 ```
 
 ### /PAGE
-Wait in _Page-mode_ for transfer completion.
-When waiting from an NSIS section (while on the `InstFiles` page), the function creates a dedicated progress bar to visually display the progress.
-NOTE: `/PAGE` is the default waiting mode.
-NOTE: `/PAGE` is incompatible with `/BACKGROUND`.
+Wait in _Page-mode_ for transfer completion.  
+When waiting from an NSIS section (while on the `InstFiles` page), the function creates a dedicated progress bar to visually display the progress.  
+`/PAGE` is the default waiting mode.
+> [!caution]
+> `/PAGE` is incompatible with `/BACKGROUND`
 
 ### /POPUP
-Wait in _Popup-mode_ for transfer completion.
-Progress is displayed in a pop-up window.
-NOTE: `/POPUP` is incompatible with `/BACKGROUND`.
+Wait in _Popup-mode_ for transfer completion.  
+Progress is displayed in a pop-up window.  
+> [!caution]
+> `/POPUP` is incompatible with `/BACKGROUND`
 
 ### /SILENT
-Wait silently for transfer completion.
-No visual progress is displayed.
-NOTE: `/SILENT` is the default waiting mode for _silent installers_.
-NOTE: `/SILENT` is incompatible with `/BACKGROUND`.
+Wait silently for transfer completion.  
+No visual progress is displayed.  
+`/SILENT` is the default waiting mode for _silent installers_.
+> [!caution]
+> `/SILENT` is incompatible with `/BACKGROUND`
 
 ### /CANCEL
-Enable the `Cancel` button when waiting in [Page-mode](#page) or [Popup-mode](#popup).
+Enable the `Cancel` button when waiting in [`/PAGE`](#page) or [`/POPUP`](#popup) modes.  
 `Cancel` is disabled by default.
 
 ### /TITLEWND
@@ -455,14 +480,15 @@ Optional _control handles_ (`HWND`) for `Title`, `Text/Status`, `progress bar`, 
 /STRING TEXT_NOSIZE `string`
 /STRING TEXT_MULTI `string`
 ```
-Overwrite the default (English) GUI messages.
+Overwrite the default (English) GUI messages.  
 Useful to create localized installers.
 
 [Query keywords](#transfer-keywords) are automatically expanded with runtime data.
 
 ### /END
 `/END` is the end-of-list marker for the variable parameter list.
-NOTE: This parameter is mandatory.
+> [!caution]
+> This parameter is mandatory
 
 *******************************************************************************
 
