@@ -33,7 +33,7 @@ Dependency            | https://github.com/negrutiu/libcurl-devel
 ## Basic usage
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
-Check out the [test NSIS project](test/NScurl-Test.nsi).  
+Check out the [NSIS test script](test/NScurl-Test.nsi).  
 
 ```nsis
 ; Quick transfer
@@ -224,7 +224,7 @@ They are followed by default.
 /USERAGENT "agent"
 ```
 Overwrite the default user agent ([`/USERAGENT "nscurl/@PluginVersion@"`](#global-keywords)).  
-[Global keywords](#global-keywords) are automatically expanded.  
+[Global keywords](#global-keywords) are automatically expanded with runtime data.  
 
 ### /REFERER
 ```
@@ -385,7 +385,7 @@ Multiple `/CERT` parameters are allowed.
 ```
 Make the new HTTP request dependent on another existing request.  
 The new request waits in the queue until its dependency completes.  
-Useful to establish a precise download order between multiple [`/BACKGROUND`](#background) transfers.
+Useful to establish a precise download order among multiple [`/BACKGROUND`](#background) transfers.
 
 ### /TAG
 ```
@@ -403,10 +403,14 @@ NScurl::http GET ${URL2} ${File2} /BACKGROUND /TAG "most important" /END
 Pop $0
 NScurl::http GET ${URL3} ${File3} /BACKGROUND /END
 Pop $0
+
 ; do useful stuff
+
 NScurl::wait /TAG "most important" /END         ; wait for important files...
-NScurl::cancel /TAG "most important" /REMOVE    ; remove from queue (unnecessary, for demo purpose)
+NScurl::cancel /TAG "most important" /REMOVE    ; remove from queue (unnecessary, demo only)
+
 ; do useful stuff
+
 NScurl::wait /TAG "less important" /END         ; wait for the remaining files...
 ```
 
@@ -415,7 +419,7 @@ By default [`NScurl::http`](#nscurlhttp) creates a new HTTP request and **waits*
 
 `/BACKGROUND` creates a new HTTP background transfer and returns immediately without waiting (aka _asynchronous transfer_).  
 No visual progress is displayed on the GUI.  
-Returns a unique _transfer ID_ (aka [`/RETURN @id@`](#return)) to the caller.
+Returns a unique _transfer ID_  to the caller (aka [`/RETURN @id@`](#return))
 
 Example:
 ```nsis
@@ -505,7 +509,7 @@ NScurl::query [/ID id] [/TAG tag] "query string"
 
 ## Description
 Query information about a transfer.  
-The function expands [query keywords](#transfer-keywords) inside `query string` with real runtime data.
+The function expands [query keywords](#transfer-keywords) inside `query string` with runtime data.
 
 There are two categories of keywords:
 - [Transfer keywords](#transfer-keywords) are available only for single transfers (/ID id)
@@ -545,7 +549,8 @@ Query information about multiple transfers tagged with `tag`.
 See [`NScurl::http /TAG`](#tag).
 
 ### `query string`
-The input string.
+The input string.  
+The function returns the expanded string back to the caller.
 
 *******************************************************************************
 
@@ -555,7 +560,7 @@ The input string.
 Unique non-zero _transfer ID_.
 
 ### @STATUS@
-Transfer status: `Waiting`, `Running` or `Complete`
+Transfer queue status: `Waiting`, `Running` or `Complete`
 
 ### @METHOD@
 HTTP method (e.g. `GET`, `POST`, `PUT`, etc.)
@@ -887,9 +892,10 @@ See [`NScurl::http /TAG`](#tag)
 ```nsis
 /STATUS "Waiting|Running|Complete"
 ```
-- `Waiting`: enumerate transfers that are still waiting in the queue
-- `Running`: enumerate transfers currently in progress
-- `Complete`: enumerate complete/aborted/failed transfers
+Enumerate transfers based on their _queue status_:
+- `Waiting`: transfers that are still waiting in the queue
+- `Running`: transfers currently in progress
+- `Complete`: transfers complete, aborted or failed
 
 Multiple `/STATUS` parameters are allowed.
 
