@@ -80,7 +80,7 @@ By default the function returns the _transfer status_ string (equivalent to [`/R
 Successful transfers receive _transfer status_ `"OK"`.
 Failed transfers receive various error messages (e.g `0x2a "Callback aborted"`, etc.)
 
-[`/RETURN "query string"`](#return) parameter can be used to request custom return values.
+[`/RETURN "query string"`](#return) parameter can be used to request custom return values.  
 [Query keywords](#transfer-keywords) are automatically expanded with runtime data.
 
 [`/BACKGROUND`](#background) parameter can be used to request background transfers.
@@ -115,7 +115,7 @@ Relative names use the [current directory](https://learn.microsoft.com/en-us/win
 > It's recommeded to use absolute paths
 
 `MEMORY` instructs the plugin to download the remote content _in-memory_.  
-Data can be retrieved later by calling [NScurl::query "@RECVDATA@"](#transfer-keywords)
+Data can be retrieved later by calling [`NScurl::query "@RECVDATA@"`](#transfer-keywords)
 
 > [!note]
 > `MEMORY` data is truncated to the NSIS string maximum length (1KB, 4KB, 8KB, depending on the NSIS build). If larger data is expected, downloading to a file is recommended  
@@ -182,7 +182,7 @@ Examples:
 Total transfer timeout (default: _infinite_)  
 This value sets a maximum time limit that a transfer is allowed to run.  
 When this timeout is reached the transfer is cancelled.  
-See [/TIMEOUT](#timeout) for `time` syntax.
+See [`/TIMEOUT`](#timeout) for `time` syntax.
 
 ### /LOWSPEEDLIMIT
 ```
@@ -190,7 +190,7 @@ See [/TIMEOUT](#timeout) for `time` syntax.
 ```
 Aborts the transfer if the speed falls below `bps` for a period of `time`.  
 Default value is `0bps for 1m` meaning that the current connection gets dropped after 1m of inactivity.  
-See [/TIMEOUT](#timeout) for `time` syntax.
+See [`/TIMEOUT`](#timeout) for `time` syntax.
 
 Examples:
 - `/LOWSPEEDLIMIT 204800 30s`
@@ -315,7 +315,7 @@ Upload data as a multipart form.
 `name`: Form part name  
 `data`: Form part data  
 
-See [NScurl::http /DATA](#data) to learn how `data` is interpreted.  
+See [`NScurl::http /DATA`](#data) to learn how `data` is interpreted.  
 Multiple `/POST` parameters are allowed. All individual parts are sent as one multipart form.
 
 Example:
@@ -382,7 +382,7 @@ Multiple `/CERT` parameters are allowed to specify multiple trusted certificates
 ```
 Make the new HTTP request dependent on another existing request.  
 The new request waits in the queue until its dependency completes.  
-Useful to establish a precise download order between multiple [/BACKGROUND](#background) transfers.
+Useful to establish a precise download order between multiple [`/BACKGROUND`](#background) transfers.
 
 ### /TAG
 ```
@@ -408,9 +408,9 @@ NScurl::wait /TAG "less important" /END         ; wait for the remaining files..
 ```
 
 ### /BACKGROUND
-By default [`NScurl::http`](#nscurlhttp) creates a new HTTP request and waits for its completion (aka _synchronous transfer_).
+By default [`NScurl::http`](#nscurlhttp) creates a new HTTP request and **waits** for it to complete (aka _synchronous transfer_).
 
-`/BACKGROUND` creates a new HTTP background transfer and returns immediately (aka _asynchronous transfer_).  
+`/BACKGROUND` creates a new HTTP background transfer and returns immediately without waiting (aka _asynchronous transfer_).  
 No visual progress is displayed on the GUI.  
 Returns an unique _transfer ID_ (aka [`/RETURN @id@`](#return)) to the caller.
 
@@ -500,11 +500,12 @@ NScurl::query [/ID id] [/TAG tag] `query string`
 ```
 
 ## Description
-Query information about a transfer.
-The function replaces [query keywords](#transfer-keywords) inside `query string` with real runtime data.
+Query information about a transfer.  
+The function expands [query keywords](#transfer-keywords) inside `query string` with real runtime data.
 
-Transfer-specific keywords are only available when a single transfer is matched (See /ID vs. /TAG).
->Global keywords are always available.
+There are two categories of keywords:
+- [Transfer keywords](#transfer-keywords) are available only for single transfers (/ID id)
+- [Global keywords](#global-keywords) are always available
 
 ## Return
 The return value is pushed to the NSIS stack.
@@ -529,19 +530,18 @@ Pop $0
 ```
 /ID `id`
 ```
-Query information about a specific transfer.
-The _transfer ID_ is returned by [NScurl::http](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
+Query information about a specific transfer.  
+The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
 
 ### /TAG `tag`
 ```
 /TAG `tag`
 ```
-Query information about multiple transfers tagged with `tag`.
-See [NScurl::http /TAG](#tag).
+Query information about multiple transfers tagged with `tag`.  
+See [`NScurl::http /TAG`](#tag).
 
 ### `query string`
 The input string.
-[Query keywords](#transfer-keywords) are automatically expanded with runtime data.
 
 *******************************************************************************
 
@@ -563,9 +563,9 @@ The original HTTP request URI.
 The final HTTP request URI, after all redirections had been followed.
 
 ### @OUT@
-Transfer output location.
-Can be a either a local file or `MEMORY`.
-See [NScurl::http `output`](#output).
+Transfer output location.  
+Can be a either a local file or `MEMORY`  
+See [`NScurl::http output`](#output)
 
 ### @OUTFILE@
 Output file name extracted from @OUT@ (e.g. "SysinternalsSuite.zip")
@@ -581,89 +581,94 @@ Webserver IP port number (usually 443 or 80).
 
 ### @FILESIZE@
 ### @FILESIZE_B@
-Remote file size extracted from `Content-Length` HTTP header.
-`@FILESIZE@` is replaced with a human-readable size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)
-`@FILESIZE_B@` is replaced with the size in bytes.
-NOTE: Some servers don't provide this information.
+Remote file size extracted from `Content-Length` HTTP header.  
+`@FILESIZE@` is replaced with a human-readable size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)  
+`@FILESIZE_B@` is replaced with the size in bytes.  
+> [!caution]
+> Some servers don't send the `Content-Length` header, leading to unknown file size
 
 ### @XFERSIZE@
 ### @XFERSIZE_B@
-The amount of data actually transferred.
-`@XFERSIZE@` is replaced with a human-readable size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)
-`@XFERSIZE_B@` is replaced with the size in bytes.
-NOTE: It's usually equal with `@FILESIZE@`, but it can be smaller for _failed_ or _cancelled_ transfers.
+The amount of data actually transferred.  
+`@XFERSIZE@` is replaced with a human-readable size (e.g. "100 bytes", "250 KB", "10 MB", "1.2 GB", etc.)  
+`@XFERSIZE_B@` is replaced with the size in bytes.  
+The value is usually identical with `@FILESIZE@` except for _failed_ or _cancelled_ transfers.
 
 ### @PERCENT@
-Transfer progress (a value between `0` and `100`).
-NOTE: The percent value might be unknown if the webserver doesn't send the `Content-Length` HTTP header.
+Transfer progress (a value between `0` and `100`).  
+> [!caution]
+> Some servers don't send the `Content-Length` header, resulting in unknown progress
 
 ### @SPEED@
 ### @SPEED_B@
-The current transfer speed.
-`@SPEED@` is replaced with a human-readable value (e.g. "100 KB/s", "1.2 MB/s", etc.)
-`@SPEED_B@` is replaced with the speed in bytes/s.
+The current transfer speed.  
+`@SPEED@` is replaced with a human-readable value (e.g. "100 KB/s", "1.2 MB/s", etc.)  
+`@SPEED_B@` is replaced with the speed in bytes/s
 
 ### @AVGSPEED@
 ### @AVGSPEED_B@
-The average transfer speed.
-`@AVGSPEED@` is replaced with a human-readable value (e.g. "100 KB/s", "1.2 MB/s", etc.)
-`@AVGSPEED_B@` is replaced with the speed in bytes/s.
+The average transfer speed.  
+`@AVGSPEED@` is replaced with a human-readable value (e.g. "100 KB/s", "1.2 MB/s", etc.)  
+`@AVGSPEED_B@` is replaced with the speed in bytes/s
 
 ### @TIMEELAPSED@
 ### @TIMEELAPSED_MS@
-The elapsed transfer time.
-It doesn't include the time this request has waited in the queue.
-`@TIMEELAPSED@` is replaced with a human-readable value like \[d.][hh:]mm:ss (e.g. "05:02" for 5m and 2s)
-`@TIMEELAPSED_MS@` is replaced with the time value in milliseconds.
+The elapsed transfer time.  
+It doesn't include the time this request has waited in the queue.  
+`@TIMEELAPSED@` is replaced with a human-readable value like \[d.][hh:]mm:ss (e.g. "05:02" for 5m and 2s)  
+`@TIMEELAPSED_MS@` is replaced with the time value in milliseconds
 
 ### @TIMEREMAINING@
 ### @TIMEREMAINING_MS@
-The estimated time until this transfer completes. Formatted as [d.][hh:]mm:ss
-`@TIMEREMAINING@` is replaced with a human-readable value like \[d.][hh:]mm:ss (e.g. "05:02" for 5m and 2s)
+The estimated time until this transfer completes.  
+`@TIMEREMAINING@` is replaced with a human-readable value like \[d.][hh:]mm:ss (e.g. "05:02" for 5m and 2s)  
 `@TIMEREMAINING_MS@` is replaced with the time value in milliseconds.
 
 ### @SENTHEADERS@
 ### @SENTHEADERS_RAW@
 ### @SENTHEADERS:Header-Name@
-HTTP request headers.
-`@SENTHEADERS@` returns a one-liner string containing all headers. Special characters `\t`, `\r`, `\n` are replaced by their string representations `"\t"`, `"\r"`, `"\n"`.
-`@SENTHEADERS_RAW@` returns the original headers with no characters replaced.
+HTTP request headers.  
+`@SENTHEADERS@` returns a one-liner string containing all headers. Special characters `\t`, `\r`, `\n` are replaced by their string representations `"\t"`, `"\r"`, `"\n"`  
+`@SENTHEADERS_RAW@` returns the original headers with no characters replaced  
 `@SENTHEADERS:Header-Name@` returns the value of a specific header. (e.g. "@SENTHEADERS:Accept-Encoding@")
 
 ### @RECVHEADERS@
 ### @RECVHEADERS_RAW@
 ### @RECVHEADERS:Header-Name@
-HTTP response headers.
-`@RECVHEADERS@` returns a one-liner string containing all headers. Special characters `\t`, `\r`, `\n` are replaced by their string representations `"\t"`, `"\r"`, `"\n"`.
-`@RECVHEADERS_RAW@` returns the original headers with no characters replaced.
+HTTP response headers.  
+`@RECVHEADERS@` returns a one-liner string containing all headers. Special characters `\t`, `\r`, `\n` are replaced by their string representations `"\t"`, `"\r"`, `"\n"`  
+`@RECVHEADERS_RAW@` returns the original headers with no characters replaced  
 `@RECVHEADERS:Header-Name@` returns the value of a specific header. (e.g. "@SENTHEADERS:Content-Type@")
 
 ### @RECVDATA@
 ### @RECVDATA_RAW@
-A preview of the received remote content.
-`@RECVDATA@` receives a printable string. Non-printable characters are replaced with `.`
-`@RECVDATA_RAW@` receives the original data no characters replaced.
-NOTE: Can retrieve the remote content downloaded to `MEMORY`.
-NOTE: This value is truncated to NSIS maximum string length (1KB, 4KB, 8KB, depending on the NSIS build).
+A preview of the received remote content.  
+`@RECVDATA@` receives a printable string. Non-printable characters are replaced with `.`  
+`@RECVDATA_RAW@` receives the original data no characters replaced  
+> [!tip]
+> Can retrieve the remote content downloaded to `MEMORY`
+
+> [!caution]
+> This value is truncated to NSIS maximum string length (1KB, 4KB, 8KB, depending on the NSIS build)
 
 ### @TAG@
-Transfer tag, empty by default.
-Multiple transfers can be tagged with the same `tag`.
+Transfer tag, empty by default.  
+Multiple transfers can be tagged with the same `tag`
 
 ### @ERROR@
-The final _transfer status_.
-Successful transfers return status `"OK"`
+The final _transfer status_.  
+Successful transfers return status `"OK"`  
 Failed transfers return various error messages (e.g `0x2a "Callback aborted"`, etc.)
 
 ### @ERRORCODE@
-The numeric _transfer status_ code.
-It can be either an HTTP status code (i.e. 200, 206, 404), a libcurl error code (7, 10), or a Win32 error code (0x2a).
+The numeric _transfer status_ code.  
+It can be either an HTTP status code (i.e. 200, 206, 404), a libcurl error code (7, 10), or a Win32 error code (i.e. 0x2a)
 
 ### @ERRORTYPE@
 Returns `win32`, `curl` or `http` error type.
 
 ### @CANCELLED@
-Indicates whether the transfer was cancelled by the user.
+Indicates whether the transfer was cancelled by the user.  
 Returns boolean values `0` or `1`
 
 *******************************************************************************
@@ -671,18 +676,18 @@ Returns boolean values `0` or `1`
 ## Global Keywords
 
 ### @PLUGINNAME@
-Plugin name (`NScurl`).
+Plugin name (`NScurl`)
 
 ### @PLUGINVERSION@
-Plugin version.
+Plugin version.  
 Returns the `FileVersion` value from the Version Information resource block.
 
 ### @PLUGINAUTHOR@
-Author name.
+Author name.  
 Returns the `CompanyName` value from the Version Information resource block.
 
 ### @PLUGINWEB@
-Project website.
+Project website.  
 Returns the `LegalTrademarks` value from the Version Information resource block.
 
 ### @CURLVERSION@
@@ -701,7 +706,7 @@ libcurl built-in features (e.g. "SSL NTLM Debug AsynchDNS Largefile TLS-SRP Unix
 The default user agent (e.g. "nscurl/1.2020.3.1")
 
 ### @TOTALCOUNT@
-The number of HTTP requests in the _transfer queue_.
+The number of HTTP requests in the _transfer queue_.  
 Includes all `Waiting`, `Running` and `Complete` requests.
 
 ### @TOTALWAITING@
@@ -724,27 +729,27 @@ The number of failed requests in the queue.
 
 ### @TOTALSPEED@
 ### @TOTALSPEED_B@
-The aggregated speed of all `Running` transfers.
-`@TOTALSPEED@` is replaced with a human-readable value (e.g. "120 KB/s", "1.2 MB/s", etc.)
-`@TOTALSPEED_B@` is replaced with the speed in bytes/s.
+The aggregated speed of all `Running` transfers.  
+`@TOTALSPEED@` is replaced with a human-readable value (e.g. "120 KB/s", "1.2 MB/s", etc.)  
+`@TOTALSPEED_B@` is replaced with the speed in bytes/s
 
 ### @TOTALSIZE@
 ### @TOTALSIZE_B@
-The aggregated amount of Downloaded + Uploaded data.
-`@TOTALSIZE@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)
-`@TOTALSIZE_B@` is replaced with the size in bytes.
+The aggregated amount of Downloaded + Uploaded data.  
+`@TOTALSIZE@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)  
+`@TOTALSIZE_B@` is replaced with the size in bytes
 
 ### @TOTALSIZEUP@
 ### @TOTALSIZEUP_B@
-The aggregated amount of Uploaded data.
-`@TOTALSIZEUP@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)
-`@TOTALSIZEUP_B@` is replaced with the size in bytes.
+The aggregated amount of Uploaded data.  
+`@TOTALSIZEUP@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)  
+`@TOTALSIZEUP_B@` is replaced with the size in bytes
 
 ### @TOTALSIZEDOWN@
 ### @TOTALSIZEDOWN_B@
-The aggregated amount of Downloaded data.
-`@TOTALSIZEDOWN@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)
-`@TOTALSIZEDOWN_B@` is replaced with the size in bytes.
+The aggregated amount of Downloaded data.  
+`@TOTALSIZEDOWN@` is replaced with a human-readable value (e.g. "100 MB", "5 GB", etc.)  
+`@TOTALSIZEDOWN_B@` is replaced with the size in bytes
 
 ### @THREADS@
 Current number of worker threads.
@@ -762,7 +767,7 @@ NScurl::wait [/ID id] [/TAG tag] `parameters` /END
 ```
 
 ## Description
-Wait synchronously for one or more [/BACKGROUND](#background) transfers to complete.
+Wait synchronously for one or more [`/BACKGROUND`](#background) transfers to complete.  
 Depending on parameters visual progress may or may not be displayed.
 
 ## Return
@@ -788,27 +793,27 @@ NScurl::wait /TAG "filegroup1" /CANCEL /END
 ```
 /ID `id`
 ```
-Wait for a specific transfer.
-The _transfer ID_ is returned by [NScurl::http](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
+Wait for a specific transfer.  
+The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
 
 ### /TAG
 ```
 /TAG `tag`
 ```
-Wait for multiple transfers tagged with `tag`
-See [NScurl::http /TAG](#tag).
+Wait for multiple transfers tagged with `tag`  
+See [`NScurl::http /TAG`](#tag)
 
 ### /PAGE
-See [NScurl::http /PAGE](#page).
+See [`NScurl::http /PAGE`](#page)
 
 ### /POPUP
-See [NScurl::http /POPUP](#popup).
+See [`NScurl::http /POPUP`](#popup)
 
 ### /SILENT
-See [NScurl::http /SILENT](#silent).
+See [`NScurl::http /SILENT`](#silent)
 
 ### /CANCEL
-See [NScurl::http /CANCEL](#cancel).
+See [`NScurl::http /CANCEL](#cancel)
 
 ### /TITLEWND
 ### /TEXTWND
@@ -820,7 +825,7 @@ See [NScurl::http /CANCEL](#cancel).
 /PROGRESSWND `hwnd`
 /CANCELWND `hwnd`
 ```
-See [NScurl /xxx](#titlewnd).
+See [`NScurl /...`](#titlewnd)
 
 ### /STRING
 ```
@@ -831,11 +836,12 @@ See [NScurl /xxx](#titlewnd).
 /STRING TEXT_NOSIZE `string`
 /STRING TEXT_MULTI `string`
 ```
-See [NScurl::http](#string).
+See [`NScurl::http`](#string)
 
 ### /END
 Must always conclude the list of parameters.
-NOTE: This parameter is mandatory.
+> [!caution]
+> This parameter is mandatory
 
 *******************************************************************************
 
@@ -850,7 +856,7 @@ NScurl::enumerate [/TAG tag] [/STATUS status] /END
 Enumerate HTTP transfers from the internal transfer queue.
 
 ## Return
-Transfer ID's are pushed one by one to the stack.
+Transfer ID's are pushed one by one to the stack.  
 An empty string ("") is pushed to mark the end of the enumeration.
 
 ## Example
@@ -870,22 +876,23 @@ _enum_end:
 ```
 /TAG `tag`
 ```
-Enumerate transfers tagged with `tag`.
-See [NScurl::http /TAG](#tag).
+Enumerate transfers tagged with `tag`  
+See [`NScurl::http /TAG`](#tag)
 
 ### /STATUS
 ```
 /STATUS Waiting|Running|Complete
 ```
 - `Waiting`: enumerates transfers that are still waiting in the queue
-- `Running`: enumerate transfers currently in progress.
-- `Complete`: enumerate complete/aborted/failed transfers.
+- `Running`: enumerate transfers currently in progress
+- `Complete`: enumerate complete/aborted/failed transfers
 
-NOTE: Multiple `/STATUS` parameters are allowed.
+Multiple `/STATUS` parameters are allowed
 
 ### /END
 Must always conclude the list of parameters.
-NOTE: This parameter is mandatory.
+> [!caution]
+> This parameter is mandatory
 
 *******************************************************************************
 
@@ -907,19 +914,19 @@ None.
 ```
 /ID `id`
 ```
-Cancel a specific transfer.
-The _transfer ID_ is returned by [NScurl::http](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`.
+Cancel a specific transfer.  
+The _transfer ID_ is returned by [`NScurl::http`](#nscurlhttp) called either with `/BACKGROUND` or with `/RETURN "@id@"`
 
 ### /TAG
 ```
 /TAG `tag`
 ```
-Cancel multiple transfers tagged with `tag`.
-See [NScurl::http /TAG](#tag).
+Cancel multiple transfers tagged with `tag`  
+See [`NScurl::http /TAG`](#tag)
 
 ### /REMOVE
-In addition to cancelling, the transfer(s) are also permanently removed from the queue.
-Further [NScurl::query](#nscurlquery) calls will fail.
+In addition to cancelling, the transfer(s) are also permanently removed from the queue.  
+Further [`NScurl::query`](#nscurlquery) calls will fail.
 
 *******************************************************************************
 
@@ -933,7 +940,7 @@ NScurl::unescape `string`
 ```
 
 ## Description
-Utility function to un/escape URL strings.
+Utility function to un/escape URL strings.  
 Illegal URL characters are converted to/from their hexadecimal `%XX` code.
 
 ## Return
@@ -961,9 +968,9 @@ NScurl::sha256 [-string|-file|-memory] `data`
 ```
 
 ## Description
-Utility functions that compute MD5 / SHA1 / SHA256 hashes.
-The data can be read either from a file or directly from memory.
-See [NScurl::http /DATA](#data) to learn how `data` is interpreted.
+Utility functions that compute MD5 / SHA1 / SHA256 hashes.  
+The data can be read either from a file or directly from memory.  
+See [`NScurl::http /DATA`](#data) to learn how `data` is interpreted.
 
 ## Return
 The hash string is pushed to the NSIS stack.
