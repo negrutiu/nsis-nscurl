@@ -27,7 +27,7 @@ Dependency            | https://github.com/negrutiu/libcurl-devel
 - Supports proxy servers (both authenticated and open)
 - Supports files larger than 4GB
 - Can download remote content in-memory instead of a file
-- Works well in **64-bit** installers created with [NSIS fork](https://github.com/negrutiu/nsis)
+- Works well in **64-bit** installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
 - Many more...
 
 ## Basic usage
