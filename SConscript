@@ -37,7 +37,7 @@ examples = Split("""
 """)
 
 docs = Split("""
-	NScurl.Readme.htm
+	NScurl.readme.md
 """)
 
 Import('BuildPlugin env plugin_env plugin_uenv')
