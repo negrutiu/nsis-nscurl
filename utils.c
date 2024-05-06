@@ -814,7 +814,7 @@ UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr )
 		LPCTSTR psz;
 		for (psz = pszStr; *psz && *psz >= _T( '0' ) && *psz <= _T( '9' ); psz++);		/// skip numbers
 		for (; *psz == _T( ' ' ) || *psz == _T( '\t' ) || *psz == _T( '\r' ) || *psz == _T( '\n' ); psz++);		/// skip white spaces
-		ms = (UINT_PTR )nsishelper_str_to_ptr( pszStr );
+		ms = (UINT_PTR )_tstoi64( pszStr );
 		if (lstrcmpi( psz, _T( "s" ) ) == 0 || lstrcmpi( psz, _T( "sec" ) ) == 0 || lstrcmpi( psz, _T( "second" ) ) == 0 || lstrcmpi( psz, _T( "seconds" ) ) == 0) {
 			ms *= 1000;
 		} else if (lstrcmpi( psz, _T( "m" ) ) == 0 || lstrcmpi( psz, _T( "min" ) ) == 0 || lstrcmpi( psz, _T( "minute" ) ) == 0 || lstrcmpi( psz, _T( "minutes" ) ) == 0) {
@@ -974,7 +974,7 @@ ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA 
 	} else if (pData->Type == IDATA_TYPE_MEM) {
 		// Clone the buffer (PVOID)
 		LPCVOID ptr;
-		if ((ptr = (LPCVOID)(bDataPopped ? nsishelper_str_to_ptr( pszParam ) : popint())) != NULL) {
+		if ((ptr = (LPCVOID)(bDataPopped ? (INT_PTR)_tstoi64( pszParam ) : popintptr())) != NULL) {
 			size_t size;
 			if ((size = (ULONG_PTR)popintptr()) != 0) {
 				if ((pData->Mem = MyAlloc( size )) != NULL) {
