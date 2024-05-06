@@ -143,7 +143,7 @@ Section "httpbin.org/get"
 SectionEnd
 
 
-Section "sysinternals.com/get (Page)"
+Section "sysinternals.com/get (Page-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -157,7 +157,7 @@ Section "sysinternals.com/get (Page)"
 SectionEnd
 
 
-Section "sysinternals.com/get (Popup)"
+Section "sysinternals.com/get (Popup-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -171,7 +171,7 @@ Section "sysinternals.com/get (Popup)"
 SectionEnd
 
 
-Section "sysinternals.com/get (Silent)"
+Section "sysinternals.com/get (Silent-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
