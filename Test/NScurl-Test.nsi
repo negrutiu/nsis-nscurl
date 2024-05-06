@@ -199,6 +199,26 @@ Section "sysinternals.com/get (HTTP/1.1)"
 SectionEnd
 
 
+Section "sysinternals.com/get (Memory)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
+	!define /redef FILE  "MEMORY"
+
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http get "${LINK}" "${FILE}" /CANCEL /INSIST /RETURN "@id@" /END
+	Pop $R0
+	DetailPrint "ID: $R0"
+
+	DetailPrint 'NScurl::query /id $R0'
+	NScurl::query /id $R0 "@RecvData@" /END
+	Pop $0
+	DetailPrint "Data: $0"
+
+SectionEnd
+
+
 Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

@@ -299,6 +299,41 @@ Section "sysinternals.com/get (HTTP/1.1)"
 SectionEnd
 
 
+Section "sysinternals.com/get (Memory)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
+	!define /redef FILE  "MEMORY"
+
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	Push "/END"
+    Push "@id@"     ; _transfer ID_ as return value (instead of _transfer status_)
+	Push "/RETURN"
+	Push "/INSIST"
+	Push "/CANCEL"
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+
+	Pop $R0
+	DetailPrint "ID: $R0"
+
+	DetailPrint 'NScurl::query /id $R0'
+    Push "@RecvData@"
+    Push $R0
+    Push "/id"
+    CallInstDLL $DLL query
+
+    Pop $0
+    DetailPrint "Data: $0"
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

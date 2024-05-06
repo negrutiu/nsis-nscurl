@@ -622,13 +622,13 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 	// NOTE: This callback function receives incoming headers one at a time
 	// Headers from multiple (redirected) connections are separated by an empty line ("\r\n")
 	// We only want to keep the headers from the last connection
-	if (pReq->Runtime.InHeaders.iSize == 0 ||	/// First connection
+	if (pReq->Runtime.InHeaders.size == 0 ||	/// First connection
 		(
-		pReq->Runtime.InHeaders.iSize > 4 &&
-		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 4] == '\r' &&
-		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 3] == '\n' &&
-		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 2] == '\r' &&
-		pReq->Runtime.InHeaders.pMem[pReq->Runtime.InHeaders.iSize - 1] == '\n')
+		pReq->Runtime.InHeaders.size > 4 &&
+		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 4] == '\r' &&
+		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 3] == '\n' &&
+		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 2] == '\r' &&
+		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 1] == '\n')
 		)
 	{
 		// The last received header is an empty line ("\r\n")
@@ -728,7 +728,7 @@ size_t CurlWriteCallback( char *ptr, size_t size, size_t nmemb, void *userdata )
 		}
 	} else {
 		// Initialize output virtual memory (once)
-		if (!pReq->Runtime.OutData.pMem) {
+		if (!pReq->Runtime.OutData.data) {
 			curl_off_t iMaxSize;
 			if (curl_easy_getinfo( pReq->Runtime.pCurl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &iMaxSize ) != CURLE_OK)
 				iMaxSize = DEFAULT_UKNOWN_VIRTUAL_SIZE;
@@ -1267,8 +1267,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						iEffectiveTimeout / 1000,
 						pReq->bInsist ? _T("true") : _T("false")
 					);
-					TRACE2(_T("Send Headers -------------------------------------\n%hs"), pReq->Runtime.OutHeaders.iSize ? pReq->Runtime.OutHeaders.pMem : "");
-					TRACE2(_T("Recv Headers -------------------------------------\n%hs\n-------------------------------------\n"), pReq->Runtime.InHeaders.iSize ? pReq->Runtime.InHeaders.pMem : "");
+					TRACE2(_T("Send Headers -------------------------------------\n%hs"), pReq->Runtime.OutHeaders.size ? pReq->Runtime.OutHeaders.data : "");
+					TRACE2(_T("Recv Headers -------------------------------------\n%hs\n-------------------------------------\n"), pReq->Runtime.InHeaders.size ? pReq->Runtime.InHeaders.data : "");
 
 					if (bSuccess)
 						break;		/// Transfer successful
@@ -1483,8 +1483,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeRemaining );
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS@" ) ) == 0) {
 			int i;
-			if (pReq->Runtime.OutHeaders.iSize) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
+			if (pReq->Runtime.OutHeaders.size) {
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.data );
 			} else {
 				pszKeyword[0] = 0;
 			}
@@ -1498,8 +1498,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (pszKeyword[l - 1] == _T( '@' )) {
 				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
 				if (pszHeader) {
-					if (pReq->Runtime.OutHeaders.iSize) {
-						CurlFindHeader( pReq->Runtime.OutHeaders.pMem, pszHeader, pszKeyword, iMaxLen );
+					if (pReq->Runtime.OutHeaders.size) {
+						CurlFindHeader( pReq->Runtime.OutHeaders.data, pszHeader, pszKeyword, iMaxLen );
 					} else {
 						pszKeyword[0] = 0;
 					}
@@ -1507,15 +1507,15 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				}
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS_RAW@" ) ) == 0) {
-			if (pReq->Runtime.OutHeaders.iSize) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.pMem );
+			if (pReq->Runtime.OutHeaders.size) {
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.data);
 			} else {
 				pszKeyword[0] = 0;
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS@" ) ) == 0) {
 			int i;
-			if (pReq->Runtime.InHeaders.iSize) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
+			if (pReq->Runtime.InHeaders.size) {
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.data);
 			} else {
 				pszKeyword[0] = 0;
 			}
@@ -1529,8 +1529,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			if (pszKeyword[l - 1] == _T( '@' )) {
 				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
 				if (pszHeader) {
-					if (pReq->Runtime.InHeaders.iSize) {
-						CurlFindHeader( pReq->Runtime.InHeaders.pMem, pszHeader, pszKeyword, iMaxLen );
+					if (pReq->Runtime.InHeaders.size) {
+						CurlFindHeader( pReq->Runtime.InHeaders.data, pszHeader, pszKeyword, iMaxLen );
 					} else {
 						pszKeyword[0] = 0;
 					}
@@ -1538,8 +1538,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				}
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS_RAW@" ) ) == 0) {
-			if (pReq->Runtime.InHeaders.iSize) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.pMem );
+			if (pReq->Runtime.InHeaders.size) {
+				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.data);
 			} else {
 				pszKeyword[0] = 0;
 			}
@@ -1561,7 +1561,7 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 				}
 			} else {
 				// Downloaded to memory
-				MyFormatBinaryPrintable( pReq->Runtime.OutData.pMem, pReq->Runtime.OutData.iSize, pszKeyword, iMaxLen, bEscape );
+				MyFormatBinaryPrintable( pReq->Runtime.OutData.data, pReq->Runtime.OutData.size, pszKeyword, iMaxLen, bEscape );
 			}
 		} else if (lstrcmpi( pszKeyword, _T( "@TAG@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszTag );

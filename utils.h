@@ -190,18 +190,6 @@ void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ UL
 UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr );
 
 
-//+ Virtual Memory
-// Auto-growing virtual memory buffer
-typedef struct {
-	PCCH   pMem;		/// Memory buffer
-	SIZE_T iSize;		/// Memory size
-	SIZE_T iReserved, iCommitted;
-} VMEMO;
-ULONG  VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize );			/// Return Win32 error
-SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
-void   VirtualMemoryReset( _Inout_ VMEMO *pMem );			/// Reset to 0-bytes
-void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );			/// Free everything
-
 //+ Input Data
 #define IDATA_TYPE_STRING		's'
 #define IDATA_TYPE_FILE			'f'

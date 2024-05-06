@@ -100,23 +100,24 @@ The caller must [`NScurl::escape`](#nscurlescape) illegal URL characters.
 > This parameter is mandatory
 
 ### `output`
-
-Syntax:
-filename | `MEMORY`
+```
+filename | "MEMORY"
+```
 
 Absolute and relative file names are both allowed.  
 Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base.
 
 > [!tip]
-> The current directory might change in unpredictable ways  
-> It's recommended to use absolute paths
+> The current directory might change in unpredictable ways. Using absolute paths is recommended
 
 `MEMORY` instructs the plugin to download the remote content _in-memory_.  
-Data can be retrieved later by calling [`NScurl::query "@RECVDATA@"`](#transfer-keywords)
+Data can be retrieved later using [`NScurl::query "@RECVDATA@"`](#transfer-keywords)  
+In-memory downloads are limited in size by:
+- the amount of physical memory installed
+- the size of the virtual address space available to the _Installer_ process. That's usually up to 2GB in x86 processes (most common) and 128TB in x64 processes (these numbers might vary, see details [here](https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases))
 
 > [!note]
-> `MEMORY` data is truncated to the NSIS string maximum length (1KB, 4KB, 8KB, depending on the NSIS build). If larger data is expected, downloading to a file is recommended  
-> This parameter is mandatory
+> The `output` parameter is mandatory
 
 ### /RETURN
 ```
@@ -658,7 +659,7 @@ A preview of the received remote content.
 > Can retrieve the remote content downloaded to `MEMORY`
 
 > [!caution]
-> This value is truncated to NSIS maximum string length (1KB, 4KB, 8KB, depending on the NSIS build)
+> This value is truncated to the NSIS maximum string length (1KB, 4KB, 8KB, depending on the NSIS build)
 
 ### @TAG@
 Transfer tag, empty by default.  
