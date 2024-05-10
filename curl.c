@@ -1344,7 +1344,13 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 {
 	// NOTE: pReq may be NULL
 	PCURL_REQUEST pReq = (PCURL_REQUEST)pParam;
-	assert( pszKeyword );
+
+    Keyword keyword = { 0 };
+#define IsKeyword(name) (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordBegin, (int)(keyword.keywordEnd - keyword.keywordBegin), name, -1) == CSTR_EQUAL)
+
+    assert( pszKeyword );
+	if (!MySplitKeyword(pszKeyword, &keyword))
+		return;
 
 	if (lstrcmpi( pszKeyword, _T( "@PLUGINNAME@" ) ) == 0) {
 		MyStrCopy( eT2T, pszKeyword, iMaxLen, PLUGINNAME );
@@ -1581,6 +1587,8 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 	} else {
 		// TODO: pReq is NULL. Replace all keywords with "", "n/a", etc.
 	}
+
+#undef IsKeyword
 }
 
 

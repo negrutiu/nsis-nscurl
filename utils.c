@@ -733,6 +733,49 @@ LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR ch
 }
 
 
+BOOL MySplitKeyword(LPCTSTR input, Keyword* data)
+{
+#define IS_WHITESPACE(ch) ((ch) == _T(' ') || (ch) == _T('\t') || (ch) == _T('\r') || (ch) == _T('\n'))
+#define TRIM_WHITESPACES(begin, end) \
+    while ((begin) < (end) && IS_WHITESPACE((begin)[0])) { (begin)++; }; \
+    while ((end) > (begin) && IS_WHITESPACE((end)[-1])) { (end)--; }
+
+	if (input && input[0] && data) {
+		int l = lstrlen(input);
+		if (l > 2 && input[0] == _T('@') && input[l - 1] == _T('@')) {
+			LPCTSTR psz = input + 1;
+
+			for (data->keywordBegin = psz++; psz[0] != _T('\0') && psz[0] != _T(':') && psz[0] != _T('>') && psz[0] != _T('@'); psz++) { }
+			data->keywordEnd = psz;
+			TRIM_WHITESPACES(data->keywordBegin, data->keywordEnd);
+
+			if (psz[0] == _T(':')) {
+				for (data->paramsBegin = ++psz; psz[0] != _T('\0') && psz[0] != _T('>') && psz[0] != _T('@'); psz++) { }
+				data->paramsEnd = psz;
+				TRIM_WHITESPACES(data->paramsBegin, data->paramsEnd);
+			}
+
+			if (psz[0] == _T('>')) {
+				for (data->pathBegin = ++psz; psz[0] != _T('\0') && psz[0] != _T('@'); psz++) { }
+				data->pathEnd = psz;
+				TRIM_WHITESPACES(data->pathBegin, data->pathEnd);
+			}
+
+			if (psz[0] != _T('@') || psz[1] != _T('\0'))
+				return FALSE;
+		}
+	}
+
+	return data &&
+		data->keywordBegin && data->keywordEnd && (data->keywordEnd > data->keywordBegin) &&    // keyword is mandatory
+		(!data->paramsBegin || (data->paramsEnd > data->paramsBegin)) &&    // null or valid, but not empty
+		(!data->pathBegin || (data->pathEnd > data->pathBegin));            // null or valid, but not empty
+
+#undef IS_WHITESPACE
+#undef TRIM_WHITESPACES
+}
+
+
 //++ MyStrReplace
 /// Replace all occurrences of the specified substring in a string
 /// Returns the final string length, not including \0

@@ -176,6 +176,15 @@ LONG MyReplaceKeywordsW(
 	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_opt_ LPVOID pReplaceParam
 );
 
+typedef struct {
+	LPCTSTR keywordBegin, keywordEnd;
+	LPCTSTR paramsBegin, paramsEnd;
+	LPCTSTR pathBegin, pathEnd;
+} Keyword;
+
+/// \brief Split input pattern \c "@keyword[:params][>path]@" into its components.
+/// \return \c TRUE if the function is successful.
+BOOL MySplitKeyword(LPCTSTR input, Keyword* data);
 
 //+ MyStrReplace
 // Returns the length of the output string, without \0. Returns -1 if errors occur
