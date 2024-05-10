@@ -88,6 +88,16 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 // ANSI (multi byte) <-> Unicode (wide char)
 typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } Encodings;
 
+/// \brief Convert string to number. \n
+/// Syntax: \c "[+|-][0x][0]digits"
+/// - Sign \c "+|-" is optional
+/// - \c "0x" and \c "0X" prefixes indicate a hexadecimal number
+/// - \c "0" prefix indicates an octal number
+/// \param s Input string
+/// \param nextChar Receives pointer to the next character
+/// \param skipSpaces If \c TRUE, leading and trailing whitespaces are ignored (i.e. "  -10  " returns -10)
+/// \return If the function fails, the return value is zero and \c nextChar is equal to \c s.
+INT_PTR MyAtoi(LPCTSTR s, LPCTSTR* nextChar, BOOL skipSpaces);
 
 //+ MyStrDup
 // If the input string is NULL, the function allocates and returns an empty string (length zero)

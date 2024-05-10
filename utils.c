@@ -163,6 +163,48 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 	return e;
 }
 
+INT_PTR MyAtoi(LPCTSTR s, LPCTSTR* nextChar, BOOL skipSpaces)
+{
+	if (skipSpaces) { while (*s == _T(' ') || *s == _T('\t')) { s++; }}
+
+	int sign = 0;
+	if (*s == _T('+')) s++;
+	if (*s == _T('-')) sign++, s++;
+
+	INT_PTR v = 0;
+	if (*s == _T('0') && (s[1] == _T('x') || s[1] == _T('X'))) {
+		s++;
+		for (;;) {
+			int c = *(++s);
+			if (c >= _T('0') && c <= _T('9')) c -= _T('0');
+			else if (c >= _T('a') && c <= _T('f')) c -= _T('a') - 10;
+			else if (c >= _T('A') && c <= _T('F')) c -= _T('A') - 10;
+			else break;
+			v <<= 4;
+			v += c;
+		}
+	} else if (*s == _T('0') && s[1] <= _T('7') && s[1] >= _T('0')) {
+		for (;;) {
+			int c = *(++s);
+			if (c >= _T('0') && c <= _T('7')) c -= _T('0');
+			else break;
+			v <<= 3;
+			v += c;
+		}
+	} else {
+		for (s--;;) {
+			int c = *(++s) - _T('0');
+			if (c < 0 || c > 9) break;
+			v *= 10;
+			v += c;
+		}
+	}
+
+    if (skipSpaces) { while (*s == _T(' ') || *s == _T('\t')) { s++; }}
+	if (nextChar) *nextChar = s;
+	if (sign) v = -v;
+	return v;
+}
 
 //++ MyStrDup
 LPVOID MyStrDup( _In_ Encodings iEnc, _In_ LPCVOID pszSrc )
