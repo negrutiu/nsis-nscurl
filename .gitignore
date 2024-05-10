@@ -1,10 +1,12 @@
 
 *nogit*
 
+curl-ca-bundle.crt
 /libcurl-devel
+/nsis
+
 libcurl-devel*.7z
 NScurl*.7z
-curl-ca-bundle.crt
 
 /Test/*.exe
 /Test/_*
