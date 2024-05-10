@@ -1549,26 +1549,79 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			} else {
 				pszKeyword[0] = 0;
 			}
-		} else if (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0 || lstrcmpi( pszKeyword, _T( "@RECVDATA_RAW@" ) ) == 0) {
-			BOOLEAN bEscape = (lstrcmpi( pszKeyword, _T( "@RECVDATA@" ) ) == 0) ? TRUE : FALSE;
-			pszKeyword[0] = 0;
+		} else if (IsKeyword( _T("RECVDATA")) || IsKeyword(_T("RECVDATA_RAW"))) {
+			BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? TRUE : FALSE;
+			INT64 iOffset = 0, iSize = INT64_MAX;
+			if (keyword.paramsBegin) {
+				LPCTSTR psz;
+				iOffset = MyAtoi(keyword.paramsBegin, &psz, TRUE);
+				if (*psz == _T(','))
+					iSize = MyAtoi(psz + 1, &psz, TRUE);
+				if (psz < keyword.paramsEnd)	// psz goes beyond paramsEnd if the last number is follwed by spaces (i.e. "@RecvData:10,10 >file.ext@")
+					return;
+			}
+			LPTSTR pszOutFile = NULL;
+			if (keyword.pathBegin) {
+				LPTSTR temp = MyStrDupN(eT2T, keyword.pathBegin, (int)(keyword.pathEnd - keyword.pathBegin));
+				if (temp) {
+					pszOutFile = MyCanonicalizePath(temp);
+					MyFree(temp);
+				}
+			}
+			pszKeyword[0] = 0;		// note: this invalidates `keyword` structure
 			if (lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0) {
-				// Downloaded to file
+				// From file
+				ULONG err = ERROR_SUCCESS;
 				LPSTR buf = (LPSTR)MyAlloc( iMaxLen );
 				if (buf) {
 					HANDLE h = CreateFile( pReq->pszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL );
 					if (MyValidHandle( h )) {
-						ULONG l;
-						if (ReadFile( h, buf, iMaxLen, &l, NULL ))
-							MyFormatBinaryPrintable( buf, l, pszKeyword, iMaxLen, bEscape );
+						ULARGE_INTEGER filesize;
+						filesize.LowPart = GetFileSize(h, &filesize.HighPart);
+						err = filesize.LowPart != INVALID_FILE_SIZE ? ERROR_SUCCESS : GetLastError();
+						if (err == ERROR_SUCCESS) {
+
+						    INT64 total = (INT64)filesize.QuadPart;
+							INT64 offset = iOffset >= 0 ? iOffset : (total + iOffset);
+							INT64 size = iSize >= 0 ? iSize : (total + iSize);
+							size = max(size, 0);
+							if (offset < 0)
+								size += offset, offset = 0;
+							size = min(size, total - offset);
+							size = max(size, 0);
+
+							if (offset > 0)
+								err = SetFilePointer(h, (LONG)((PLARGE_INTEGER)&offset)->LowPart, &((PLARGE_INTEGER)&offset)->HighPart, FILE_BEGIN) != INVALID_SET_FILE_POINTER ? ERROR_SUCCESS : GetLastError();
+
+						    if (err == ERROR_SUCCESS) {
+								ULONG read;
+								if (ReadFile(h, buf, min(iMaxLen, (ULONG)size), &read, NULL))
+									MyFormatBinaryPrintable(buf, read, pszKeyword, iMaxLen, bEscape);
+							}
+
+							if (pszOutFile)
+								MyWriteFileToFile(h, offset, size, pszOutFile);
+						}
 						CloseHandle( h );
 					}
 					MyFree( buf );
 				}
 			} else {
-				// Downloaded to memory
-				MyFormatBinaryPrintable( pReq->Runtime.OutData.data, pReq->Runtime.OutData.size, pszKeyword, iMaxLen, bEscape );
+				// From memory
+				INT64 total = (INT64)pReq->Runtime.OutData.size;
+				INT64 offset = iOffset >= 0 ? iOffset : (total + iOffset);
+				INT64 size = iSize >= 0 ? iSize : (total + iSize);
+				size = max(size, 0);
+				if (offset < 0)
+					size += offset, offset = 0;
+				size = min(size, total - offset);
+				size = max(size, 0);
+				MyFormatBinaryPrintable( (char*)pReq->Runtime.OutData.data + offset, (ULONG)size, pszKeyword, iMaxLen, bEscape );
+
+			    if (pszOutFile)
+			        MyWriteDataToFile((char*)pReq->Runtime.OutData.data + offset, size, pszOutFile);
 			}
+			MyFree(pszOutFile);
 		} else if (lstrcmpi( pszKeyword, _T( "@TAG@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszTag );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
