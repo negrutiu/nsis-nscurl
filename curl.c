@@ -1487,65 +1487,51 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			MyFormatMilliseconds( pReq->Runtime.iTimeRemaining, pszKeyword, iMaxLen, TRUE );
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING_MS@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeRemaining );
-		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS@" ) ) == 0) {
-			int i;
+		} else if (IsKeyword( _T("SENTHEADERS")) || IsKeyword(_T("SENTHEADERS_RAW"))) {
 			if (pReq->Runtime.OutHeaders.size) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.data );
-			} else {
-				pszKeyword[0] = 0;
-			}
-			for (i = lstrlen( pszKeyword ) - 1; (i >= 0) && (pszKeyword[i] == _T( '\r' ) || pszKeyword[i] == _T( '\n' )); i--)
-				pszKeyword[i] = _T( '\0' );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\r" ), _T( "\\r" ), FALSE );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\n" ), _T( "\\n" ), FALSE );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
-		} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszKeyword, 13, _T( "@SENTHEADERS:" ), -1 ) == CSTR_EQUAL) {
-			int l = lstrlen( pszKeyword );
-			if (pszKeyword[l - 1] == _T( '@' )) {
-				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
-				if (pszHeader) {
-					if (pReq->Runtime.OutHeaders.size) {
-						CurlFindHeader( pReq->Runtime.OutHeaders.data, pszHeader, pszKeyword, iMaxLen );
-					} else {
-						pszKeyword[0] = 0;
+				BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? FALSE : TRUE;
+				if (keyword.paramsBegin) {
+					LPSTR pszHeaderName = MyStrDupN(eT2A, keyword.paramsBegin, (int)(keyword.paramsEnd - keyword.paramsBegin));
+					if (pszHeaderName) {
+						CurlFindHeader(pReq->Runtime.OutHeaders.data, pszHeaderName, pszKeyword, iMaxLen);
+						MyFree(pszHeaderName);
 					}
-					MyFree( pszHeader );
+				} else {
+					MyStrCopy(eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.data);
 				}
-			}
-		} else if (lstrcmpi( pszKeyword, _T( "@SENTHEADERS_RAW@" ) ) == 0) {
-			if (pReq->Runtime.OutHeaders.size) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.OutHeaders.data);
+
+			    int i;
+				for (i = lstrlen(pszKeyword) - 1; (i >= 0) && (pszKeyword[i] == _T('\r') || pszKeyword[i] == _T('\n')); i--)
+					pszKeyword[i] = _T('\0');	// trim trailing \r\n
+				if (bEscape) {
+					MyStrReplace(pszKeyword, iMaxLen, _T("\r"), _T("\\r"), FALSE);
+					MyStrReplace(pszKeyword, iMaxLen, _T("\n"), _T("\\n"), FALSE);
+					MyStrReplace(pszKeyword, iMaxLen, _T("\t"), _T("\\t"), FALSE);
+				}
 			} else {
 				pszKeyword[0] = 0;
 			}
-		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS@" ) ) == 0) {
-			int i;
+		} else if (IsKeyword( _T("RECVHEADERS")) || IsKeyword(_T("RECVHEADERS_RAW"))) {
 			if (pReq->Runtime.InHeaders.size) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.data);
-			} else {
-				pszKeyword[0] = 0;
-			}
-			for (i = lstrlen( pszKeyword ) - 1; (i >= 0) && (pszKeyword[i] == _T( '\r' ) || pszKeyword[i] == _T( '\n' )); i--)
-				pszKeyword[i] = _T( '\0' );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\r" ), _T( "\\r" ), FALSE );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\n" ), _T( "\\n" ), FALSE );
-			MyStrReplace( pszKeyword, iMaxLen, _T( "\t" ), _T( "\\t" ), FALSE );
-		} else if (CompareString( CP_ACP, NORM_IGNORECASE, pszKeyword, 13, _T( "@RECVHEADERS:" ), -1 ) == CSTR_EQUAL) {
-			int l = lstrlen( pszKeyword );
-			if (pszKeyword[l - 1] == _T( '@' )) {
-				LPSTR pszHeader = MyStrDupN( eT2A, pszKeyword + 13, l - 13 - 1 );
-				if (pszHeader) {
-					if (pReq->Runtime.InHeaders.size) {
-						CurlFindHeader( pReq->Runtime.InHeaders.data, pszHeader, pszKeyword, iMaxLen );
-					} else {
-						pszKeyword[0] = 0;
+				BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? FALSE : TRUE;
+				if (keyword.paramsBegin) {
+					LPSTR pszHeaderName = MyStrDupN(eT2A, keyword.paramsBegin, (int)(keyword.paramsEnd - keyword.paramsBegin));
+					if (pszHeaderName) {
+						CurlFindHeader(pReq->Runtime.InHeaders.data, pszHeaderName, pszKeyword, iMaxLen);
+						MyFree(pszHeaderName);
 					}
-					MyFree( pszHeader );
+				} else {
+					MyStrCopy(eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.data);
 				}
-			}
-		} else if (lstrcmpi( pszKeyword, _T( "@RECVHEADERS_RAW@" ) ) == 0) {
-			if (pReq->Runtime.InHeaders.size) {
-				MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->Runtime.InHeaders.data);
+
+			    int i;
+				for (i = lstrlen(pszKeyword) - 1; (i >= 0) && (pszKeyword[i] == _T('\r') || pszKeyword[i] == _T('\n')); i--)
+					pszKeyword[i] = _T('\0');	// trim trailing \r\n
+				if (bEscape) {
+					MyStrReplace(pszKeyword, iMaxLen, _T("\r"), _T("\\r"), FALSE);
+					MyStrReplace(pszKeyword, iMaxLen, _T("\n"), _T("\\n"), FALSE);
+					MyStrReplace(pszKeyword, iMaxLen, _T("\t"), _T("\\t"), FALSE);
+				}
 			} else {
 				pszKeyword[0] = 0;
 			}
