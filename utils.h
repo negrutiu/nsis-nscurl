@@ -149,6 +149,22 @@ ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _
 ULONG MyQueryResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _Out_ void **ppData, _Out_opt_ ULONG *piDataSize );
 
 
+/// \brief Write memory buffer to file.
+/// \param pData Data pointer.
+/// \param iSize Data size.
+/// \param pszOutFile Canonical output file path.
+/// \return Win32 error code.
+ULONG MyWriteDataToFile(_In_ const void* pData, _In_ ULONG64 iSize, _In_ LPCTSTR pszOutFile);
+
+/// \brief Write (partial) file content to another file.
+/// \param hInFile Input file handle with \c FILE_READ_DATA access right.
+/// \param iOffset Input data offset.
+/// \param iSize Input data size.
+/// \param pszOutFile Canonical output file path.
+/// \return Win32 error code.
+ULONG MyWriteFileToFile(_In_ HANDLE hInFile, _In_ ULONG64 iOffset, _In_ ULONG64 iSize, LPCTSTR pszOutFile);
+
+
 //+ MyFormatBinaryHex
 // Returns the length of the output string, without \0
 ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen );

@@ -548,6 +548,72 @@ ULONG MyFormatBinaryHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR 
 	return j;										/// Characters written, not including \0
 }
 
+ULONG MyWriteDataToFile(_In_ const void* pData, _In_ ULONG64 iSize, _In_ LPCTSTR pszOutFile)
+{
+	ULONG err = ERROR_SUCCESS;
+	if (pData && pszOutFile && pszOutFile[0]) {
+		HANDLE hOutFile = CreateFile(pszOutFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (MyValidHandle(hOutFile)) {
+			ULONG iWritten;
+			while (err == ERROR_SUCCESS && iSize > 0) {
+				err = WriteFile(hOutFile, pData, (ULONG)min(iSize, 1024 * 1024ULL), &iWritten, NULL) ? ERROR_SUCCESS : GetLastError();
+				if (err == ERROR_SUCCESS) {
+					pData = (const char*)pData + iWritten;
+					iSize -= iWritten;
+				}
+			}
+			CloseHandle(hOutFile);
+		} else {
+			err = GetLastError();
+		}
+	} else {
+		err = ERROR_INVALID_PARAMETER;
+	}
+	return err;
+}
+
+ULONG MyWriteFileToFile(_In_ HANDLE hInFile, _In_ ULONG64 iOffset, _In_ ULONG64 iSize, LPCTSTR pszOutFile)
+{
+	ULONG err = ERROR_SUCCESS;
+	if (MyValidHandle(hInFile) && pszOutFile && pszOutFile[0]) {
+		err = SetFilePointer(hInFile, (LONG)((PLARGE_INTEGER)&iOffset)->LowPart, &((PLARGE_INTEGER)&iOffset)->HighPart, FILE_BEGIN) != INVALID_SET_FILE_POINTER ? ERROR_SUCCESS : GetLastError();
+		if (err == ERROR_SUCCESS) {
+			HANDLE hOutFile = CreateFile(pszOutFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (MyValidHandle(hOutFile)) {
+				const ULONG iBufSize = 1024 * 1024;
+				char* pBuf = (char*)MyAlloc(iBufSize);
+				if (pBuf) {
+					ULONG iRead, iWritten;
+					while (err == ERROR_SUCCESS && iSize > 0) {
+						err = ReadFile(hInFile, pBuf, (ULONG)min(iSize, iBufSize), &iRead, NULL) ? ERROR_SUCCESS : GetLastError();
+						if (err == ERROR_SUCCESS) {
+							if (iRead == 0)
+								break;
+							err = WriteFile(hOutFile, pBuf, iRead, &iWritten, NULL) ? ERROR_SUCCESS : GetLastError();
+							if (err == ERROR_SUCCESS) {
+								if (iWritten == iRead) {
+									iSize -= iWritten;
+								} else {
+									err = ERROR_WRITE_FAULT;
+								}
+							}
+						}
+					}
+					MyFree(pBuf);
+				} else {
+					err = ERROR_OUTOFMEMORY;
+				}
+				CloseHandle(hOutFile);
+			} else {
+				err = GetLastError();
+			}
+		}
+	} else {
+		err = GetLastError();
+	}
+	return err;
+}
+
 
 //++ MyFormatBinaryHexA
 ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen )
