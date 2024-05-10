@@ -88,6 +88,16 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 // ANSI (multi byte) <-> Unicode (wide char)
 typedef enum { eA2A, eA2W, eA2T, eW2A, eW2W, eW2T, eT2A, eT2W, eT2T } Encodings;
 
+/// \brief Convert string to number. \n
+/// Syntax: \c "[+|-][0x][0]digits"
+/// - Sign \c "+|-" is optional
+/// - \c "0x" and \c "0X" prefixes indicate a hexadecimal number
+/// - \c "0" prefix indicates an octal number
+/// \param s Input string
+/// \param nextChar Receives pointer to the next character
+/// \param skipSpaces If \c TRUE, leading and trailing whitespaces are ignored (i.e. "  -10  " returns -10)
+/// \return If the function fails, the return value is zero and \c nextChar is equal to \c s.
+INT_PTR MyAtoi(LPCTSTR s, LPCTSTR* nextChar, BOOL skipSpaces);
 
 //+ MyStrDup
 // If the input string is NULL, the function allocates and returns an empty string (length zero)
@@ -139,6 +149,22 @@ ULONG MyReadVersionString( _In_opt_ LPCTSTR szFile, _In_ LPCTSTR szStringName, _
 ULONG MyQueryResource( _In_ HMODULE hMod, _In_ LPCTSTR pszResType, _In_ LPCTSTR pszResName, _In_ USHORT iResLang, _Out_ void **ppData, _Out_opt_ ULONG *piDataSize );
 
 
+/// \brief Write memory buffer to file.
+/// \param pData Data pointer.
+/// \param iSize Data size.
+/// \param pszOutFile Canonical output file path.
+/// \return Win32 error code.
+ULONG MyWriteDataToFile(_In_ const void* pData, _In_ ULONG64 iSize, _In_ LPCTSTR pszOutFile);
+
+/// \brief Write (partial) file content to another file.
+/// \param hInFile Input file handle with \c FILE_READ_DATA access right.
+/// \param iOffset Input data offset.
+/// \param iSize Input data size.
+/// \param pszOutFile Canonical output file path.
+/// \return Win32 error code.
+ULONG MyWriteFileToFile(_In_ HANDLE hInFile, _In_ ULONG64 iOffset, _In_ ULONG64 iSize, LPCTSTR pszOutFile);
+
+
 //+ MyFormatBinaryHex
 // Returns the length of the output string, without \0
 ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen );
@@ -166,6 +192,15 @@ LONG MyReplaceKeywordsW(
 	_In_ REPLACE_KEYWORD_CALLBACK_W fnReplace, _In_opt_ LPVOID pReplaceParam
 );
 
+typedef struct {
+	LPCTSTR keywordBegin, keywordEnd;
+	LPCTSTR paramsBegin, paramsEnd;
+	LPCTSTR pathBegin, pathEnd;
+} Keyword;
+
+/// \brief Split input pattern \c "@keyword[:params][>path]@" into its components.
+/// \return \c TRUE if the function is successful.
+BOOL MySplitKeyword(LPCTSTR input, Keyword* data);
 
 //+ MyStrReplace
 // Returns the length of the output string, without \0. Returns -1 if errors occur
@@ -189,18 +224,6 @@ void MyFormatMilliseconds( _In_ curl_off_t iMillis, _Out_ LPTSTR pszStr, _In_ UL
 // Input strings without any suffix is assumed to be milliseconds (e.g. "2500" will return 2500)
 UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr );
 
-
-//+ Virtual Memory
-// Auto-growing virtual memory buffer
-typedef struct {
-	PCCH   pMem;		/// Memory buffer
-	SIZE_T iSize;		/// Memory size
-	SIZE_T iReserved, iCommitted;
-} VMEMO;
-ULONG  VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize );			/// Return Win32 error
-SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size );	/// Return bytes written
-void   VirtualMemoryReset( _Inout_ VMEMO *pMem );			/// Reset to 0-bytes
-void   VirtualMemoryDestroy( _Inout_ VMEMO *pMem );			/// Free everything
 
 //+ Input Data
 #define IDATA_TYPE_STRING		's'

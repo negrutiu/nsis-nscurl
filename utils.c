@@ -163,6 +163,48 @@ ULONG MyCreateDirectory( _In_ LPCTSTR pszPath, _In_ BOOLEAN bHasFilename )
 	return e;
 }
 
+INT_PTR MyAtoi(LPCTSTR s, LPCTSTR* nextChar, BOOL skipSpaces)
+{
+	if (skipSpaces) { while (*s == _T(' ') || *s == _T('\t')) { s++; }}
+
+	int sign = 0;
+	if (*s == _T('+')) s++;
+	if (*s == _T('-')) sign++, s++;
+
+	INT_PTR v = 0;
+	if (*s == _T('0') && (s[1] == _T('x') || s[1] == _T('X'))) {
+		s++;
+		for (;;) {
+			int c = *(++s);
+			if (c >= _T('0') && c <= _T('9')) c -= _T('0');
+			else if (c >= _T('a') && c <= _T('f')) c -= _T('a') - 10;
+			else if (c >= _T('A') && c <= _T('F')) c -= _T('A') - 10;
+			else break;
+			v <<= 4;
+			v += c;
+		}
+	} else if (*s == _T('0') && s[1] <= _T('7') && s[1] >= _T('0')) {
+		for (;;) {
+			int c = *(++s);
+			if (c >= _T('0') && c <= _T('7')) c -= _T('0');
+			else break;
+			v <<= 3;
+			v += c;
+		}
+	} else {
+		for (s--;;) {
+			int c = *(++s) - _T('0');
+			if (c < 0 || c > 9) break;
+			v *= 10;
+			v += c;
+		}
+	}
+
+    if (skipSpaces) { while (*s == _T(' ') || *s == _T('\t')) { s++; }}
+	if (nextChar) *nextChar = s;
+	if (sign) v = -v;
+	return v;
+}
 
 //++ MyStrDup
 LPVOID MyStrDup( _In_ Encodings iEnc, _In_ LPCVOID pszSrc )
@@ -506,6 +548,72 @@ ULONG MyFormatBinaryHexW( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPWSTR 
 	return j;										/// Characters written, not including \0
 }
 
+ULONG MyWriteDataToFile(_In_ const void* pData, _In_ ULONG64 iSize, _In_ LPCTSTR pszOutFile)
+{
+	ULONG err = ERROR_SUCCESS;
+	if (pData && pszOutFile && pszOutFile[0]) {
+		HANDLE hOutFile = CreateFile(pszOutFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (MyValidHandle(hOutFile)) {
+			ULONG iWritten;
+			while (err == ERROR_SUCCESS && iSize > 0) {
+				err = WriteFile(hOutFile, pData, (ULONG)min(iSize, 1024 * 1024ULL), &iWritten, NULL) ? ERROR_SUCCESS : GetLastError();
+				if (err == ERROR_SUCCESS) {
+					pData = (const char*)pData + iWritten;
+					iSize -= iWritten;
+				}
+			}
+			CloseHandle(hOutFile);
+		} else {
+			err = GetLastError();
+		}
+	} else {
+		err = ERROR_INVALID_PARAMETER;
+	}
+	return err;
+}
+
+ULONG MyWriteFileToFile(_In_ HANDLE hInFile, _In_ ULONG64 iOffset, _In_ ULONG64 iSize, LPCTSTR pszOutFile)
+{
+	ULONG err = ERROR_SUCCESS;
+	if (MyValidHandle(hInFile) && pszOutFile && pszOutFile[0]) {
+		err = SetFilePointer(hInFile, (LONG)((PLARGE_INTEGER)&iOffset)->LowPart, &((PLARGE_INTEGER)&iOffset)->HighPart, FILE_BEGIN) != INVALID_SET_FILE_POINTER ? ERROR_SUCCESS : GetLastError();
+		if (err == ERROR_SUCCESS) {
+			HANDLE hOutFile = CreateFile(pszOutFile, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if (MyValidHandle(hOutFile)) {
+				const ULONG iBufSize = 1024 * 1024;
+				char* pBuf = (char*)MyAlloc(iBufSize);
+				if (pBuf) {
+					ULONG iRead, iWritten;
+					while (err == ERROR_SUCCESS && iSize > 0) {
+						err = ReadFile(hInFile, pBuf, (ULONG)min(iSize, iBufSize), &iRead, NULL) ? ERROR_SUCCESS : GetLastError();
+						if (err == ERROR_SUCCESS) {
+							if (iRead == 0)
+								break;
+							err = WriteFile(hOutFile, pBuf, iRead, &iWritten, NULL) ? ERROR_SUCCESS : GetLastError();
+							if (err == ERROR_SUCCESS) {
+								if (iWritten == iRead) {
+									iSize -= iWritten;
+								} else {
+									err = ERROR_WRITE_FAULT;
+								}
+							}
+						}
+					}
+					MyFree(pBuf);
+				} else {
+					err = ERROR_OUTOFMEMORY;
+				}
+				CloseHandle(hOutFile);
+			} else {
+				err = GetLastError();
+			}
+		}
+	} else {
+		err = GetLastError();
+	}
+	return err;
+}
+
 
 //++ MyFormatBinaryHexA
 ULONG MyFormatBinaryHexA( _In_ LPVOID pData, _In_ ULONG iDataSize, _Out_ LPSTR pszStr, _In_ ULONG iStrLen )
@@ -691,6 +799,49 @@ LONG MyReplaceKeywordsW( _Inout_ LPWSTR pszStr, _In_ LONG iMaxLen, _In_ WCHAR ch
 }
 
 
+BOOL MySplitKeyword(LPCTSTR input, Keyword* data)
+{
+#define IS_WHITESPACE(ch) ((ch) == _T(' ') || (ch) == _T('\t') || (ch) == _T('\r') || (ch) == _T('\n'))
+#define TRIM_WHITESPACES(begin, end) \
+    while ((begin) < (end) && IS_WHITESPACE((begin)[0])) { (begin)++; }; \
+    while ((end) > (begin) && IS_WHITESPACE((end)[-1])) { (end)--; }
+
+	if (input && input[0] && data) {
+		int l = lstrlen(input);
+		if (l > 2 && input[0] == _T('@') && input[l - 1] == _T('@')) {
+			LPCTSTR psz = input + 1;
+
+			for (data->keywordBegin = psz++; psz[0] != _T('\0') && psz[0] != _T(':') && psz[0] != _T('>') && psz[0] != _T('@'); psz++) { }
+			data->keywordEnd = psz;
+			TRIM_WHITESPACES(data->keywordBegin, data->keywordEnd);
+
+			if (psz[0] == _T(':')) {
+				for (data->paramsBegin = ++psz; psz[0] != _T('\0') && psz[0] != _T('>') && psz[0] != _T('@'); psz++) { }
+				data->paramsEnd = psz;
+				TRIM_WHITESPACES(data->paramsBegin, data->paramsEnd);
+			}
+
+			if (psz[0] == _T('>')) {
+				for (data->pathBegin = ++psz; psz[0] != _T('\0') && psz[0] != _T('@'); psz++) { }
+				data->pathEnd = psz;
+				TRIM_WHITESPACES(data->pathBegin, data->pathEnd);
+			}
+
+			if (psz[0] != _T('@') || psz[1] != _T('\0'))
+				return FALSE;
+		}
+	}
+
+	return data &&
+		data->keywordBegin && data->keywordEnd && (data->keywordEnd > data->keywordBegin) &&    // keyword is mandatory
+		(!data->paramsBegin || (data->paramsEnd > data->paramsBegin)) &&    // null or valid, but not empty
+		(!data->pathBegin || (data->pathEnd > data->pathBegin));            // null or valid, but not empty
+
+#undef IS_WHITESPACE
+#undef TRIM_WHITESPACES
+}
+
+
 //++ MyStrReplace
 /// Replace all occurrences of the specified substring in a string
 /// Returns the final string length, not including \0
@@ -824,72 +975,6 @@ UINT_PTR MyStringToMilliseconds( _In_ LPCTSTR pszStr )
 		}
 	}
 	return ms;
-}
-
-
-//++ VirtualMemoryInitialize
-ULONG VirtualMemoryInitialize( _Inout_ VMEMO *pMem, _In_ SIZE_T iMaxSize )
-{
-	if (pMem) {
-		ZeroMemory( pMem, sizeof( *pMem ) );
-		pMem->pMem = (PCCH)VirtualAlloc( NULL, iMaxSize, MEM_RESERVE, PAGE_READWRITE );
-		if (pMem->pMem) {
-			MEMORY_BASIC_INFORMATION mbi = {0};
-			pMem->iReserved = (VirtualQuery( pMem->pMem, &mbi, sizeof( mbi ) ) > 0) ? mbi.RegionSize : iMaxSize;
-		} else {
-			return GetLastError();
-		}
-	}
-	return ERROR_SUCCESS;
-}
-
-//++ VirtualMemoryAppend
-SIZE_T VirtualMemoryAppend( _Inout_ VMEMO *pMem, _In_ PVOID mem, _In_ SIZE_T size )
-{
-	ULONG e = ERROR_SUCCESS;
-	if (pMem && pMem->pMem && mem && size) {
-
-		/// Commit more virtual memory as needed
-		if (pMem->iSize + size > pMem->iCommitted) {
-			SYSTEM_INFO si;
-			GetSystemInfo( &si );
-			SIZE_T n = ((size + si.dwPageSize) / si.dwPageSize) * si.dwPageSize;
-			pMem->iCommitted = min( pMem->iCommitted + n, pMem->iReserved );
-			e = VirtualAlloc( (LPVOID)pMem->pMem, pMem->iCommitted, MEM_COMMIT, PAGE_READWRITE ) ? ERROR_SUCCESS : GetLastError();
-		}
-
-		/// Write
-		if (e == ERROR_SUCCESS) {
-			SIZE_T n = min( size, pMem->iReserved - pMem->iSize );
-			if (n > 0) {
-				CopyMemory( (LPVOID)(pMem->pMem + pMem->iSize), mem, n );
-				pMem->iSize += n;
-			}
-			return n;
-		}
-	}
-	return 0;
-}
-
-//++ VirtualMemoryReset
-void VirtualMemoryReset( _Inout_ VMEMO *pMem )
-{
-	if (pMem) {
-		if (pMem->pMem)
-			VirtualFree( (LPVOID)pMem->pMem, pMem->iReserved, MEM_DECOMMIT );
-		pMem->iCommitted = pMem->iSize = 0;
-	}
-}
-
-
-//++ VirtualMemoryDestroy
-void VirtualMemoryDestroy( _Inout_ VMEMO *pMem )
-{
-	if (pMem) {
-		if (pMem->pMem)
-			VirtualFree( (LPVOID)pMem->pMem, 0, MEM_RELEASE );
-		ZeroMemory( pMem, sizeof( *pMem ) );
-	}
 }
 
 

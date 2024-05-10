@@ -299,6 +299,51 @@ Section "sysinternals.com/get (HTTP/1.1)"
 SectionEnd
 
 
+Section "sysinternals.com/get (Memory)"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuite_memory.zip"
+
+	DetailPrint 'NScurl::http "${LINK}" "Memory"'
+	Push "/END"
+    Push "@id@"     ; _transfer ID_ as return value (instead of _transfer status_)
+	Push "/RETURN"
+	Push "/INSIST"
+	Push "/CANCEL"
+	Push "Memory"   ; Memory
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $R0
+	DetailPrint "ID: $R0"
+
+    ; For demonstration purposes, we'll retrieve the first two bytes of the remote content stored in memory
+    ; If the data begins with the "PK" sequence (the standard zip file magic bytes), we'll save it to disk as a .zip file
+    DetailPrint 'NScurl::query /id $R0 "@RecvData:0,2@"'
+    Push "@RecvData:0,2@"   ; offset:0, size:2
+    Push $R0
+    Push "/id"
+    CallInstDLL $DLL query
+    Pop $0
+    DetailPrint '  RecvData[0,2]: "$0"'
+
+    ${If} $0 == "PK"
+        DetailPrint 'NScurl::query /id $R0 "@RecvData>${FILE}@"'
+        Push "  @RecvData>${FILE}@"
+        Push $R0
+        Push "/id"
+        CallInstDLL $DLL query
+        Pop $0      ; @RecvData@ trimmed down to ${NSIS_MAX_STRLEN}
+        DetailPrint '  RecvData: $0'
+    ${EndIf}
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
@@ -1098,7 +1143,7 @@ _enum_loop:
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
-	Push 'Remote Content: @RECVDATA@'
+	Push 'Remote Content: @RECVDATA:0,128@'
 	Push $0
 	Push "/ID"
 	CallInstDLL $DLL query

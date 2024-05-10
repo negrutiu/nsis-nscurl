@@ -5,6 +5,7 @@
 #pragma once
 #include <curl/curl.h>
 #include "utils.h"
+#include "vmemo.h"
 
 #define STATUS_WAITING		0
 #define STATUS_RUNNING		'r'

@@ -100,23 +100,24 @@ The caller must [`NScurl::escape`](#nscurlescape) illegal URL characters.
 > This parameter is mandatory
 
 ### `output`
-
-Syntax:
-filename | `MEMORY`
+```
+filename | "MEMORY"
+```
 
 Absolute and relative file names are both allowed.  
 Relative names use the [current directory](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory) as base.
 
 > [!tip]
-> The current directory might change in unpredictable ways  
-> It's recommended to use absolute paths
+> The current directory might change in unpredictable ways. Using absolute paths is recommended
 
 `MEMORY` instructs the plugin to download the remote content _in-memory_.  
-Data can be retrieved later by calling [`NScurl::query "@RECVDATA@"`](#transfer-keywords)
+Data can be retrieved later using [`NScurl::query "@RECVDATA@"`](#transfer-keywords)  
+In-memory downloads are limited in size by:
+- the amount of physical memory installed
+- the size of the virtual address space available to the _Installer_ process. That's usually up to 2GB in x86 processes (most common) and 128TB in x64 processes (these numbers might vary, see details [here](https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases))
 
 > [!note]
-> `MEMORY` data is truncated to the NSIS string maximum length (1KB, 4KB, 8KB, depending on the NSIS build). If larger data is expected, downloading to a file is recommended  
-> This parameter is mandatory
+> The `output` parameter is mandatory
 
 ### /RETURN
 ```
@@ -651,14 +652,34 @@ HTTP response headers.
 
 ### @RECVDATA@
 ### @RECVDATA_RAW@
-A preview of the received remote content.  
-`@RECVDATA@` receives a printable string. Non-printable characters are replaced with `.`  
-`@RECVDATA_RAW@` receives the original data no characters replaced  
+The remote content.  
+`@RECVDATA[:offset[,size]][>file]@` receives a printable string. Non-printable characters are replaced with `.`  
+`@RECVDATA_RAW[:offset[,size]][>file]@` receives the original data no characters replaced
+
+Optional parameters are available to customize the query.
+Parameter  | Details
+---------- | ----------------------
+offset     | Data offset. <br> Negative values are subtracted from the remote content length.
+size       | Data size.
+file       | Save data to file. Absolute and relative file names are both allowed. <br> NOTE: The saved content is always _RAW_ (aka no characters replaced)
+
+```nsis
+# Examples:
+NScurl::query /id $0 "@RecvData:0,1024@"     ; get the first 1024 bytes of the remote content (offset 0, size 1024)
+Pop $0
+NScurl::query /id $0 "@RecvData:-1024,1024@" ; get the last 1024 bytes (offset -1024, size 1024)
+Pop $0
+NScurl::query /id $0 "@RecvData>$INSTDIR\file.ext@"         ; save all remote content to a file
+Pop $0
+NScurl::query /id $0 "@RecvData:0,4096>$INSTDIR\file.ext@"  ; save the first 4KB to a file
+Pop $0
+```
+
 > [!tip]
 > Can retrieve the remote content downloaded to `MEMORY`
 
 > [!caution]
-> This value is truncated to NSIS maximum string length (1KB, 4KB, 8KB, depending on the NSIS build)
+> The value returned by the `NScurl::query` function is subject to a size limit defined by the `${NSIS_MAX_STRLEN}` constant. Typically, the maximum length is 2KB, 4KB, or 8KB, depending on the specific NSIS build or fork you're using. If you need to access data beyond this limit, you can make multiple `NScurl::query` calls, each with a different _(offset, size)_ pair.
 
 ### @TAG@
 Transfer tag, empty by default.  
