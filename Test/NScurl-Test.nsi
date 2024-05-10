@@ -670,7 +670,7 @@ _enum_loop:
 	Pop $1
 	DetailPrint "$1"
 
-	NScurl::query /ID $0 'Remote Content: @RECVDATA@'
+	NScurl::query /ID $0 'Remote Content: @RECVDATA:0,128@'
 	Pop $1
 	DetailPrint "$1"
 

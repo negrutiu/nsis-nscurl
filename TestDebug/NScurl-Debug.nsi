@@ -1143,7 +1143,7 @@ _enum_loop:
 	!insertmacro STACK_VERIFY_END
 
 	!insertmacro STACK_VERIFY_START
-	Push 'Remote Content: @RECVDATA@'
+	Push 'Remote Content: @RECVDATA:0,128@'
 	Push $0
 	Push "/ID"
 	CallInstDLL $DLL query
