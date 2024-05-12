@@ -23,16 +23,6 @@ CURL_GLOBALS g_Curl = {0};
 //x #define DEBUG_TRANSFER_SLOWDOWN		50						/// Delays during transfer
 
 
-// ----------------------------------------------------------------------
-// TODO: Check if remote content has changed at /RECONNECT
-// TODO: Client certificate (CURLOPT_SSLCERT, CURLOPT_PROXY_SSLCERT)
-// TODO: Certificate revocation (CURLOPT_CRLFILE, CURLOPT_PROXY_CRLFILE)
-// TODO: Secure Proxy (CURLOPT_PROXY_CAPATH, CURLOPT_PROXY_SSL_VERIFYHOST, CURLOPT_PROXY_SSL_VERIFYPEER)
-// TODO: HPKP - HTTP public key pinning (CURLOPT_PINNEDPUBLICKEY, CURLOPT_PROXY_PINNEDPUBLICKEY)
-// TODO: Time conditional request (CURLOPT_TIMECONDITION, CURLOPT_TIMEVALUE)
-// TODO: Query SSL info (certificate chain, cypher, etc.)
-// ----------------------------------------------------------------------
-
 //+ CurlRequestComputeNumbers
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown )
 {
