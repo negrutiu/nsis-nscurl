@@ -1,14 +1,16 @@
 REM :: Marius Negrutiu (marius.negrutiu@protonmail.com)
 
 @echo off
+setlocal enabledelayedexpansion
 echo.
 
 :CHDIR
 cd /d "%~dp0"
 
-:pluginapi
-call _acquire_pluginapi.bat
-if %errorlevel% neq 0 exit /B %errorlevel%
+:dependencies
+call _acquire_pluginapi.bat      || exit /b !errorlevel!
+call _acquire_libcurl-devel.bat  || exit /b !errorlevel!
+call _acquire_curl-ca-bundle.bat || exit /b !errorlevel!
 
 :DEFINITIONS
 set BUILD_SOLUTION=%CD%\NScurl.sln

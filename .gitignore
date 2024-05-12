@@ -6,6 +6,7 @@ curl-ca-bundle.crt
 /nsis
 
 libcurl-devel*.7z
+libcurl-devel*.7z.etag
 NScurl*.7z
 
 /Test/*.exe

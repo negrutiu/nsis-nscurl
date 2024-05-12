@@ -1,6 +1,7 @@
 REM :: Marius Negrutiu (marius.negrutiu@protonmail.com)
 
 @echo off
+setlocal enabledelayedexpansion
 echo.
 
 if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%MINGW32_INSTDIR%
@@ -15,9 +16,10 @@ set ORIGINAL_PATH=%PATH%
 
 cd /d "%~dp0"
 
-:pluginapi
-call _acquire_pluginapi.bat
-if %errorlevel% neq 0 exit /B %errorlevel%
+:dependencies
+call _acquire_pluginapi.bat      || exit /b !errorlevel!
+call _acquire_libcurl-devel.bat  || exit /b !errorlevel!
+call _acquire_curl-ca-bundle.bat || exit /b !errorlevel!
 
 :x86
 if not exist "%MINGW32%\bin\gcc.exe" echo ERROR: Missing "%MINGW32%" && pause && exit /B 2
