@@ -27,20 +27,24 @@ set PATH=%MINGW32%\bin;%ORIGINAL_PATH%
 
 echo.
 echo -------------------------------------------------------------------
-set OUTDIR=Release-mingw-x86-ansi
+set OUTDIR=%~dp0Release-mingw-x86-ansi
 echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
-mingw32-make.exe ARCH=X86 CHAR=ANSI OUTDIR=%OUTDIR% -fMakefile.mingw clean all
+pushd "%~dp0src\nscurl"
+mingw32-make.exe ARCH=X86 CHAR=ANSI OUTDIR=%OUTDIR% clean all
+popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
 echo.
 echo -------------------------------------------------------------------
-set OUTDIR=Release-mingw-x86-unicode
+set OUTDIR=%~dp0Release-mingw-x86-unicode
 echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
-mingw32-make.exe ARCH=X86 CHAR=Unicode OUTDIR=%OUTDIR% -fMakefile.mingw clean all
+pushd "%~dp0src\nscurl"
+mingw32-make.exe ARCH=X86 CHAR=Unicode OUTDIR=%OUTDIR% clean all
+popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
 
@@ -50,11 +54,13 @@ set PATH=%MINGW64%\bin;%ORIGINAL_PATH%
 
 echo.
 echo -------------------------------------------------------------------
-set OUTDIR=Release-mingw-amd64-unicode
+set OUTDIR=%~dp0Release-mingw-amd64-unicode
 echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
-mingw32-make.exe ARCH=X64 CHAR=Unicode OUTDIR=%OUTDIR% -fMakefile.mingw clean all
+pushd "%~dp0src\nscurl"
+mingw32-make.exe ARCH=X64 CHAR=Unicode OUTDIR=%OUTDIR% clean all
+popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
 echo.

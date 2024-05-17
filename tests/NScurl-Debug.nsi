@@ -17,7 +17,7 @@ Target ${_TARGET_}
 Var /global DLL
 
 !if /fileexists "${NSISDIR}\Include\ModernXXL.nsh"
-	!include "ModernXXL.nsh"		; Available in the NSIS fork from https://github.com/negrutiu/nsis
+	!include "ModernXXL.nsh"		    ; Available in the NSIS fork from https://github.com/negrutiu/nsis
 !endif
 !include "MUI2.nsh"
 !define LOGICLIB_STRCMP
@@ -29,7 +29,7 @@ Var /global DLL
 !insertmacro GetParameters
 
 !define /ifndef NULL 0
-!define TEST_FILE "$SYSDIR\lz32.dll"		; ...random file that exists in every Windows build
+!define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 
 # GUI settings
@@ -60,16 +60,16 @@ InstType "Most"			; 2
 Name    "NScurl-Debug-${_TARGET_}"
 OutFile "NScurl-Debug-${_TARGET_}.exe"
 XPStyle on
-RequestExecutionLevel user		; Don't require UAC elevation
+RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 
 !macro STACK_VERIFY_START
-	Push "MyStackTop"			; Mark the top of the stack
+	Push "MyStackTop"			        ; Mark the top of the stack
 !macroend
 
 !macro STACK_VERIFY_END
-	Pop $R9						; Validate our stack marker
+	Pop $R9						        ; Validate our stack marker
 	StrCmp $R9 "MyStackTop" +2 +1
 		MessageBox MB_ICONSTOP "Stack is NOT OK"
 !macroend

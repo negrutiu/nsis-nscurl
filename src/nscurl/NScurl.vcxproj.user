@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-x86-ansi|Win32'">
-    <LocalDebuggerCommand>$(ProjectDir)\TestDebug\NScurl-Debug-x86-ansi.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)tests\NScurl-Debug-x86-ansi.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>/dll "$(TargetPath)"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-x86-unicode|Win32'">
-    <LocalDebuggerCommand>$(ProjectDir)\TestDebug\NScurl-Debug-x86-unicode.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)tests\NScurl-Debug-x86-unicode.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>/dll "$(TargetPath)"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-unicode|Win32'">
-    <LocalDebuggerCommand>$(ProjectDir)\TestDebug\NScurl-Debug-x86-unicode.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)tests\NScurl-Debug-x86-unicode.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommandArguments>/dll "$(TargetPath)"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-ansi|Win32'">
     <LocalDebuggerCommandArguments>/dll "$(TargetPath)"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>$(ProjectDir)\TestDebug\NScurl-Debug-x86-ansi.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(SolutionDir)tests\NScurl-Debug-x86-ansi.exe</LocalDebuggerCommand>
   </PropertyGroup>
 </Project>

@@ -5,8 +5,7 @@ echo.
 
 cd /d "%~dp0"
 
-call "%CD%\Test\cleanup.bat"
-call "%CD%\TestDebug\cleanup.bat"
+call "%cd%\tests\cleanup.bat"
 
 call :CLEANUP
 call :CLEANUP
@@ -20,7 +19,10 @@ rd /S /Q ipch
 
 for /D %%a in (Debug*)   do rd /S /Q "%%a"
 for /D %%a in (Release*) do rd /S /Q "%%a"
-rd /S /Q nsis
+
+rd  /Q /S "src\nscurl\nsis"
+del /Q    "src\nscurl\curl-ca-bundle.crt"
+rd  /Q /S "packages\current"
 
 del *.aps
 del *.bak

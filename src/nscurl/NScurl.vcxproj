@@ -89,12 +89,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-x86-unicode|Win32'">
@@ -103,12 +103,12 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-ansi|Win32'">
@@ -120,14 +120,14 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-unicode|Win32'">
@@ -139,14 +139,14 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(ProjectDir);libcurl-devel/include;libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ProjectDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -4,6 +4,8 @@ REM :: Marius Negrutiu (marius.negrutiu@protonmail.com)
 setlocal enabledelayedexpansion
 echo.
 
+REM | script.bat [Release|Debug]
+
 :CHDIR
 cd /d "%~dp0"
 
@@ -14,7 +16,8 @@ call _acquire_curl-ca-bundle.bat || exit /b !errorlevel!
 
 :DEFINITIONS
 set BUILD_SOLUTION=%CD%\NScurl.sln
-set BUILD_CONFIG=Release
+if "%1" neq "" set BUILD_CONFIG=%~1
+if "%1" equ "" set BUILD_CONFIG=Release
 set BUILD_VERBOSITY=normal
 :: Verbosity: quiet, minimal, normal, detailed, diagnostic
 

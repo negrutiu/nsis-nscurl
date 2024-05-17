@@ -7,13 +7,13 @@
 !else ifdef ANSI
 	!define _TARGET_ x86-ansi
 !else
-	!define _TARGET_ x86-unicode		; Default
+	!define _TARGET_ x86-unicode        ; Default
 !endif
 
 Target ${_TARGET_}
 
 !if /fileexists "${NSISDIR}\Include\ModernXXL.nsh"
-	!include "ModernXXL.nsh"		; Available in the NSIS fork from https://github.com/negrutiu/nsis
+	!include "ModernXXL.nsh"		    ; Available in the NSIS fork from https://github.com/negrutiu/nsis
 !endif
 !include "MUI2.nsh"
 !define LOGICLIB_STRCMP
@@ -21,7 +21,7 @@ Target ${_TARGET_}
 !include "Sections.nsh"
 
 !define /ifndef NULL 0
-!define TEST_FILE "$SYSDIR\lz32.dll"		; ...random file that exists in every Windows build
+!define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 # NScurl.dll development location
 !ifdef DEVEL
@@ -61,7 +61,7 @@ InstType "Most"			; 2
 Name    "NScurl-Test-${_TARGET_}"
 OutFile "NScurl-Test-${_TARGET_}.exe"
 XPStyle on
-RequestExecutionLevel user		; Don't require UAC elevation
+RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 

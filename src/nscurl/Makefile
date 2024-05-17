@@ -16,7 +16,7 @@
 PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
-INC      = -I. -Ilibcurl-devel/include -Ilibcurl-devel/include/openssl
+INC      = -I. -I../../libcurl-devel/include -I../../libcurl-devel/include/openssl
 LIB      = -lcurl -lssl -lcrypto -lnghttp2_static -lzlibstatic -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
 
 _OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
@@ -33,11 +33,11 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 
 # ARCH
 ifeq ($(ARCH), X64)
-	CFLAGS  += -Wall -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib
+	CFLAGS  += -Wall -DNDEBUG -L../../libcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -Wall -DNDEBUG -Llibcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib -march=pentium2
+	CFLAGS  += -Wall -DNDEBUG -L../../libcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib -march=pentium2
 	LDFLAGS += -Wl,-e'_DllMain'
 	RCFLAGS += -F pe-i386
 endif

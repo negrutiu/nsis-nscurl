@@ -1,24 +1,24 @@
 
 *nogit*
 
-curl-ca-bundle.crt
-/libcurl-devel
-/nsis
+/src/nscurl/curl-ca-bundle.crt
+/src/nscurl/nsis
 
+/packages/current
+/packages/*.zip
+/packages/*.7z
+
+/libcurl-devel
 libcurl-devel*.7z
 libcurl-devel*.7z.etag
-NScurl*.7z
 
-/Test/*.exe
-/Test/_*
+/tests/*.exe
+/tests/_*
 
-/TestDebug/*.exe
-/TestDebug/_*
-
-Debug-*
-Release-*
-ipch
-.vs
+/Debug-*
+/Release-*
+/ipch
+/.vs
 
 *.opensdf
 *.sdf

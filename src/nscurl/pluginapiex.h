@@ -6,8 +6,8 @@
 #ifndef _PLUGINAPI_EX_H_
 #define _PLUGINAPI_EX_H_
 
-#include <nsis/nsis_tchar.h>
-#include <nsis/pluginapi.h>
+#include "nsis/nsis_tchar.h"
+#include "nsis/pluginapi.h"
 
 //+ EXDLL_VALID_PARAMS
 // Validate input parameters to prevent crashes
