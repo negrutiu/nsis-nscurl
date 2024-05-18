@@ -381,24 +381,30 @@ Section "github.com/get (Encoding)"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
-
     Push "${FILE}.debug.txt"
     Push "nodata"
     Push "/DEBUG"
-
+    Push "@id@"
+    Push "/RETURN"
 	Push "/Zone.Identifier"
 	Push "/INSIST"
 	;Push "/RESUME"
 	Push "/CANCEL"
 	Push "/ENCODING"	; incompatible with /RESUME or MEMORY transfers
-
 	Push "${FILE}"
 	Push "${LINK}"
 	Push "GET"
 	CallInstDLL $DLL http
+	Pop $R0
+	DetailPrint "ID: $R0"
 
-	Pop $0
-	DetailPrint "Status: $0"
+	Push "@RecvHeaders:content-encoding@"
+	Push $R0
+	Push "/id"
+	CallInstDLL $DLL query
+    Pop $0
+    DetailPrint "Reply Headers[content-encoding]: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 

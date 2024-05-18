@@ -252,10 +252,13 @@ Section "github.com/get (Encoding)"
 
 	; note: /Accept-Encoding is incompatible with /RESUME or MEMORY transfers
 	; note: Notice that content-lenght indicates the size of the gzip-compressed data (15kb) and not the actual data size (60kb)
-	;NScurl::http get "${LINK}" "${FILE}" /Accept-Encoding /CANCEL /INSIST /Zone.Identifier /DEBUG nodata "${FILE}.debug.txt" /END
-	NScurl::http get "${LINK}" "${FILE}" /Accept-Encoding /CANCEL /INSIST /Zone.Identifier /END
-	Pop $0
-	DetailPrint "Status: $0"
+	NScurl::http get "${LINK}" "${FILE}" /Accept-Encoding /CANCEL /INSIST /Zone.Identifier /RETURN "@id@" /END
+	Pop $R0
+	DetailPrint "ID: $R0"
+
+    NScurl::query /id $R0 "@RecvHeaders:content-encoding@"
+    Pop $0
+    DetailPrint "Reply Headers[content-encoding]: $0"
 
 SectionEnd
 
