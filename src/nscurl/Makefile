@@ -2,7 +2,7 @@
 # -------------------------------
 # Mandatory definitions
 # -------------------------------
-#   ARCH=X86|x64
+#   ARCH=x86|x64
 #   CHAR=ANSI|Unicode
 #   OUTDIR=<output_directory>
 # -------------------------------
@@ -32,19 +32,14 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 #
 
 # vcpkg
-ifeq ($(ARCH), X64)
-    VCPKG_TRIPLET = x64-mingw-static
-else
-    VCPKG_TRIPLET = x86-mingw-static
-endif
-
+VCPKG_TRIPLET = $(ARCH)-mingw-static
 VCPKG_INSTALLED = ../../vcpkg/$(VCPKG_TRIPLET)/installed/$(VCPKG_TRIPLET)
 
 INC += -I$(VCPKG_INSTALLED)/include -I$(VCPKG_INSTALLED)/include/openssl
 LIB += -L$(VCPKG_INSTALLED)/lib
 
 # ARCH
-ifeq ($(ARCH), X64)
+ifeq ($(ARCH), x64)
 	CFLAGS  += -Wall -DNDEBUG
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64

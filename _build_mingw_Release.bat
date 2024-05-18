@@ -27,7 +27,7 @@ echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
 pushd "%~dp0src\nscurl"
-mingw32-make.exe ARCH=X86 CHAR=ANSI OUTDIR=%OUTDIR% clean all
+mingw32-make.exe ARCH=x86 CHAR=ANSI OUTDIR=%OUTDIR% clean all
 popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
@@ -38,7 +38,7 @@ echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
 pushd "%~dp0src\nscurl"
-mingw32-make.exe ARCH=X86 CHAR=Unicode OUTDIR=%OUTDIR% clean all
+mingw32-make.exe ARCH=x86 CHAR=Unicode OUTDIR=%OUTDIR% clean all
 popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
@@ -54,7 +54,7 @@ echo %OUTDIR%
 title %OUTDIR%
 echo -------------------------------------------------------------------
 pushd "%~dp0src\nscurl"
-mingw32-make.exe ARCH=X64 CHAR=Unicode OUTDIR=%OUTDIR% clean all
+mingw32-make.exe ARCH=x64 CHAR=Unicode OUTDIR=%OUTDIR% clean all
 popd
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
