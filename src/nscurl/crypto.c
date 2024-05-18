@@ -4,7 +4,8 @@
 
 #include "main.h"
 #include "crypto.h"
-#include <openssl/crypto/evp.h>
+#include "openssl/evp.h"
+#include "crypto/evp.h"
 
 
 //++ Hash
