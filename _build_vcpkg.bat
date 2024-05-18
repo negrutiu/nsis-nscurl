@@ -28,8 +28,6 @@ if /i "%compiler%" equ "msvc" if /i "%runtime%" equ "dynamic" set vcpkg_triplet=
 
 set vcpkg_dir=%~dp0vcpkg\%vcpkg_triplet%
 
-title vcpkg -^> %vcpkg_triplet%
-
 REM | -------------------------------------------------------------------------
 
 if /i "%compiler%" equ "mingw" if /i "%arch%" equ "x64" if exist "%SystemDrive%\msys64\mingw64\bin" set PATH=%SystemDrive%\msys64\mingw64\bin;%PATH%
@@ -41,13 +39,17 @@ if /i "%compiler%" equ "mingw" if /i "%arch%" equ "x86" if exist "%SystemDrive%\
 REM | -------------------------------------------------------------------------
 
 if exist "%vcpkg_dir%\.gitignore" (
+    echo Pull https://github.com/Microsoft/vcpkg.git ...
     pushd "%vcpkg_dir%"
     git pull --verbose || exit /b !errorlevel!
+    echo Bootstrapping vcpkg ...
     call "%vcpkg_dir%\bootstrap-vcpkg.bat" -disableMetrics || exit /b !errorlevel!
     popd
 ) else (
+    echo Clone https://github.com/Microsoft/vcpkg.git ...
     pushd "%vcpkg_dir%\.."
     git clone https://github.com/Microsoft/vcpkg.git "%vcpkg_dir%" || exit /b !errorlevel!
+    echo Bootstrapping vcpkg ...
     call "%vcpkg_dir%\bootstrap-vcpkg.bat" -disableMetrics || exit /b !errorlevel!
     popd
 )
@@ -60,6 +62,10 @@ set vcpkg_buildtrees=%vcpkg_dir%\buildtrees
 set vcpkg_packages=%vcpkg_dir%\packages
 REM set vcpkg_archives=%vcpkg_dir%\archives
 set vcpkg_archives=%~dp0vcpkg\archives
+
+echo -------------------------------------------------------------------------
+echo Build ^& install vcpkg ...
+echo -------------------------------------------------------------------------
 
 mkdir "%vcpkg_dir%" > nul 2> nul
 pushd "%vcpkg_dir%"
@@ -75,4 +81,6 @@ vcpkg.exe ^
   --no-print-usage
 
 popd
+
+echo -------------------------------------------------------------------------
 exit /b %errorlevel%

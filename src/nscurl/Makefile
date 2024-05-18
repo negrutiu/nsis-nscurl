@@ -97,16 +97,28 @@ RCFLAGS += \
 	$(CUSTOM_RCFLAGS)
 
 
-.PHONY: clean all-before all all-after
+.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install
 
 clean:
 	@echo.
 	if exist $(OUTDIR) rd /S /Q $(OUTDIR)
 
-all: all-before $(_BIN) all-after
+all: all-before nsis-sdk curl-ca-bundle vcpkg-install $(_BIN) all-after
 
 all-before:
 	if not exist $(OUTDIR) mkdir $(OUTDIR)
+
+nsis-sdk:
+	REM ----- NSIS SDK ------------------------------------------------------------
+	call _acquire_pluginapi.bat
+
+curl-ca-bundle:
+	REM ----- curl-ca-bundle.crt --------------------------------------------------
+	call _acquire_curl-ca-bundle.bat
+
+vcpkg-install:
+	REM ----- vcpkg install -------------------------------------------------------
+	call ..\..\_build_vcpkg.bat $(ARCH) mingw static
 
 # Link
 $(_BIN): $(_OBJ)

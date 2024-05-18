@@ -99,6 +99,10 @@
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call _acquire_pluginapi.bat &amp;&amp; call _acquire_curl-ca-bundle.bat &amp;&amp; call "$(SolutionDir)_build_vcpkg.bat" $(Platform) msvc static
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -112,6 +116,10 @@
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call _acquire_pluginapi.bat &amp;&amp; call _acquire_curl-ca-bundle.bat &amp;&amp; call "$(SolutionDir)_build_vcpkg.bat" $(Platform) msvc static
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -128,6 +136,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call _acquire_pluginapi.bat &amp;&amp; call _acquire_curl-ca-bundle.bat &amp;&amp; call "$(SolutionDir)_build_vcpkg.bat" $(Platform) msvc static
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -143,6 +155,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>call _acquire_pluginapi.bat &amp;&amp; call _acquire_curl-ca-bundle.bat &amp;&amp; call "$(SolutionDir)_build_vcpkg.bat" $(Platform) msvc static
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="crypto.c" />
