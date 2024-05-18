@@ -6,6 +6,9 @@
     <VcpkgTriplet Condition="'$(VcpkgTriplet)'=='' And '$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
     <VcpkgRootDir Condition="'$(VcpkgRootDir)'==''">$(SolutionDir)vcpkg\$(VcpkgTriplet)\</VcpkgRootDir>
     <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(VcpkgRootDir)installed\$(VcpkgTriplet)\</VcpkgInstalledDir>
+
+    <PlatformNsis Condition="'$(Platform)'=='Win32'">x86</PlatformNsis>
+    <PlatformNsis Condition="'$(Platform)'=='x64'">amd64</PlatformNsis>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="$(MSBuildProjectExtension) == '.vcxproj'">

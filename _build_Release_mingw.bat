@@ -26,7 +26,7 @@ echo Building vcpkg ...
    start "vcpkg x86" cmd /C _build_vcpkg.bat Win32 mingw
    start "vcpkg x64" cmd /C _build_vcpkg.bat x64 mingw
 ) | set /P "="
-
+echo.
 
 :x86
 if not exist "%MINGW32%\bin\gcc.exe" echo ERROR: Missing "%MINGW32%" && pause && exit /B 2

@@ -19,6 +19,7 @@ echo Building vcpkg ...
    start "vcpkg x86" cmd /C _build_vcpkg.bat Win32 msvc
    start "vcpkg x64" cmd /C _build_vcpkg.bat x64 msvc
 ) | set /P "="
+echo.
 
 
 :DEFINITIONS
@@ -46,10 +47,14 @@ pushd "%CD%"
 call "%VCVARSALL%" x86
 popd
 
-title %BUILD_CONFIG%-x86-ansi
-msbuild /m /t:build "%BUILD_SOLUTION%" /p:Configuration=%BUILD_CONFIG%-x86-ansi /p:Platform=Win32 /p:PlatformToolset=%BUILD_PLATFORMTOOLSET% /p:WindowsTargetPlatformVersion=%WindowsSDKVersion% /nologo /verbosity:%BUILD_VERBOSITY%
-if %errorlevel% neq 0 pause && exit /B %errorlevel%
+REM title %BUILD_CONFIG%-x86-ansi
+REM msbuild /m /t:build "%BUILD_SOLUTION%" /p:Configuration=%BUILD_CONFIG%-x86-ansi /p:Platform=Win32 /p:PlatformToolset=%BUILD_PLATFORMTOOLSET% /p:WindowsTargetPlatformVersion=%WindowsSDKVersion% /nologo /verbosity:%BUILD_VERBOSITY%
+REM if %errorlevel% neq 0 pause && exit /B %errorlevel%
 
 title %BUILD_CONFIG%-x86-unicode
-msbuild /m /t:build "%BUILD_SOLUTION%" /p:Configuration=%BUILD_CONFIG%-x86-unicode /p:Platform=Win32 /p:PlatformToolset=%BUILD_PLATFORMTOOLSET% /p:WindowsTargetPlatformVersion=%WindowsSDKVersion% /nologo /verbosity:%BUILD_VERBOSITY%
+msbuild /m /t:build "%BUILD_SOLUTION%" /p:Configuration=%BUILD_CONFIG% /p:Platform=Win32 /p:PlatformToolset=%BUILD_PLATFORMTOOLSET% /p:WindowsTargetPlatformVersion=%WindowsSDKVersion% /nologo /verbosity:%BUILD_VERBOSITY%
+if %errorlevel% neq 0 pause && exit /B %errorlevel%
+
+title %BUILD_CONFIG%-amd64-unicode
+msbuild /m /t:build "%BUILD_SOLUTION%" /p:Configuration=%BUILD_CONFIG% /p:Platform=x64 /p:PlatformToolset=%BUILD_PLATFORMTOOLSET% /p:WindowsTargetPlatformVersion=%WindowsSDKVersion% /nologo /verbosity:%BUILD_VERBOSITY%
 if %errorlevel% neq 0 pause && exit /B %errorlevel%
