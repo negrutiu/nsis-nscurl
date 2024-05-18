@@ -878,7 +878,7 @@ LONG MyStrReplace(
 					size_t iMoveSize = (iStrLen - iSubstrIndex - iSubstrLen + 1) * sizeof(TCHAR);
 					MoveMemory( psz + iReplaceWithLen, psz + iSubstrLen, iMoveSize );	/// Make room for the new substring
 					CopyMemory( psz, pszReplaceWith, iReplaceWithLen * sizeof(TCHAR) );	/// Copy the new substring
-					iStrLen += (iReplaceWithLen - iSubstrLen);							/// Update the overall string length
+					iStrLen += (LONG)(iReplaceWithLen - iSubstrLen);					/// Update the overall string length
 					psz = psz + iReplaceWithLen;
 				} else {
 					iStrLen = -1;
@@ -1062,7 +1062,7 @@ ULONG IDataParseParam( _In_ LPTSTR pszParam, _In_ int iParamMaxLen, _Out_ IDATA 
 		if ((ptr = (LPCVOID)(bDataPopped ? (INT_PTR)_tstoi64( pszParam ) : popintptr())) != NULL) {
 			size_t size;
 			if ((size = (ULONG_PTR)popintptr()) != 0) {
-				if ((pData->Mem = MyAlloc( size )) != NULL) {
+				if ((pData->Mem = MyAlloc( (ULONG)size )) != NULL) {
 					CopyMemory( pData->Mem, ptr, size );
 					pData->Size = size;
 				} else {

@@ -123,7 +123,7 @@ LPSTR EncBase64( _In_ LPCVOID pPtr, _In_ size_t iSize )
 	LPSTR pszBase64 = NULL;
 	EVP_ENCODE_CTX *ctx = EVP_ENCODE_CTX_new();
 	if (ctx) {
-		int lOut = 4 * ((iSize + 2) / 3) + 1;
+		ULONG lOut = (ULONG)(4 * ((iSize + 2) / 3) + 1);
 		if ((pszBase64 = (LPSTR)MyAlloc( lOut )) != NULL) {
 			unsigned char* psz = (unsigned char*)pszBase64;
 			int len;

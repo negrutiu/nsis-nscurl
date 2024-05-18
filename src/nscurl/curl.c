@@ -674,14 +674,14 @@ size_t CurlReadCallback( char *buffer, size_t size, size_t nitems, void *instrea
 	if (pReq->Data.Type == IDATA_TYPE_STRING || pReq->Data.Type == IDATA_TYPE_MEM) {
 		// Input string/memory buffer
 		assert( pReq->Runtime.iDataPos <= pReq->Data.Size );
-		l = min( size * nitems, pReq->Data.Size - pReq->Runtime.iDataPos );
+		l = min( (curl_off_t)(size * nitems), pReq->Data.Size - pReq->Runtime.iDataPos );
 		CopyMemory( buffer, (PCCH)pReq->Data.Str + pReq->Runtime.iDataPos, (size_t)l );
 		pReq->Runtime.iDataPos += l;
 	} else if (pReq->Data.Type == IDATA_TYPE_FILE) {
 		// Input file
 		if (MyValidHandle( pReq->Runtime.hInFile )) {
 			ULONG iRead;
-			if (ReadFile( pReq->Runtime.hInFile, (LPVOID)buffer, size * nitems, &iRead, NULL )) {
+			if (ReadFile( pReq->Runtime.hInFile, (LPVOID)buffer, (ULONG)(size * nitems), &iRead, NULL )) {
 				l = iRead;
 				pReq->Runtime.iDataPos += iRead;
 			} else {
