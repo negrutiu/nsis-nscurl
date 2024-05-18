@@ -11,8 +11,15 @@ cd /d "%~dp0"
 
 :dependencies
 call _acquire_pluginapi.bat      || exit /b !errorlevel!
-call _acquire_libcurl-devel.bat  || exit /b !errorlevel!
 call _acquire_curl-ca-bundle.bat || exit /b !errorlevel!
+
+REM | https://stackoverflow.com/questions/33584587/how-to-wait-all-batch-files-to-finish-before-exiting
+echo Building vcpkg ...
+(
+   start "vcpkg x86" cmd /C _build_vcpkg.bat Win32 msvc
+   start "vcpkg x64" cmd /C _build_vcpkg.bat x64 msvc
+) | set /P "="
+
 
 :DEFINITIONS
 set BUILD_SOLUTION=%CD%\NScurl.sln

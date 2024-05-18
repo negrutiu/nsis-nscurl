@@ -89,12 +89,10 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-x86-unicode|Win32'">
@@ -103,12 +101,10 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Debug-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-ansi|Win32'">
@@ -120,14 +116,12 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-x86-unicode|Win32'">
@@ -139,14 +133,12 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcurl-devel/include;$(SolutionDir)libcurl-devel/include/openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto_static.lib;libssl_static.lib;nghttp2_static.lib;zlibstatic.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)libcurl-devel\MSVC-curl_openssl-Release-$(Platform)-HTTP_ONLY\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

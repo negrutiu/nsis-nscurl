@@ -8,12 +8,10 @@
 /packages/*.zip
 /packages/*.7z
 
-/libcurl-devel
-libcurl-devel*.7z
-libcurl-devel*.7z.etag
-
 /tests/*.exe
 /tests/_*
+
+/vcpkg
 
 /Debug-*
 /Release-*

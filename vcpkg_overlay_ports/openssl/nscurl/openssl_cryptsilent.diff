@@ -1,0 +1,36 @@
+diff --git a/providers/implementations/rands/seeding/rand_win.c b/providers/implementations/rands/seeding/rand_win.c
+index ee2d3e4d7f..d0d08cff49 100644
+--- a/providers/implementations/rands/seeding/rand_win.c
++++ b/providers/implementations/rands/seeding/rand_win.c
+@@ -86,8 +86,14 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
+     if (buffer != NULL) {
+         size_t bytes = 0;
+         /* poll the CryptoAPI PRNG */
++        /* note: CRYPT_SILENT available starting in Windows 2000 */
++#if _WIN32_WINNT >= 0x0500
+         if (CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL,
+                                  CRYPT_VERIFYCONTEXT | CRYPT_SILENT) != 0) {
++#else
++        if (CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL,
++                                 CRYPT_VERIFYCONTEXT | (LOBYTE(LOWORD(GetVersion())) >= 5 ? CRYPT_SILENT : 0)) != 0) {
++#endif
+             if (CryptGenRandom(hProvider, bytes_needed, buffer) != 0)
+                 bytes = bytes_needed;
+ 
+@@ -105,9 +111,16 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
+     if (buffer != NULL) {
+         size_t bytes = 0;
+         /* poll the Pentium PRG with CryptoAPI */
++        /* note: CRYPT_SILENT available starting in Windows 2000 */
++#if _WIN32_WINNT >= 0x0500
+         if (CryptAcquireContextW(&hProvider, NULL,
+                                  INTEL_DEF_PROV, PROV_INTEL_SEC,
+                                  CRYPT_VERIFYCONTEXT | CRYPT_SILENT) != 0) {
++#else
++        if (CryptAcquireContextW(&hProvider, NULL,
++                                 INTEL_DEF_PROV, PROV_INTEL_SEC,
++                                 CRYPT_VERIFYCONTEXT | (LOBYTE(LOWORD(GetVersion())) >= 5 ? CRYPT_SILENT : 0)) != 0) {
++#endif
+             if (CryptGenRandom(hProvider, bytes_needed, buffer) != 0)
+                 bytes = bytes_needed;
+ 

@@ -18,8 +18,15 @@ cd /d "%~dp0"
 
 :dependencies
 call _acquire_pluginapi.bat      || exit /b !errorlevel!
-call _acquire_libcurl-devel.bat  || exit /b !errorlevel!
 call _acquire_curl-ca-bundle.bat || exit /b !errorlevel!
+
+REM | https://stackoverflow.com/questions/33584587/how-to-wait-all-batch-files-to-finish-before-exiting
+echo Building vcpkg ...
+(
+   start "vcpkg x86" cmd /C _build_vcpkg.bat Win32 mingw
+   start "vcpkg x64" cmd /C _build_vcpkg.bat x64 mingw
+) | set /P "="
+
 
 :x86
 if not exist "%MINGW32%\bin\gcc.exe" echo ERROR: Missing "%MINGW32%" && pause && exit /B 2

@@ -20,6 +20,8 @@ rd /S /Q ipch
 for /D %%a in (Debug*)   do rd /S /Q "%%a"
 for /D %%a in (Release*) do rd /S /Q "%%a"
 
+rd  /Q /S "vcpkg"
+
 rd  /Q /S "src\nscurl\nsis"
 del /Q    "src\nscurl\curl-ca-bundle.crt"
 rd  /Q /S "packages\current"

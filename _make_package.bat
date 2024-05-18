@@ -32,11 +32,12 @@ call :file %workdir%\Test\NScurl-Test-build.bat		tests\NScurl-Test-build.bat
 call :file %workdir%\NScurl.readme.md				src\nscurl\NScurl.readme.md
 call :file %workdir%\README.md						README.md
 call :file %workdir%\LICENSE.md						LICENSE.md
-call :file %workdir%\LICENSE.curl.md				libcurl-devel\src\curl\COPYING
-call :file %workdir%\LICENSE.libcurl-devel.md		libcurl-devel\LICENSE.md
-call :file %workdir%\LICENSE.nghttp2.md				libcurl-devel\src\nghttp2\COPYING
-call :file %workdir%\LICENSE.openssl.md				libcurl-devel\src\openssl\LICENSE.txt
-call :file %workdir%\LICENSE.zlib.md				libcurl-devel\src\zlib\LICENSE
+call :file %workdir%\LICENSE.brotli.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\brotli\copyright
+call :file %workdir%\LICENSE.curl.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\curl\copyright
+call :file %workdir%\LICENSE.nghttp2.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\nghttp2\copyright
+call :file %workdir%\LICENSE.openssl.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\openssl\copyright
+call :file %workdir%\LICENSE.zlib.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\zlib\copyright
+call :file %workdir%\LICENSE.zstd.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\zstd\copyright
 
 pushd %workdir%
 "%Z7%" a "..\NScurl-%RCVER%.7z" * -r || pause && exit /b !errorlevel!

@@ -1,0 +1,13 @@
+diff --git a/include/internal/thread_arch.h b/include/internal/thread_arch.h
+index aba9362e8d..eb5fd912b6 100644
+--- a/include/internal/thread_arch.h
++++ b/include/internal/thread_arch.h
+@@ -25,7 +25,7 @@
+     defined(_WIN32_WINNT)
+ #  if _WIN32_WINNT >= 0x0600
+ #   define OPENSSL_THREADS_WINNT
+-#  elif _WIN32_WINNT >= 0x0501
++#  elif _WIN32_WINNT >= 0x0400
+ #   define OPENSSL_THREADS_WINNT
+ #   define OPENSSL_THREADS_WINNT_LEGACY
+ #  else

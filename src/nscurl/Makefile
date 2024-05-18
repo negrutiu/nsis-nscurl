@@ -16,8 +16,8 @@
 PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
-INC      = -I. -I../../libcurl-devel/include -I../../libcurl-devel/include/openssl
-LIB      = -lcurl -lssl -lcrypto -lnghttp2_static -lzlibstatic -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
+INC      =
+LIB      = -lcurl -lssl -lcrypto -lbrotlidec -lbrotlicommon -lnghttp2 -lzlib -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
 
 _OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
 _BIN     = $(patsubst %,$(OUTDIR)/%,$(BIN))
@@ -31,13 +31,25 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 # http://linux.die.net/man/1/ld
 #
 
+# vcpkg
+ifeq ($(ARCH), X64)
+    VCPKG_TRIPLET = x64-mingw-static
+else
+    VCPKG_TRIPLET = x86-mingw-static
+endif
+
+VCPKG_INSTALLED = ../../vcpkg/$(VCPKG_TRIPLET)/installed/$(VCPKG_TRIPLET)
+
+INC += -I$(VCPKG_INSTALLED)/include -I$(VCPKG_INSTALLED)/include/openssl
+LIB += -L$(VCPKG_INSTALLED)/lib
+
 # ARCH
 ifeq ($(ARCH), X64)
-	CFLAGS  += -Wall -DNDEBUG -L../../libcurl-devel/mingw-curl_openssl-Release-x64-Legacy/lib
+	CFLAGS  += -Wall -DNDEBUG
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -Wall -DNDEBUG -L../../libcurl-devel/mingw-curl_openssl-Release-Win32-Legacy/lib -march=pentium2
+	CFLAGS  += -Wall -DNDEBUG -march=pentium2
 	LDFLAGS += -Wl,-e'_DllMain'
 	RCFLAGS += -F pe-i386
 endif

@@ -1,0 +1,29 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)User.props" Condition="Exists('$(MSBuildThisFileDirectory)User.props')"/>
+
+  <PropertyGroup>
+    <VcpkgTriplet Condition="'$(VcpkgTriplet)'=='' And '$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(VcpkgTriplet)'=='' And '$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+    <VcpkgRootDir Condition="'$(VcpkgRootDir)'==''">$(SolutionDir)vcpkg\$(VcpkgTriplet)\</VcpkgRootDir>
+    <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(VcpkgRootDir)installed\$(VcpkgTriplet)\</VcpkgInstalledDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="$(MSBuildProjectExtension) == '.vcxproj'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(VcpkgInstalledDir)include;$(VcpkgInstalledDir)include\openssl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="$(Configuration.Contains('Debug')) and '$(MSBuildProjectExtension)' == '.vcxproj'">
+    <Link>
+      <AdditionalLibraryDirectories>$(VcpkgInstalledDir)debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="$(Configuration.Contains('Release')) and '$(MSBuildProjectExtension)' == '.vcxproj'">
+    <Link>
+      <AdditionalLibraryDirectories>$(VcpkgInstalledDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+
+</Project>
