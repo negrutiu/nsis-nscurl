@@ -25,6 +25,7 @@ vcpkg_from_github(
         dependencies.patch
         cmake-config.patch
         "${COMPRESSION_FIX}"
+        nscurl/curl_ftruncate.patch         # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_toolhelp.diff           # nscurl: no Tool Help calls (i.e. CreateToolhelp32Snapshot). inexistent in NT4, unneeded by nscurl
         nscurl/curl_wspiapi.diff            # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
         nscurl/curl_xprequirement.diff      # nscurl: remove target >= XP restriction
@@ -56,10 +57,6 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         ldap        CURL_DISABLE_LDAPS
         non-http    HTTP_ONLY
 )
-
-# nscurl: -D_UNISTD_H counters the effect of curl commit 474a947e (11 Oct 2022) "cmake: enable more detection on Windows". It prevents "unistd.h" from defining ftruncate(). Its mingw-x64 implementation calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
-set(VCPKG_C_FLAGS "${VCPKG_C_FLAGS} -D_UNISTD_H")
-set(VCPKG_CXX_FLAGS "${VCPKG_CXX_FLAGS} -D_UNISTD_H")
 
 set(OPTIONS "")
 
