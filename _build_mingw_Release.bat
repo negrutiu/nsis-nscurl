@@ -5,12 +5,12 @@ setlocal enabledelayedexpansion
 echo.
 
 if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%MINGW32_INSTDIR%
-if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%SYSTEMROOT%\msys64\mingw32
-if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%SYSTEMROOT%\msys2\mingw32
+if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%SystemDrive%\msys2\mingw32
+if not exist "%MINGW32%\bin\gcc.exe" set MINGW32=%SystemDrive%\msys64\mingw32
 
 if not exist "%MINGW64%\bin\gcc.exe" set MINGW64=%MINGW64_INSTDIR%
-if not exist "%MINGW64%\bin\gcc.exe" set MINGW64=%SYSTEMROOT%\msys64\mingw64
-if not exist "%MINGW64%\bin\gcc.exe" set MINGW64=%SYSTEMROOT%\msys2\mingw64
+if not exist "%MINGW64%\bin\gcc.exe" set MINGW64=%SystemDrive%\msys2\mingw64
+if not exist "%MINGW64%\bin\gcc.exe" set MINGW64=%SystemDrive%\msys64\mingw64
 
 set ORIGINAL_PATH=%PATH%
 
