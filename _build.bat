@@ -58,14 +58,45 @@ gcc --version
 set platform_nsis=%platform%
 if "%platform_nsis%" equ "x64" set platform_nsis=amd64
 
-echo ^> mingw32-make.exe ARCH=%platform% CHAR=%charset% OUTDIR="%~dp0%configuration%-%compiler%-%platform_nsis%-%charset%" CONFIG=%configuration% clean all
+REM --- build ---
+echo --- mingw32-make.exe ARCH=%platform% CHAR=%charset% OUTDIR="%~dp0%configuration%-%compiler%-%platform_nsis%-%charset%" CONFIG=%configuration% clean all
+echo.
 mingw32-make.exe ARCH=%platform% CHAR=%charset% OUTDIR="%~dp0%configuration%-%compiler%-%platform_nsis%-%charset%" CONFIG=%configuration% clean all || exit /b !errorlevel!
+
 goto :end
 
 :: -------------------------------------------------------------------------------
 
 :msvc
-echo TODO
+set solution=%CD%\NScurl.sln
+set verbosity=normal
+
+if not exist "%VcVarsAll%" for /f "tokens=1* delims=: " %%i in ('"%PROGRAMFILES(X86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version 17 -requires Microsoft.Component.MSBuild 2^> nul') do if /i "%%i"=="installationPath" set VcVarsAll=%%j\VC\Auxiliary\Build\VCVarsAll.bat&& set platformtoolset=v143
+if not exist "%VcVarsAll%" for /f "tokens=1* delims=: " %%i in ('"%PROGRAMFILES(X86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version 16 -requires Microsoft.Component.MSBuild 2^> nul') do if /i "%%i"=="installationPath" set VcVarsAll=%%j\VC\Auxiliary\Build\VCVarsAll.bat&& set platformtoolset=v142
+if not exist "%VcVarsAll%" echo ERROR: Can't find Visual Studio 2017-2022 && exit /b 2
+
+echo --- %VcVarsAll%
+echo --- platformtoolset = %platformtoolset%
+echo --- solution = %solution%
+echo --- verbosity = %verbosity%
+
+echo.
+pushd "%CD%"
+call "%VcVarsAll%" %platform%
+popd
+
+set platform_msbuild=%platform%
+if "%platform_msbuild%" equ "x86" set platform_msbuild=Win32
+
+REM --- build ---
+if "%charset%" equ "unicode" set ParamCharacterSet= /p:CharacterSet=Unicode
+if "%charset%" equ "ansi"    set ParamCharacterSet= /p:CharacterSet=MultiByte
+
+echo.
+echo --- msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%platformtoolset% /verbosity:%verbosity%%ParamCharacterSet%
+echo.
+msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%platformtoolset% /verbosity:%verbosity%%ParamCharacterSet% || exit /b !errorlevel!
+
 goto :end
 
 :end

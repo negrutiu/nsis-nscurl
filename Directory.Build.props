@@ -7,8 +7,17 @@
     <VcpkgRootDir Condition="'$(VcpkgRootDir)'==''">$(SolutionDir)vcpkg\$(VcpkgTriplet)\</VcpkgRootDir>
     <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(VcpkgRootDir)installed\$(VcpkgTriplet)\</VcpkgInstalledDir>
 
-    <PlatformNsis Condition="'$(Platform)'=='Win32'">x86</PlatformNsis>
-    <PlatformNsis Condition="'$(Platform)'=='x64'">amd64</PlatformNsis>
+    <NsisPlatform Condition="'$(Platform)'=='Win32'">x86</NsisPlatform>
+    <NsisPlatform Condition="'$(Platform)'=='x64'">amd64</NsisPlatform>
+
+    <CharacterSet Condition="'$(CharacterSet)'!=''">$(CharacterSet)</CharacterSet>
+    <CharacterSet Condition="'$(CharacterSet)'==''">Unicode</CharacterSet>
+
+    <NsisCharacterSet Condition="'$(CharacterSet)'=='MultiByte'">ansi</NsisCharacterSet>
+    <NsisCharacterSet Condition="'$(CharacterSet)'!='MultiByte'">unicode</NsisCharacterSet>
+
+    <OutDir>$(SolutionDir)$(Configuration)-msvc-$(NsisPlatform)-$(NsisCharacterSet)\</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)-msvc-$(NsisPlatform)-$(NsisCharacterSet)\IntDir\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="$(MSBuildProjectExtension) == '.vcxproj'">
