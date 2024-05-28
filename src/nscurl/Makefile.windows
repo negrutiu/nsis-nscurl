@@ -5,6 +5,7 @@
 #   ARCH=x86|x64
 #   CHAR=ANSI|Unicode
 #   OUTDIR=<output_directory>
+#   CONFIG=Debug|Release
 # -------------------------------
 # Optional definitions
 # -------------------------------
@@ -12,12 +13,30 @@
 #   CUSTOM_LDFLAGS
 #   CUSTOM_RCFLAGS
 
+# Convert input to lowercase
+lower = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
+ifneq ($(ARCH),)
+    _arch = $(call lower,$(ARCH))
+endif
+ifneq ($(CHAR),)
+    _char = $(call lower,$(CHAR))
+endif
+ifneq ($(CONFIG),)
+    _config = $(call lower,$(CONFIG))
+endif
+
 
 PROJECT  = NScurl
 BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
 INC      =
-LIB      = -lcurl -lssl -lcrypto -lbrotlidec -lbrotlicommon -lnghttp2 -lzlib -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
+ifeq ($(_config), debug)
+	LIB = -lcurl-d -lzlibd
+else
+	LIB = -lcurl -lzlib
+endif
+
+LIB      += -lssl -lcrypto -lbrotlidec -lbrotlicommon -lnghttp2 -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
 
 _OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
 _BIN     = $(patsubst %,$(OUTDIR)/%,$(BIN))
@@ -32,25 +51,30 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 #
 
 # vcpkg
-VCPKG_TRIPLET = $(ARCH)-mingw-static
+VCPKG_TRIPLET = $(_arch)-mingw-static
 VCPKG_INSTALLED = ../../vcpkg/$(VCPKG_TRIPLET)/installed/$(VCPKG_TRIPLET)
 
 INC += -I$(VCPKG_INSTALLED)/include -I$(VCPKG_INSTALLED)/include/openssl
-LIB += -L$(VCPKG_INSTALLED)/lib
+ifeq ($(_config), debug)
+    LIB += -L$(VCPKG_INSTALLED)/debug/lib
+else
+    LIB += -L$(VCPKG_INSTALLED)/lib
+endif
 
 # ARCH
-ifeq ($(ARCH), x64)
-	CFLAGS  += -Wall -DNDEBUG
+ifeq ($(_arch), x64)
+	CFLAGS  += -Wall
 	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -Wall -DNDEBUG -march=pentium2
+	CFLAGS  += -Wall -march=pentium2
 	LDFLAGS += -Wl,-e'_DllMain'
 	RCFLAGS += -F pe-i386
 endif
 
+
 # CHAR
-ifeq ($(CHAR), ANSI)
+ifeq ($(_char), ansi)
 	CFLAGS  += -DMBCS -D_MBCS
 	LDFLAGS +=
 else
@@ -61,10 +85,14 @@ endif
 # https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/
 CFLAGS += -D__USE_MINGW_ANSI_STDIO=0
 
+ifeq ($(_config), debug)
+	CFLAGS  += -DDEBUG -D_DEBUG -Og
+else
+	CFLAGS  += -DNEBUG -O3 -s
+endif
+
 CFLAGS += \
 	-mdll \
-	-s \
-	-O3 \
 	-fPIE \
 	-ffunction-sections \
 	-fdata-sections \
@@ -113,7 +141,7 @@ curl-ca-bundle:
 
 vcpkg-install:
 	REM ----- vcpkg install -------------------------------------------------------
-	call ..\..\_build_vcpkg.bat $(ARCH) mingw static
+	call ..\..\_build_vcpkg.bat $(_arch) mingw static
 
 # Link
 $(_BIN): $(_OBJ)
