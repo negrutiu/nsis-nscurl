@@ -22,6 +22,16 @@ vcpkg_from_github(
         nscurl/curl_xprequirement.diff      # nscurl: remove target >= XP restriction
 )
 
+# nscurl: remove "-DEV" version suffix
+# nscurl: replace "[unreleased]" with the release date
+if(VCPKG_HOST_IS_WINDOWS)
+    vcpkg_execute_required_process(
+        COMMAND pwsh "${CURRENT_PORT_DIR}/nscurl/curl_version_fixup.ps1" -Version "${VERSION}" -Tag "${curl_version}" -Sources "${SOURCE_PATH}"
+        WORKING_DIRECTORY "${SOURCE_PATH}"
+        LOGNAME "build-${TARGET_TRIPLET}-version-fixup"
+    )
+endif()
+
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         # Support HTTP2 TLS Download https://curl.haxx.se/ca/cacert.pem rename to curl-ca-bundle.crt, copy it to libcurl.dll location.
