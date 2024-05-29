@@ -1,0 +1,20 @@
+name: Build
+on:
+  push:
+    branches:
+      master
+      feature/*
+      bugfix/*
+
+  pull_request:
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+      - name: Build with mingw
+        uses: ./_build.bat mingw release x86 unicode
