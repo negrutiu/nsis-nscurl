@@ -4,9 +4,7 @@
 /src/nscurl/curl-ca-bundle.crt
 /src/nscurl/nsis
 
-/packages/current
-/packages/*.zip
-/packages/*.7z
+/packages
 
 /tests/*.exe
 /tests/_*

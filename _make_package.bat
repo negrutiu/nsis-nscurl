@@ -12,6 +12,8 @@ for /f usebackq^ tokens^=3^ delims^=^"^,^  %%f in (`type src\nscurl\resource.rc 
 set workdir=packages\current
 set outdir=packages\%RCVER%
 
+rmdir "%outdir%" > nul 2> nul
+
 rmdir /S /Q %workdir% > nul 2> nul
 mkdir %workdir%
 mkdir %workdir%\amd64-unicode
@@ -43,6 +45,27 @@ call :file %workdir%\LICENSE.zstd.md				vcpkg\x86-mingw-static\installed\x86-min
 mkdir %outdir% 2> nul
 pushd %workdir%
 "%Z7%" a "%~dp0%outdir%\NScurl.7z" * -r || pause && exit /b !errorlevel!
+popd
+
+echo.
+echo -------------------------------------------------
+REM  -- curl packages
+
+pushd vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl
+"%Z7%" a "%~dp0%outdir%\curl-x86.7z" curl.exe || pause && exit /b !errorlevel!
+popd
+
+echo -------------------------------------------------
+
+pushd vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl
+"%Z7%" a "%~dp0%outdir%\curl-amd64.7z" curl.exe || pause && exit /b !errorlevel!
+popd
+
+echo -------------------------------------------------
+
+pushd src\nscurl
+"%Z7%" a "%~dp0%outdir%\curl-x86.7z"   curl-ca-bundle.crt || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\curl-amd64.7z" curl-ca-bundle.crt || pause && exit /b !errorlevel!
 popd
 
 echo.
