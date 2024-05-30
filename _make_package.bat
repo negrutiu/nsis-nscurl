@@ -69,6 +69,20 @@ pushd src\nscurl
 popd
 
 echo.
+echo *************************************************
+REM  ** Print versions
+
+echo.
+"%~dp0\vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl\curl.exe" -V
+
+echo.
+"%~dp0\vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl\curl.exe" -V
+
+echo.
+echo curl-ca-bundle.crt
+type "%~dp0\src\nscurl\curl-ca-bundle.crt" | findstr /C:"as of:"
+
+echo.
 pause
 
 rmdir /S /Q %workdir% > nul 2> nul
