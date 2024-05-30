@@ -10,6 +10,7 @@ REM :: Read version from the .rc file
 for /f usebackq^ tokens^=3^ delims^=^"^,^  %%f in (`type src\nscurl\resource.rc ^| findstr /r /c:"\s*\"FileVersion\"\s*"`) do set RCVER=%%f
 
 set workdir=packages\current
+set outdir=packages\%RCVER%
 
 rmdir /S /Q %workdir% > nul 2> nul
 mkdir %workdir%
@@ -39,8 +40,9 @@ call :file %workdir%\LICENSE.openssl.md				vcpkg\x86-mingw-static\installed\x86-
 call :file %workdir%\LICENSE.zlib.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\zlib\copyright
 call :file %workdir%\LICENSE.zstd.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\zstd\copyright
 
+mkdir %outdir% 2> nul
 pushd %workdir%
-"%Z7%" a "..\NScurl-%RCVER%.7z" * -r || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\NScurl.7z" * -r || pause && exit /b !errorlevel!
 popd
 
 echo.
