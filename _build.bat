@@ -7,7 +7,7 @@ echo.
 cd /d "%~dp0"
 set original_path=%PATH%
 
-REM | build.bat [mingw|msvc] [debug|release] [win32|amd64|x86|x64] [unicode|ansi]
+REM | build.bat [mingw|msbuild] [debug|release] [win32|amd64|x86|x64] [unicode|ansi]
 
 set compiler=mingw
 set configuration=Release
@@ -17,7 +17,7 @@ set charset=unicode
 :arg
     if "%~1" equ "" goto :arg_end
     if /i "%~1" equ "mingw"     set compiler=mingw
-    if /i "%~1" equ "msvc"      set compiler=msvc
+    if /i "%~1" equ "msbuild"   set compiler=msbuild
     if /i "%~1" equ "debug"     set configuration=Debug
     if /i "%~1" equ "release"   set configuration=Release
     if /i "%~1" equ "win32"     set platform=x86
@@ -39,7 +39,7 @@ echo --- platform = %platform%
 echo --- charset = %charset%
 
 if "%compiler%" equ "mingw" goto :mingw
-if "%compiler%" equ "msvc" goto :msvc
+if "%compiler%" equ "msbuild" goto :msbuild
 
 :: -------------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ goto :end
 
 :: -------------------------------------------------------------------------------
 
-:msvc
+:msbuild
 set solution=%CD%\NScurl.sln
 set verbosity=normal
 

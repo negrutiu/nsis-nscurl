@@ -16,8 +16,8 @@
     <NsisCharacterSet Condition="'$(CharacterSet)'=='MultiByte'">ansi</NsisCharacterSet>
     <NsisCharacterSet Condition="'$(CharacterSet)'!='MultiByte'">unicode</NsisCharacterSet>
 
-    <OutDir>$(SolutionDir)$(Configuration)-msvc-$(NsisPlatform)-$(NsisCharacterSet)\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)-msvc-$(NsisPlatform)-$(NsisCharacterSet)\IntDir\$(MSBuildProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Configuration)-msbuild-$(NsisPlatform)-$(NsisCharacterSet)\</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)-msbuild-$(NsisPlatform)-$(NsisCharacterSet)\IntDir\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="$(MSBuildProjectExtension) == '.vcxproj'">

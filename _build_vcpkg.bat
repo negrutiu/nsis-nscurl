@@ -2,7 +2,7 @@ REM | marius.negrutiu@protonmail.com
 @echo off
 setlocal EnableDelayedExpansion
 
-REM | script.bat <Win32|x64|arm64> <msvc|mingw> <static|dynamic>
+REM | script.bat <Win32|x64|arm64> <msbuild|mingw> <static|dynamic>
 set arch=%~1
 set compiler=%~2
 set runtime=%~3
@@ -15,16 +15,16 @@ echo _x86_x64_arm64_ | findstr /I "_%arch%_" > nul
 if %errorlevel% neq 0 echo ERROR: Unexpected architecture. Use Win32^|x64^|arm64&& exit /b -57
 
 if "%compiler%" equ "" set compiler=mingw
-echo _msvc_mingw_ | findstr /I "_%compiler%_" > nul
-if %errorlevel% neq 0 echo ERROR: Unexpected compiler. Use msvc^|mingw&& exit /b -57
+echo _msbuild_mingw_ | findstr /I "_%compiler%_" > nul
+if %errorlevel% neq 0 echo ERROR: Unexpected compiler. Use msbuild^|mingw&& exit /b -57
 
 if "%runtime%" equ "" set runtime=static
 echo _static_dynamic_ | findstr /I "_%runtime%_" > nul
 if %errorlevel% neq 0 echo ERROR: Unexpected linkage type. Use static^|dynamic&& exit /b -57
 
 if /i "%compiler%" equ "mingw" set vcpkg_triplet=%arch%-mingw-%runtime%
-if /i "%compiler%" equ "msvc" if /i "%runtime%" equ "static"  set vcpkg_triplet=%arch%-windows-%runtime%
-if /i "%compiler%" equ "msvc" if /i "%runtime%" equ "dynamic" set vcpkg_triplet=%arch%-windows
+if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "static"  set vcpkg_triplet=%arch%-windows-%runtime%
+if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "dynamic" set vcpkg_triplet=%arch%-windows
 
 set vcpkg_dir=%~dp0vcpkg\%vcpkg_triplet%
 
