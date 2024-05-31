@@ -141,7 +141,7 @@ curl-ca-bundle:
 
 vcpkg-install:
 	REM ----- vcpkg install -------------------------------------------------------
-	call ..\..\_build_vcpkg.bat $(_arch) mingw static
+	call ..\..\_install_vcpkg.bat $(_arch) mingw static
 
 # Link
 $(_BIN): $(_OBJ)
