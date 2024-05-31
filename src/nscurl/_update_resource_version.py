@@ -40,7 +40,7 @@ with open('resource.rc') as infile:
 if replaced > 0:
     with open(infile.name, 'w') as outfile:
         for line in lines:
-            print("{}".format(line.replace('\n', '')))
+            # print("{}".format(line.replace('\n', '')))
             outfile.write(line)
 else:
     print("resource file already up-to-date")
