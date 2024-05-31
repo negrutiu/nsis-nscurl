@@ -68,6 +68,9 @@ echo *************************************************
 REM  ** Print versions
 
 echo.
+echo NScurl/%version%
+
+echo.
 "%~dp0\vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl\curl.exe" -V
 
 echo.
