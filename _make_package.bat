@@ -44,7 +44,7 @@ call :file %workdir%\LICENSE.zstd.md				vcpkg\x86-mingw-static\installed\x86-min
 
 mkdir %outdir% 2> nul
 pushd %workdir%
-"%Z7%" a "%~dp0%outdir%\NScurl.7z" * -r || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\NScurl.zip" * -r || pause && exit /b !errorlevel!
 popd
 
 echo.
@@ -52,20 +52,20 @@ echo -------------------------------------------------
 REM  -- curl packages
 
 pushd vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl
-"%Z7%" a "%~dp0%outdir%\curl-x86.7z" curl.exe || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\curl-x86.zip" curl.exe || pause && exit /b !errorlevel!
 popd
 
 echo -------------------------------------------------
 
 pushd vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl
-"%Z7%" a "%~dp0%outdir%\curl-amd64.7z" curl.exe || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\curl-amd64.zip" curl.exe || pause && exit /b !errorlevel!
 popd
 
 echo -------------------------------------------------
 
 pushd src\nscurl
-"%Z7%" a "%~dp0%outdir%\curl-x86.7z"   curl-ca-bundle.crt || pause && exit /b !errorlevel!
-"%Z7%" a "%~dp0%outdir%\curl-amd64.7z" curl-ca-bundle.crt || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\curl-x86.zip"   curl-ca-bundle.crt || pause && exit /b !errorlevel!
+"%Z7%" a "%~dp0%outdir%\curl-amd64.zip" curl-ca-bundle.crt || pause && exit /b !errorlevel!
 popd
 
 echo.
