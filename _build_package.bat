@@ -65,22 +65,28 @@ popd
 
 echo.
 echo *************************************************
-REM  ** Print versions
+REM  ** Versions
+set versions=%outdir%\versions.txt
 
-echo.
-echo NScurl/%version%
+echo.> "%versions%"
+echo NScurl/%version%>> "%versions%"
 
-echo.
-"%~dp0\vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl\curl.exe" -V
+echo.>> "%versions%"
+"%~dp0\vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl\curl.exe" -V>> "%versions%"
 
-echo.
-"%~dp0\vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl\curl.exe" -V
+echo.>> "%versions%"
+"%~dp0\vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl\curl.exe" -V>> "%versions%"
 
-echo.
-echo curl-ca-bundle.crt
-type "%~dp0\src\nscurl\curl-ca-bundle.crt" | findstr /C:"as of:"
+echo.>> "%versions%"
+echo curl-ca-bundle.crt>> "%versions%"
+type "%~dp0\src\nscurl\curl-ca-bundle.crt" | findstr /C:"as of:">> "%versions%"
 
-echo.
+echo.>> "%versions%"
+for %%d in (%SystemDrive%\msys64\mingw64\bin %SystemDrive%\msys64\mingw32\bin %SystemDrive%\msys2\mingw64\bin %SystemDrive%\msys2\mingw32\bin) do (
+    if exist "%%~d\gcc.exe" echo %%~d\gcc.exe>> %versions% && "%%~d\gcc.exe" --version>> %versions%
+)
+
+type "%versions%"
 pause
 
 rmdir /S /Q %workdir% > nul 2> nul
