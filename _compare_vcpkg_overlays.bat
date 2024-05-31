@@ -22,3 +22,6 @@ for /d %%d in (%~dp0\vcpkg_overlay_ports\*) do (
     echo Comparing %%~nxd . . .
     "%ProgramFiles%\WinMerge\WinMergeU.exe" "%vcpkg_dir%\ports\%%~nxd" "%~dp0\vcpkg_overlay_ports\%%~nxd"
 )
+
+echo Comparing triplets . . .
+"%ProgramFiles%\WinMerge\WinMergeU.exe" "%vcpkg_dir%\triplets\community" "%~dp0\vcpkg_overlay_triplets"
