@@ -3,23 +3,18 @@ setlocal EnableDelayedExpansion
 
 cd /d "%~dp0"
 
-set Z7=%PROGRAMFILES%\7-Zip\7z.exe
-if not exist "%Z7%" echo ERROR: Missing %Z7% && pause && exit /b 2
+set PATH=%PATH%;%PROGRAMFILES%\7-Zip
 
 REM :: Read version from the .rc file
-for /f usebackq^ tokens^=3^ delims^=^"^,^  %%f in (`type src\nscurl\resource.rc ^| findstr /r /c:"\s*\"FileVersion\"\s*"`) do set RCVER=%%f
+for /f usebackq^ tokens^=3^ delims^=^"^,^  %%f in (`type src\nscurl\resource.rc ^| findstr /r /c:"\s*\"FileVersion\"\s*"`) do set version=%%f
 
 set workdir=packages\current
-set outdir=packages\%RCVER%
+set outdir=packages\%version%
 
-rmdir "%outdir%" > nul 2> nul
-
-rmdir /S /Q %workdir% > nul 2> nul
-mkdir %workdir%
-mkdir %workdir%\amd64-unicode
-mkdir %workdir%\x86-unicode
-mkdir %workdir%\x86-ansi
-mkdir %workdir%\Test
+rmdir /s /q "%outdir%"  > nul 2> nul
+rmdir /s /q "%workdir%" > nul 2> nul
+for %%d in (%workdir%\Plugins\amd64-unicode, %workdir%\Plugins\x86-unicode, %workdir%\Plugins\x86-ansi) do mkdir %%~d
+for %%d in (%workdir%\Examples\NScurl, %workdir%\Docs\NScurl) do mkdir %%~d
 
 goto :file_end
 :file
@@ -27,12 +22,12 @@ goto :file_end
     exit /b
 :file_end
 
-call :file %workdir%\amd64-unicode\NScurl.dll		Release-mingw-amd64-unicode\NScurl.dll
-call :file %workdir%\x86-unicode\NScurl.dll			Release-mingw-x86-unicode\NScurl.dll
-call :file %workdir%\x86-ansi\NScurl.dll			Release-mingw-x86-ansi\NScurl.dll
-call :file %workdir%\Test\NScurl-Test.nsi			tests\NScurl-Test.nsi
-call :file %workdir%\Test\NScurl-Test-build.bat		tests\NScurl-Test-build.bat
-call :file %workdir%\NScurl.readme.md				src\nscurl\NScurl.readme.md
+call :file %workdir%\Plugins\amd64-unicode\NScurl.dll		    Release-mingw-amd64-unicode\NScurl.dll
+call :file %workdir%\Plugins\x86-unicode\NScurl.dll			    Release-mingw-x86-unicode\NScurl.dll
+call :file %workdir%\Plugins\x86-ansi\NScurl.dll			    Release-mingw-x86-ansi\NScurl.dll
+call :file %workdir%\Examples\NScurl\NScurl-Test.nsi			tests\NScurl-Test.nsi
+call :file %workdir%\Examples\NScurl\NScurl-Test-build.bat		tests\NScurl-Test-build.bat
+call :file %workdir%\Docs\NScurl\NScurl.readme.md				src\nscurl\NScurl.readme.md
 call :file %workdir%\README.md						README.md
 call :file %workdir%\LICENSE.md						LICENSE.md
 call :file %workdir%\LICENSE.brotli.md				vcpkg\x86-mingw-static\installed\x86-mingw-static\share\brotli\copyright
@@ -44,7 +39,7 @@ call :file %workdir%\LICENSE.zstd.md				vcpkg\x86-mingw-static\installed\x86-min
 
 mkdir %outdir% 2> nul
 pushd %workdir%
-"%Z7%" a "%~dp0%outdir%\NScurl.zip" * -r || pause && exit /b !errorlevel!
+7z a "%~dp0%outdir%\NScurl.zip" * -r || pause && exit /b !errorlevel!
 popd
 
 echo.
@@ -52,20 +47,20 @@ echo -------------------------------------------------
 REM  -- curl packages
 
 pushd vcpkg\x86-mingw-static\installed\x86-mingw-static\tools\curl
-"%Z7%" a "%~dp0%outdir%\curl-x86.zip" curl.exe || pause && exit /b !errorlevel!
+7z a "%~dp0%outdir%\curl-x86.zip" curl.exe || pause && exit /b !errorlevel!
 popd
 
 echo -------------------------------------------------
 
 pushd vcpkg\x64-mingw-static\installed\x64-mingw-static\tools\curl
-"%Z7%" a "%~dp0%outdir%\curl-amd64.zip" curl.exe || pause && exit /b !errorlevel!
+7z a "%~dp0%outdir%\curl-amd64.zip" curl.exe || pause && exit /b !errorlevel!
 popd
 
 echo -------------------------------------------------
 
 pushd src\nscurl
-"%Z7%" a "%~dp0%outdir%\curl-x86.zip"   curl-ca-bundle.crt || pause && exit /b !errorlevel!
-"%Z7%" a "%~dp0%outdir%\curl-amd64.zip" curl-ca-bundle.crt || pause && exit /b !errorlevel!
+7z a "%~dp0%outdir%\curl-x86.zip"   curl-ca-bundle.crt || pause && exit /b !errorlevel!
+7z a "%~dp0%outdir%\curl-amd64.zip" curl-ca-bundle.crt || pause && exit /b !errorlevel!
 popd
 
 echo.
