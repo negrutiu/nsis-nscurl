@@ -137,7 +137,7 @@ nsis-sdk:
 
 curl-ca-bundle:
 	REM ----- curl-ca-bundle.crt --------------------------------------------------
-	call _acquire_curl-ca-bundle.bat
+	py -3 _get_curl-ca-bundle.py
 
 update-file-version:
 	REM ----- Resource.rc ---------------------------------------------------------
