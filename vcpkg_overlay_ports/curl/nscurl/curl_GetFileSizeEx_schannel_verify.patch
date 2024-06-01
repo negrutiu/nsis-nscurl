@@ -1,0 +1,9 @@
+diff --git a/lib/vtls/schannel_verify.c b/lib/vtls/schannel_verify.c
+--- a/lib/vtls/schannel_verify.c
++++ b/lib/vtls/schannel_verify.c
+@@ -267,3 +267,4 @@
+ 
+-  if(!GetFileSizeEx(ca_file_handle, &file_size)) {
++  file_size.LowPart = GetFileSize(ca_file_handle, &file_size.HighPart);
++  if(file_size.LowPart == INVALID_FILE_SIZE && GetLastError() != NO_ERROR) {
+     char buffer[STRERROR_LEN];

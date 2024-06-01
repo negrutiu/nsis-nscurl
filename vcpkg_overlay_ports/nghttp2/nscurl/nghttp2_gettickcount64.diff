@@ -1,0 +1,21 @@
+diff --git a/lib/nghttp2_time.c b/lib/nghttp2_time.c
+index 947b5449..4f4a9df7 100644
+--- a/lib/nghttp2_time.c
++++ b/lib/nghttp2_time.c
+@@ -44,6 +44,16 @@ static uint64_t time_now_sec(void) {
+ 
+ #if defined(HAVE_GETTICKCOUNT64) && !defined(__CYGWIN__)
+ uint64_t nghttp2_time_now_sec(void) { return GetTickCount64() / 1000; }
++#elif defined(__MINGW32__)
++#include <profileapi.h>
++uint64_t nghttp2_time_now_sec(void) {
++    LARGE_INTEGER perfCounter, perfFrequency;
++    QueryPerformanceFrequency(&perfFrequency);
++    QueryPerformanceCounter(&perfCounter);
++    perfCounter.QuadPart *= 1000000;
++    perfCounter.QuadPart /= perfFrequency.QuadPart;
++    return (uint64_t)perfCounter.QuadPart / 1000000;
++}
+ #elif defined(HAVE_CLOCK_GETTIME) && defined(HAVE_DECL_CLOCK_MONOTONIC) &&     \
+     HAVE_DECL_CLOCK_MONOTONIC
+ uint64_t nghttp2_time_now_sec(void) {

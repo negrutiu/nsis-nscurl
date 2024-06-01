@@ -1,0 +1,23 @@
+diff --git a/src/tool_doswin.c b/src/tool_doswin.c
+index db2b8b78a..864aa1418 100644
+--- a/src/tool_doswin.c
++++ b/src/tool_doswin.c
+@@ -661,6 +661,9 @@ struct curl_slist *GetLoadedModulePaths(void)
+ 
+   mod.dwSize = sizeof(MODULEENTRY32);
+ 
++  /* [marius]: Toolhelp functions are available in W2K+ */
++#if _WIN32_WINNT >= _WIN32_WINNT_WIN2K
++
+   do {
+     hnd = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
+   } while(hnd == INVALID_HANDLE_VALUE && GetLastError() == ERROR_BAD_LENGTH);
+@@ -700,6 +703,8 @@ error:
+ cleanup:
+   if(hnd != INVALID_HANDLE_VALUE)
+     CloseHandle(hnd);
++
++#endif
+   return slist;
+ }
+ 

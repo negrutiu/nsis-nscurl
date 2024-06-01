@@ -1,0 +1,19 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a54c2fff9..06477f794 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1089,10 +1089,10 @@ if(WIN32)
+   unset(HAVE_WIN32_WINNT CACHE)
+ 
+   if(HAVE_WIN32_WINNT)
+-    if(HAVE_WIN32_WINNT STRLESS "0x0501")
+-      # Windows XP is required for freeaddrinfo, getaddrinfo
+-      message(FATAL_ERROR "Building for Windows XP or newer is required.")
+-    endif()
++  # if(HAVE_WIN32_WINNT STRLESS "0x0501")
++  #   # Windows XP is required for freeaddrinfo, getaddrinfo
++  #   message(FATAL_ERROR "Building for Windows XP or newer is required.")
++  # endif()
+ 
+     # pre-fill detection results based on target OS version
+     if(MINGW OR MSVC)

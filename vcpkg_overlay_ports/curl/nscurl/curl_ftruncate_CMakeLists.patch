@@ -1,0 +1,8 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1310,3 +1310,3 @@
+ check_symbol_exists(pipe           "${CURL_INCLUDES}" HAVE_PIPE)
+-check_symbol_exists(ftruncate      "${CURL_INCLUDES}" HAVE_FTRUNCATE)
++# check_symbol_exists(ftruncate    "${CURL_INCLUDES}" HAVE_FTRUNCATE)     # nscurl: The mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
+ check_symbol_exists(_fseeki64      "${CURL_INCLUDES};stdio.h" HAVE__FSEEKI64)

@@ -1,0 +1,12 @@
+diff -git a/src/tool_operate.c b/src/tool_operate.c
+--- a/src/tool_operate.c
++++ b/src/tool_operate.c
+@@ -610,2 +610,8 @@
+         rc = fseek(outs->stream, (long)outs->init, SEEK_SET);
++#if defined(_WIN32)
++        /* nscurl: mark the end-of-file */
++        if(!SetEndOfFile((HANDLE)_get_osfhandle(outs->stream))) {
++          rc = -1;
++        }
++#endif
+ #endif

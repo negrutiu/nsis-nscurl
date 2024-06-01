@@ -1,0 +1,33 @@
+diff --git a/include/curl/curl.h b/include/curl/curl.h
+index b2377b789..4ba564624 100644
+--- a/include/curl/curl.h
++++ b/include/curl/curl.h
+@@ -71,7 +71,11 @@
+ /* The check above prevents the winsock2 inclusion if winsock.h already was
+    included, since they can't co-exist without problems */
+ #include <winsock2.h>
++#if _WIN32_WINNT >= 0x0501
+ #include <ws2tcpip.h>
++#else
++#include <wspiapi.h>
++#endif
+ #endif
+ #endif
+ 
+diff --git a/lib/setup-win32.h b/lib/setup-win32.h
+index d7e2e6be1..144b12be0 100644
+--- a/lib/setup-win32.h
++++ b/lib/setup-win32.h
+@@ -89,7 +89,11 @@
+ #    define NOGDI
+ #  endif
+ #  include <winsock2.h>
+-#  include <ws2tcpip.h>
++#  if _WIN32_WINNT >= 0x0501
++#    include <ws2tcpip.h>
++#  else
++#    include <wspiapi.h>
++#  endif
+ #  include <windows.h>
+ #  include <winerror.h>
+ #  include <tchar.h>

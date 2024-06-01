@@ -1,0 +1,12 @@
+diff -git a/src/tool_cb_hdr.c b/src/tool_cb_hdr.c
+--- a/src/tool_cb_hdr.c
++++ b/src/tool_cb_hdr.c
+@@ -146,2 +146,8 @@
+           }
++#if defined(_WIN32)
++          /* nscurl: mark the end-of-file */
++          if(!SetEndOfFile((HANDLE)_get_osfhandle(etag_save->stream))) {
++            return CURL_WRITEFUNC_ERROR;
++          }
++#endif
+ #endif

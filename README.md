@@ -59,7 +59,9 @@ Pop $0
 Project        | License
 :------        | :----------------------------------------------------
 NScurl itself  | [BSD3](LICENSE.md)
-libcurl        | [MIT/X inspired](https://curl.haxx.se/docs/copyright.html)
-OpenSSL        | [Apache v2](https://www.openssl.org/source/license.html)
+brotli         | [MIT](https://github.com/google/brotli/blob/master/LICENSE)
+curl           | [MIT/X inspired](https://curl.haxx.se/docs/copyright.html)
 nghttp2        | [MIT](https://github.com/nghttp2/nghttp2/blob/master/COPYING)
+OpenSSL        | [Apache v2](https://www.openssl.org/source/license.html)
 zlib           | [zlib](https://www.zlib.net/zlib_license.html)
+zstd           | [BSD3](https://github.com/facebook/zstd/blob/dev/LICENSE)
