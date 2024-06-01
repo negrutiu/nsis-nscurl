@@ -120,7 +120,7 @@ RCFLAGS += \
 	$(CUSTOM_RCFLAGS)
 
 
-.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install
+.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle update-file-version vcpkg-install
 
 clean:
 	@echo.
@@ -133,7 +133,7 @@ all-before:
 
 nsis-sdk:
 	REM ----- NSIS SDK ------------------------------------------------------------
-	call _acquire_pluginapi.bat
+	call py -3 _get_nsis_sdk.py
 
 curl-ca-bundle:
 	REM ----- curl-ca-bundle.crt --------------------------------------------------
