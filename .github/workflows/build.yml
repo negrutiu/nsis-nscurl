@@ -22,7 +22,8 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
             msystem: mingw32
-            location: C:\msys64
+            location: C:\
+            release: false
             update: true
             install: git mingw-w64-i686-toolchain
             
@@ -31,7 +32,8 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
             msystem: mingw64
-            location: C:\msys64
+            location: C:\
+            release: false
             update: true
             install: git mingw-w64-x86_64-toolchain
 
@@ -42,6 +44,8 @@ jobs:
             set
             echo ----------------------------------------------------
             dir /OG %SystemDrive%\
+            echo ----------------------------------------------------
+            dir /OG D:\
             echo ----------------------------------------------------
             dir /s /b c:\msys64\*.exe
             echo ----------------------------------------------------
