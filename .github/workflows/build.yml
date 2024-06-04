@@ -8,8 +8,10 @@ jobs:
       matrix:
         os: [windows-latest]
         arch: [amd64, x86]
+        charset: [unicode]
         include:
-          - charset: unicode
+          - charset: ansi
+            arch: x86
 
     runs-on: ${{matrix.os}}
     steps:
