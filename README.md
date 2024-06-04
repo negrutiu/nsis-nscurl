@@ -34,7 +34,7 @@ Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenS
 ## Basic usage
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
-Check out the [documentation](src/NScurl/NScurl.readme.md) page.  
+Check out the [documentation](src/nscurl/NScurl.readme.md) page.  
 Check out the [NSIS test script](tests/NScurl-Test.nsi).  
 
 ```nsis
