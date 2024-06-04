@@ -1,0 +1,20 @@
+name: Build everything
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        arch: [amd64, x86]
+
+    runs-on: ${{matrix.os}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Build
+        run: |
+          echo TODO: Build ${{matrix.arch}} binaries
