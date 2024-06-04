@@ -18,20 +18,20 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - name: Setup mingw32
+        if: matrix.arch == 'x86'
         uses: msys2/setup-msys2@v2
         with:
             msystem: mingw32
             update: true
             install: git mingw-w64-i686-toolchain
-            if: matrix.arch == 'x86'
             
       - name: Setup mingw64
+        if: matrix.arch == 'amd64'
         uses: msys2/setup-msys2@v2
         with:
             msystem: mingw64
             update: true
             install: git mingw-w64-x86_64-toolchain
-            if: matrix.arch == 'amd64'
 
       - name: Dump environment
         shell: cmd
