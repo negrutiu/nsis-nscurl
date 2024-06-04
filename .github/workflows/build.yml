@@ -8,6 +8,10 @@ jobs:
       matrix:
         os: [windows-latest]
         arch: [amd64, x86]
+        include:
+          - charset: unicode
+          - charset: ansi
+            arch: x86
 
     runs-on: ${{matrix.os}}
     steps:
@@ -23,12 +27,12 @@ jobs:
             echo ----------------------------------------------------
             dir /OG %SystemDrive%\
             echo ----------------------------------------------------
-            dir /OG %SystemDrive%\msys64
-            echo ----------------------------------------------------
-            dir /OG %SystemDrive%\msys64\mingw32
-            dir /OG %SystemDrive%\msys64\mingw64
+            dir /OG %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
+            dir /OG %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
             echo ----------------------------------------------------
             dir py -0p
+            echo ----------------------------------------------------
             py -3 -V
+            echo ----------------------------------------------------
             py -3 -m pip list
             echo ----------------------------------------------------
