@@ -123,33 +123,27 @@ RCFLAGS += \
 .PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle update-file-version vcpkg-install
 
 clean:
-	@echo.
-	if exist $(OUTDIR) rd /S /Q $(OUTDIR)
+	cmd /c if exist $(OUTDIR) rd /S /Q $(OUTDIR)
 
 all: all-before nsis-sdk curl-ca-bundle update-file-version vcpkg-install $(_BIN) all-after
 
 all-before:
-	if not exist $(OUTDIR) mkdir $(OUTDIR)
+	cmd /c if not exist $(OUTDIR) mkdir $(OUTDIR)
 
 nsis-sdk:
-	REM ----- NSIS SDK ------------------------------------------------------------
-	call py -3 _get_nsis_sdk.py
+	py -3 _get_nsis_sdk.py
 
 curl-ca-bundle:
-	REM ----- curl-ca-bundle.crt --------------------------------------------------
 	py -3 _get_curl-ca-bundle.py
 
 update-file-version:
-	REM ----- Resource.rc ---------------------------------------------------------
-	call py -3 _update_resource_version.py
+	py -3 _update_resource_version.py
 
 vcpkg-install:
-	REM ----- vcpkg install -------------------------------------------------------
-	call ..\..\_install_vcpkg.bat $(_arch) mingw static
+	cmd /c call ..\..\_install_vcpkg.bat $(_arch) mingw static
 
 # Link
 $(_BIN): $(_OBJ)
-	@echo.
 	gcc $(_OBJ) -o $(_BIN) $(LDFLAGS)
 
 # Compile .c
