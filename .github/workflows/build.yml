@@ -50,6 +50,11 @@ jobs:
             %SystemDrive%\mingw32\bin\gcc.exe -v
             %SystemDrive%\mingw64\bin\gcc.exe -v
             echo ----------------------------------------------------
+            where msys2.exe
+            where msys2.cmd
+            where gcc.exe
+            gcc.exe -v
+            echo ----------------------------------------------------
             py -0p
             echo ----------------------------------------------------
             py -3 -V
