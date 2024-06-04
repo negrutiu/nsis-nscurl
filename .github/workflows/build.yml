@@ -8,7 +8,6 @@ jobs:
       matrix:
         os: [windows-latest]
         arch: [amd64, x86]
-        charset: [unicode, ansi]
         include:
           - charset: unicode
 
