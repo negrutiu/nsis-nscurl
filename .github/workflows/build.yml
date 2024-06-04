@@ -10,8 +10,8 @@ jobs:
         arch: [amd64, x86]
         include:
           - charset: unicode
-          - charset: ansi
-            arch: x86
+          - arch: x86
+            charset: ansi
 
     runs-on: ${{matrix.os}}
     steps:
