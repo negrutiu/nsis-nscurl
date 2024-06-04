@@ -4,6 +4,7 @@ on:
 
 jobs:
   build:
+    name: Build
     strategy:
       matrix:
         os: [windows-latest]
@@ -20,20 +21,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'true'
-      - name: Dump environment
+
+      - name: Build
         shell: cmd
         run: |
-            echo ----------------------------------------------------
-            set
-            echo ----------------------------------------------------
-            dir /OG %SystemDrive%\
-            echo ----------------------------------------------------
-            dir /OG %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
-            dir /OG %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
-            echo ----------------------------------------------------
-            dir py -0p
-            echo ----------------------------------------------------
-            py -3 -V
-            echo ----------------------------------------------------
-            py -3 -m pip list
-            echo ----------------------------------------------------
+            _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
+            echo ------------------------------------------------
+            dir /OG Release-mingw-${{matrix.arch}}-${{matrix.charset}}
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-${{matrix.arch}}-${{matrix.charset}}
+          path: Release-mingw-${{matrix.arch}}-${{matrix.charset}}/*.dll
+          retention-days: 7
+      # if: success() && github.ref == 'refs/heads/master'
+        if: success()
+
+      - name: Upload curl
+        uses: actions/upload-artifact@v4
+        with:
+          name: curl-${{matrix.arch}}
+          path: |
+            vcpkg/*-mingw-static/installed/*-mingw-static/tools/curl/curl.exe
+            src/nscurl/curl-ca-bundle.crt
+          retention-days: 7
+      # if: success() && github.ref == 'refs/heads/master'
+        if: success() && matrix.charset == 'unicode'
+
+  package:
+    name: Package
+    runs-on: windows-latest
+    steps:
+      - name: Package
+        shell: cmd
+        run: |
+          echo TODO: build the package
