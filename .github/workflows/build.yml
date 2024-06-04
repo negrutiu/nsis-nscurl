@@ -16,6 +16,11 @@ jobs:
             charset: ansi
 
     runs-on: ${{matrix.os}}
+
+    defaults:
+        run:
+          shell: cmd
+
     steps:
       - name: Setup mingw32
         if: matrix.arch == 'x86'
@@ -36,18 +41,15 @@ jobs:
             install: git mingw-w64-x86_64-toolchain
 
       - name: Dump environment
-        shell: cmd
         run: |
             echo ----------------------------------------------------
             set
             echo ----------------------------------------------------
             dir /OG %SystemDrive%\
             echo ----------------------------------------------------
-            dir /OG D:\
-            echo ----------------------------------------------------
             dir /s /b c:\msys64\*.exe
             echo ----------------------------------------------------
-            dir /s /b D:\a\_temp\setup-msys2
+            dir /s /b D:\
             echo ----------------------------------------------------
             echo -- 1 && %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
             echo -- 2 && %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
@@ -70,7 +72,6 @@ jobs:
           submodules: 'true'
 
       - name: Build
-        shell: cmd
         run: |
             _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
             echo ------------------------------------------------
