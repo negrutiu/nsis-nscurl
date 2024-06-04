@@ -17,6 +17,34 @@ jobs:
 
     runs-on: ${{matrix.os}}
     steps:
+      - name: Dump environment
+        shell: cmd
+        run: |
+            echo ----------------------------------------------------
+            set
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\mingw32
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\mingw32\bin
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\msys64
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\msys64\mingw32
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\msys64\mingw32\bin
+            echo ----------------------------------------------------
+            dir /OG %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
+            dir /OG %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
+            echo ----------------------------------------------------
+            dir py -0p
+            echo ----------------------------------------------------
+            py -3 -V
+            echo ----------------------------------------------------
+            py -3 -m pip list
+            echo ----------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -51,6 +79,7 @@ jobs:
 
   package:
     name: Package
+    needs: build
     runs-on: windows-latest
     steps:
       - name: Package
