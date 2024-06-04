@@ -41,20 +41,20 @@ jobs:
             echo ----------------------------------------------------
             dir /OG %SystemDrive%\
             echo ----------------------------------------------------
-            dir /OG %SystemDrive%\msys64
-            dir /OG %SystemDrive%\msys64\mingw32\bin
-            dir /OG %SystemDrive%\msys64\mingw64\bin
+            dir /s /b c:\msys64\mingw32\*.exe
             echo ----------------------------------------------------
-            %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
-            %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
-            %SystemDrive%\mingw32\bin\gcc.exe -v
-            %SystemDrive%\mingw64\bin\gcc.exe -v
+            dir /s /b D:\a\_temp\setup-msys2\*.exe
             echo ----------------------------------------------------
-            where msys2.exe
-            where msys2.cmd
-            where gcc.exe
-            gcc.exe -v
+            echo -- 1 && %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
+            echo -- 2 && %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
+            echo -- 3 && %SystemDrive%\mingw32\bin\gcc.exe -v
+            echo -- 4 && %SystemDrive%\mingw64\bin\gcc.exe -v
+            echo -- 5 && gcc.exe -v
             echo ----------------------------------------------------
+            echo --1 && where msys2.exe
+            echo --2 && where msys2.cmd
+            echo --3 && where gcc.exe
+            echo ====================================================
             py -0p
             echo ----------------------------------------------------
             py -3 -V
