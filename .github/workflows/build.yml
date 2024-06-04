@@ -41,6 +41,7 @@ jobs:
             install: git mingw-w64-x86_64-toolchain
 
       - name: Dump environment
+        if: failure()
         run: |
             echo ----------------------------------------------------
             set
