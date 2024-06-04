@@ -20,16 +20,18 @@ jobs:
       - name: Setup mingw32
         uses: msys2/setup-msys2@v2
         with:
-          update: true
-          install: git mingw-w64-i686-toolchain
-        if: matrix.arch == 'x86'
-
+            msystem: mingw32
+            update: true
+            install: git mingw-w64-i686-toolchain
+            if: matrix.arch == 'x86'
+            
       - name: Setup mingw64
         uses: msys2/setup-msys2@v2
         with:
-          update: true
-          install: git mingw-w64-x86_64-toolchain
-        if: matrix.arch == 'amd64'
+            msystem: mingw64
+            update: true
+            install: git mingw-w64-x86_64-toolchain
+            if: matrix.arch == 'amd64'
 
       - name: Dump environment
         shell: cmd
@@ -40,6 +42,8 @@ jobs:
             dir /OG %SystemDrive%\
             echo ----------------------------------------------------
             dir /OG %SystemDrive%\msys64
+            dir /OG %SystemDrive%\msys64\mingw32\bin
+            dir /OG %SystemDrive%\msys64\mingw64\bin
             echo ----------------------------------------------------
             %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
             %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
