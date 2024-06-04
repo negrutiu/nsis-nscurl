@@ -86,13 +86,25 @@ jobs:
       # if: success() && github.ref == 'refs/heads/master'
         if: success()
 
+      - name: Gather curl-x86
+        if: success() && matrix.charset == 'unicode' && matrix.arch == 'x86'
+        run: |
+          mkdir packages/curl 2> nul
+          copy /y vcpkg/x86-mingw-static/installed/x86-mingw-static/tools/curl/curl.exe packages/curl/
+          src/nscurl/curl-ca-bundle.crt packages/curl/
+
+      - name: Gather curl-amd64
+        if: success() && matrix.charset == 'unicode' && matrix.arch == 'amd64'
+        run: |
+          mkdir packages/curl 2> nul
+          copy /y vcpkg/x64-mingw-static/installed/x64-mingw-static/tools/curl/curl.exe packages/curl/
+          src/nscurl/curl-ca-bundle.crt packages/curl/
+
       - name: Upload curl
         uses: actions/upload-artifact@v4
         with:
           name: curl-${{matrix.arch}}
-          path: |
-            vcpkg/*-mingw-static/installed/*-mingw-static/tools/curl/curl.exe
-            src/nscurl/curl-ca-bundle.crt
+          path: packages/curl/*
           retention-days: 7
       # if: success() && github.ref == 'refs/heads/master'
         if: success() && matrix.charset == 'unicode'
