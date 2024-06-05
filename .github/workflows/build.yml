@@ -92,14 +92,14 @@ jobs:
         run: |
           mkdir packages/curl 2> nul
           copy /y vcpkg/x86-mingw-static/installed/x86-mingw-static/tools/curl/curl.exe packages/curl/
-          src/nscurl/curl-ca-bundle.crt packages/curl/
+          copy /y src/nscurl/curl-ca-bundle.crt packages/curl/
 
       - name: Gather curl-amd64
         if: success() && matrix.charset == 'unicode' && matrix.arch == 'amd64'
         run: |
           mkdir packages/curl 2> nul
           copy /y vcpkg/x64-mingw-static/installed/x64-mingw-static/tools/curl/curl.exe packages/curl/
-          src/nscurl/curl-ca-bundle.crt packages/curl/
+          copy /y src/nscurl/curl-ca-bundle.crt packages/curl/
 
       - name: Upload curl
         uses: actions/upload-artifact@v4
