@@ -14,12 +14,6 @@ jobs:
           - os: windows-latest
             arch: x86
             charset: ansi
-          - arch: x86
-            mingw: mingw32
-            mingwpkg: mingw-w64-i686-toolchain
-          - arch: amd64
-            mingw: mingw64
-            mingwpkg: mingw-w64-x86_64-toolchain
 
     runs-on: ${{matrix.os}}
 
@@ -28,14 +22,24 @@ jobs:
           shell: cmd
 
     steps:
-      - name: Upgrade msys2/${{matrix.mingw}}
+      - name: Upgrade msys2/mingw32
+        if: matrix.arch == 'x86'
         uses: msys2/setup-msys2@v2
         with:
-            msystem: ${{matrix.mingw}}
+          msystem: mingw32
+          release: false
+          update: true
+          install: git mingw-w64-i686-toolchain
+          
+      - name: Upgrade msys2/mingw64
+        if: matrix.arch == 'amd64'
+        uses: msys2/setup-msys2@v2
+        with:
+            msystem: mingw64
             release: false
             update: true
-            install: git ${{matrix.mingwpkg}}
-            
+            install: mingw-w64-x86_64-toolchain
+
       - name: Print environment
         if: failure()
         run: |
