@@ -32,10 +32,18 @@ set charset=unicode
 
 if "%platform%" neq "x86" set charset=unicode
 
+if "%platform_nsis%" equ ""    set platform_nsis=%platform%
+if "%platform_nsis%" equ "x64" set platform_nsis=amd64
+
+if /i "%compiler%" equ "mingw"   set triplet=%platform%-mingw-static
+if /i "%compiler%" equ "msbuild" set triplet=%platform%-windows-static
+
 title %configuration%-%compiler%-%platform%-%charset%
 echo --- compiler = %compiler%
 echo --- configuration = %configuration%
 echo --- platform = %platform%
+echo --- platform_nsis = %platform_nsis%
+echo --- triplet = %triplet%
 echo --- charset = %charset%
 
 if "%compiler%" equ "mingw" goto :mingw
@@ -57,15 +65,12 @@ set PATH=%mingw%\bin;%PATH%
 echo.
 gcc --version
 
-set platform_nsis=%platform%
-if "%platform_nsis%" equ "x64" set platform_nsis=amd64
-
 REM --- build ---
 echo --- mingw32-make.exe ARCH=%platform% CHAR=%charset% OUTDIR="%~dp0%configuration%-%compiler%-%platform_nsis%-%charset%" CONFIG=%configuration% clean all
 echo.
 mingw32-make.exe ARCH=%platform% CHAR=%charset% OUTDIR="%~dp0%configuration%-%compiler%-%platform_nsis%-%charset%" CONFIG=%configuration% clean all || exit /b !errorlevel!
 
-goto :end
+goto :end_build
 
 :: -------------------------------------------------------------------------------
 
@@ -99,8 +104,42 @@ echo --- msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Pl
 echo.
 msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%platformtoolset% /verbosity:%verbosity%%ParamCharacterSet% || exit /b !errorlevel!
 
-goto :end
+goto :end_build
 
-:end
+:end_build
+echo.
+
+REM --- package ---
+set outdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
+rmdir /s /q %outdir% 2> nul
+
+call :copy README.md   %outdir%\README.md
+call :copy LICENSE.md  %outdir%\LICENSE.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\brotli\copyright   %outdir%\LICENSE.brotli.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\curl\copyright     %outdir%\LICENSE.curl.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\nghttp2\copyright  %outdir%\LICENSE.nghttp2.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\openssl\copyright  %outdir%\LICENSE.openssl.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\zlib\copyright     %outdir%\LICENSE.zlib.md
+call :copy vcpkg\%triplet%\installed\%triplet%\share\zstd\copyright     %outdir%\LICENSE.zstd.md
+
+call :copy Release-%compiler%-%platform_nsis%-%charset%\NScurl.dll %outdir%\Plugins\%platform_nsis%-%charset%\
+
+call :copy tests\NScurl-Test.nsi       %outdir%\Examples\NScurl\
+call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
+
+call :copy src\nscurl\NScurl.readme.md %outdir%\Docs\NScurl\
+call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
+
+echo.
+goto :end_package
+
+:copy
+echo %~1 -^> %~2
+mkdir "%~dp2" 2> nul
+copy "%~1" "%~2" || exit !errorlevel!
+exit /b
+
+:end_package
+
 echo all done. errorlevel %errorlevel%
 REM pause
