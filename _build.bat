@@ -107,9 +107,16 @@ msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%p
 goto :end_build
 
 :end_build
-echo.
 
-REM --- package ---
+goto :package
+:copy
+echo %~1 -^> %~2
+mkdir "%~dp2" 2> nul
+copy "%~1" "%~2" || pause&& exit !errorlevel!
+exit /b
+
+:package
+echo.
 set outdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
 rmdir /s /q %outdir% 2> nul
 
@@ -129,17 +136,15 @@ call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
 
 call :copy src\nscurl\NScurl.readme.md %outdir%\Docs\NScurl\
 call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
-
-echo.
-goto :end_package
-
-:copy
-echo %~1 -^> %~2
-mkdir "%~dp2" 2> nul
-copy "%~1" "%~2" || exit !errorlevel!
-exit /b
-
 :end_package
+
+:curl_package
+if /i "%charset%" neq "unicode" goto :end_curl_package
+echo.
+set outdir=packages\%configuration%-%compiler%-%platform_nsis%-curl
+call :copy vcpkg\%triplet%\installed\%triplet%\tools\curl\curl.exe %outdir%\
+call :copy src\nscurl\curl-ca-bundle.crt %outdir%\
+:end_curl_package
 
 echo all done. errorlevel %errorlevel%
 REM pause
