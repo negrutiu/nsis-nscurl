@@ -121,7 +121,7 @@ jobs:
         # Install an NSIS fork with amd64 support
         # note: NSIS-negrutiu sits in C:\Program Files\NSIS
         # note: NSIS-official sits in C:\Program Files (x86)\NSIS
-      - name: Download NSIS-negrutiu
+      - name: Install NSIS-negrutiu
         shell: cmd
         run: |
           setlocal enabledelayedexpansion
@@ -131,23 +131,23 @@ jobs:
           echo installing...
           nsis-%version%-negrutiu-%arch%.exe /S
 
-      - name: NSIS example (x86-unicode)
+      - name: Build NSIS example (x86-unicode)
         shell: cmd
         run: |
           set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
-      - name: NSIS example (x86-ansi)
+      - name: Build NSIS example (x86-ansi)
         shell: cmd
         run: |
           set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DANSI artifacts\Examples\NScurl\NScurl-Test.nsi
+          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DANSI artifacts\Examples\NScurl\NScurl-Test.nsi
 
-      - name: NSIS example (amd64-unicode)
+      - name: Build NSIS example (amd64-unicode)
         shell: cmd
         run: |
           set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DAMD64 artifacts\Examples\NScurl\NScurl-Test.nsi
+          makensis.exe /V /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DAMD64 artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4
