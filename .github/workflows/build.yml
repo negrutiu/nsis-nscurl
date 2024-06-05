@@ -15,9 +15,11 @@ jobs:
             arch: x86
             charset: ansi
           - arch: x86
-            xarch: x86
+            mingw: mingw32
+            mingwpkg: mingw-w64-i686-toolchain
           - arch: amd64
-            xarch: x64
+            mingw: mingw64
+            mingwpkg: mingw-w64-x86_64-toolchain
 
     runs-on: ${{matrix.os}}
 
@@ -26,25 +28,15 @@ jobs:
           shell: cmd
 
     steps:
-      - name: Setup mingw32
-        if: matrix.arch == 'x86'
+      - name: Upgrade msys2/${{matrix.mingw}}
         uses: msys2/setup-msys2@v2
         with:
-            msystem: mingw32
+            msystem: ${{matrix.mingw}}
             release: false
             update: true
-            install: git mingw-w64-i686-toolchain
+            install: git ${{matrix.mingwpkg}}
             
-      - name: Setup mingw64
-        if: matrix.arch == 'amd64'
-        uses: msys2/setup-msys2@v2
-        with:
-            msystem: mingw64
-            release: false
-            update: true
-            install: git mingw-w64-x86_64-toolchain
-
-      - name: Dump environment
+      - name: Print environment
         if: failure()
         run: |
             echo ----------------------------------------------------
@@ -79,37 +71,25 @@ jobs:
       - name: Build
         run: |
             _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
-            echo ------------------------------------------------
-            dir /OG Release-mingw-${{matrix.arch}}-${{matrix.charset}}
+
+      - name: Print packages
+        run: |
+            dir /s /b packages
 
       - name: Upload
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: output-${{matrix.arch}}-${{matrix.charset}}
-          path: Release-mingw-${{matrix.arch}}-${{matrix.charset}}/*.dll
+          name: package-${{matrix.arch}}-${{matrix.charset}}
+          path: packages/Release-mingw-${{matrix.arch}}-${{matrix.charset}}/*
           retention-days: 7
       # if: success() && github.ref == 'refs/heads/master'
-        if: success()
-
-      - name: Gather curl-x86
-        if: success() && matrix.charset == 'unicode' && matrix.arch == 'x86'
-        run: |
-          mkdir packages/curl 2> nul
-          copy /y vcpkg/x86-mingw-static/installed/x86-mingw-static/tools/curl/curl.exe packages/curl/
-          copy /y src/nscurl/curl-ca-bundle.crt packages/curl/
-
-      - name: Gather curl-amd64
-        if: success() && matrix.charset == 'unicode' && matrix.arch == 'amd64'
-        run: |
-          mkdir packages/curl 2> nul
-          copy /y vcpkg/x64-mingw-static/installed/x64-mingw-static/tools/curl/curl.exe packages/curl/
-          copy /y src/nscurl/curl-ca-bundle.crt packages/curl/
 
       - name: Upload curl
         uses: actions/upload-artifact@v4
         with:
           name: curl-${{matrix.arch}}
-          path: packages/curl/*
+          path: packages/Release-mingw-${{matrix.arch}}-curl/*
           retention-days: 7
       # if: success() && github.ref == 'refs/heads/master'
         if: success() && matrix.charset == 'unicode'
