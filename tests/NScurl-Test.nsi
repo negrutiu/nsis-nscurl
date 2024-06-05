@@ -23,14 +23,12 @@ Target ${_TARGET_}
 !define /ifndef NULL 0
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
-# NScurl.dll development location
-!ifdef DEVEL
-!if ! /FileExists "..\Release-mingw-${_TARGET_}\NScurl.dll"
-	!error "Missing \Release-mingw-${_TARGET_}\NScurl.dll"
+# NScurl.dll custom location
+!ifdef PLUGIN_DIR
+!if ! /FileExists "${PLUGIN_DIR}\NScurl.dll"
+	!error "Missing ${PLUGIN_DIR}\NScurl.dll"
 !endif
-!AddPluginDir /amd64-unicode "..\Release-mingw-amd64-unicode"
-!AddPluginDir /x86-unicode   "..\Release-mingw-x86-unicode"
-!AddPluginDir /x86-ansi      "..\Release-mingw-x86-ansi"
+!AddPluginDir "${PLUGIN_DIR}"
 !endif
 
 # GUI settings
