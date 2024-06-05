@@ -78,7 +78,7 @@ jobs:
 
       - name: Print packages
         run: |
-            dir /s /b packages
+            dir /s /b /a-d packages
 
       - name: Upload
         if: success()
@@ -103,7 +103,19 @@ jobs:
     needs: build
     runs-on: windows-latest
     steps:
-      - name: Package
-        shell: cmd
-        run: |
-          echo TODO: build the package
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: package-*
+          merge-multiple: true
+
+      - run: ls -R artifacts
+
+      - name: Upload final package
+        uses: actions/upload-artifact@v4
+        with:
+          name: NScurl
+          path: artifacts/*
+          retention-days: 7
+      # if: success() && github.ref == 'refs/heads/master'
