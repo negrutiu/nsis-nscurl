@@ -12,12 +12,23 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Print environment
+        run: |
+              echo ----------------------------------------------------
+              set
+              echo ====================================================
+              py -0p
+              echo ----------------------------------------------------
+              py -3 -V
+              py -3 -m pip list
+              
       - name: Version
         shell: python
         run: |
+          import os
           from datetime import datetime, timezone
           date = datetime.now(tz=timezone.utc)
-          with open($GITHUB_OUTPUT, 'w') as fout:
+          with open(os.getenv('GITHUB_OUTPUT'), 'w') as fout:
             fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}"")
 
       - name: Print version
