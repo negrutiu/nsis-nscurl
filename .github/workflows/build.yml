@@ -89,28 +89,18 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Patch version
-        working-directory: src/nscurl
-        run: py -3 _set_version.py --version=${{steps.version.outputs.version}}
-
-      - name: Restore vcpkg/archives from cache
-        if: runner.os == 'windows'
-        id: cache-vcpkg-restore
-        uses: actions/cache/restore@v4
+      - name: Setup vcpkg/archives cache
+        uses: actions/cache@v4
         with:
           path: vcpkg/archives
           key: vcpkg-${{runner.os}}-${{matrix.arch}}-${{matrix.charset}}
 
+      - name: Patch version    
+        working-directory: src/nscurl
+        run: py -3 _set_version.py --version=${{steps.version.outputs.version}}
+  
       - name: Build
         run: _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
-
-      - name: Save vcpkg/archives to cache
-        if: success() && runner.os == 'windows'
-        id: cache-vcpkg-save
-        uses: actions/cache/save@v4
-        with:
-          path: vcpkg/archives
-          key: ${{ steps.cache-vcpkg-restore.outputs.cache-primary-key }}
 
       - name: Print packages
         run: dir /s /b /a-d packages
