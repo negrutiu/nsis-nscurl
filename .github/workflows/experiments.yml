@@ -1,4 +1,4 @@
-name: Experiments ${{github.run_number}}
+run-name: Experiments #${{github.run_number}}
 on:
   workflow_dispatch
 
