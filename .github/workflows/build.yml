@@ -1,13 +1,21 @@
 name: Build
 on:
-  workflow_dispatch
+  push:
+    branches:
+      - master
+      - 'feature/**'
+      - 'bugfix/**'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build
     outputs:
       # accessible from other jobs as ${{needs.experiments.outputs.version}}
-      version: ${{steps.version.outputs.VERSION}}
+      version: ${{steps.version.outputs.version}}
 
     strategy:
       matrix:
@@ -65,17 +73,11 @@ jobs:
             echo ----------------------------------------------------
             dir /s /b c:\msys64\*.exe
             echo ----------------------------------------------------
-            dir /s /b D:\
-            echo ----------------------------------------------------
             echo -- 1 && %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
             echo -- 2 && %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
             echo -- 3 && %SystemDrive%\mingw32\bin\gcc.exe -v
             echo -- 4 && %SystemDrive%\mingw64\bin\gcc.exe -v
             echo -- 5 && gcc.exe -v
-            echo ----------------------------------------------------
-            echo --1 && where msys2.exe
-            echo --2 && where msys2.cmd
-            echo --3 && where gcc.exe
             echo ====================================================
             py -0p
             echo ----------------------------------------------------
@@ -98,22 +100,17 @@ jobs:
         run: dir /s /b /a-d packages
 
       - name: Upload
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: package-${{matrix.arch}}-${{matrix.charset}}
           path: packages/Release-mingw-${{matrix.arch}}-${{matrix.charset}}/*
-          retention-days: 7
-      # if: success() && github.ref == 'refs/heads/master'
 
       - name: Upload curl
+        if: matrix.charset == 'unicode'
         uses: actions/upload-artifact@v4
         with:
           name: curl-${{matrix.arch}}
           path: packages/Release-mingw-${{matrix.arch}}-curl/*
-          retention-days: 7
-      # if: success() && github.ref == 'refs/heads/master'
-        if: success() && matrix.charset == 'unicode'
 
   package:
     name: Package
@@ -132,8 +129,6 @@ jobs:
         with:
           name: NScurl
           path: artifacts/*
-          retention-days: 7
-      # if: success() && github.ref == 'refs/heads/master'
 
         # Install an NSIS fork with amd64 support
         # note: NSIS-negrutiu sits in C:\Program Files\NSIS
@@ -171,5 +166,3 @@ jobs:
         with:
           name: NScurl-Tests
           path: artifacts/Examples/NScurl/NScurl-Test-*.exe
-          retention-days: 7
-      # if: success() && github.ref == 'refs/heads/master'
