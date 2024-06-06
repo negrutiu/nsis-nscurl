@@ -1,4 +1,4 @@
-name: Experiments
+name: Experiments ${{steps.version.outputs.version}}
 on:
   workflow_dispatch
 
@@ -6,7 +6,7 @@ jobs:
   experiments:
     outputs:
       # accessible from other jobs as ${{needs.experiments.outputs.version}}
-      version: ${{steps.version.outputs.VERSION}}
+      version: ${{steps.version.outputs.version}}
 
     runs-on: windows-latest
     steps:
@@ -34,16 +34,14 @@ jobs:
           import os
           from datetime import datetime, timezone
           date = datetime.now(tz=timezone.utc)
-          print(f"run_id=${{github.run_id}}, run_number=${{github.run_number}}, run_attempt=${{github.run_attempt}}")
-          print(f"GITHUB_OUTPUT={os.getenv('GITHUB_OUTPUT')}")
           with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
-            print(     f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_number}}")
-            fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+            print(     f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+            fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
 
       - name: Print version
         shell: cmd
         run: |
-          echo -- version is ${{steps.version.outputs.VERSION}}
+          echo -- version is ${{steps.version.outputs.version}}
 
   results:
     runs-on: windows-latest
@@ -53,4 +51,3 @@ jobs:
         shell: cmd
         run: |
             echo previous version=${{needs.experiments.outputs.version}}
-          
