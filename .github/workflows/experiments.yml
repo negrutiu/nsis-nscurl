@@ -1,0 +1,17 @@
+name: Experiments
+on:
+  workflow_dispatch
+
+jobs:
+  experiments:
+    runs-on: windows-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Test
+        run: |
+          echo TODO: test here
