@@ -9,8 +9,6 @@
 /tests/*.exe
 /tests/_*
 
-/vcpkg
-
 /Debug-*
 /Release-*
 /ipch

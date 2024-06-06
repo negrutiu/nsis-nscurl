@@ -122,12 +122,12 @@ rmdir /s /q %outdir% 2> nul
 
 call :copy README.md   %outdir%\README.md
 call :copy LICENSE.md  %outdir%\LICENSE.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\brotli\copyright   %outdir%\LICENSE.brotli.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\curl\copyright     %outdir%\LICENSE.curl.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\nghttp2\copyright  %outdir%\LICENSE.nghttp2.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\openssl\copyright  %outdir%\LICENSE.openssl.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\zlib\copyright     %outdir%\LICENSE.zlib.md
-call :copy vcpkg\%triplet%\installed\%triplet%\share\zstd\copyright     %outdir%\LICENSE.zstd.md
+call :copy vcpkg\clone\installed\%triplet%\share\brotli\copyright   %outdir%\LICENSE.brotli.md
+call :copy vcpkg\clone\installed\%triplet%\share\curl\copyright     %outdir%\LICENSE.curl.md
+call :copy vcpkg\clone\installed\%triplet%\share\nghttp2\copyright  %outdir%\LICENSE.nghttp2.md
+call :copy vcpkg\clone\installed\%triplet%\share\openssl\copyright  %outdir%\LICENSE.openssl.md
+call :copy vcpkg\clone\installed\%triplet%\share\zlib\copyright     %outdir%\LICENSE.zlib.md
+call :copy vcpkg\clone\installed\%triplet%\share\zstd\copyright     %outdir%\LICENSE.zstd.md
 
 call :copy Release-%compiler%-%platform_nsis%-%charset%\NScurl.dll %outdir%\Plugins\%platform_nsis%-%charset%\
 
@@ -142,7 +142,7 @@ call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
 if /i "%charset%" neq "unicode" goto :end_curl_package
 echo.
 set outdir=packages\%configuration%-%compiler%-%platform_nsis%-curl
-call :copy vcpkg\%triplet%\installed\%triplet%\tools\curl\curl.exe %outdir%\
+call :copy vcpkg\clone\installed\%triplet%\tools\curl\curl.exe %outdir%\
 call :copy src\nscurl\curl-ca-bundle.crt %outdir%\
 :end_curl_package
 
@@ -156,7 +156,7 @@ powershell -C "(Get-Item 'Release-%compiler%-%platform_nsis%-%charset%\NScurl.dl
 
 echo.
 echo curl.exe
-vcpkg\%triplet%\installed\%triplet%\tools\curl\curl.exe -V
+vcpkg\clone\installed\%triplet%\tools\curl\curl.exe -V
 
 echo.
 echo curl-ca-bundle.crt

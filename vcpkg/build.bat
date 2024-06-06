@@ -26,7 +26,7 @@ if /i "%compiler%" equ "mingw" set vcpkg_triplet=%arch%-mingw-%runtime%
 if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "static"  set vcpkg_triplet=%arch%-windows-%runtime%
 if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "dynamic" set vcpkg_triplet=%arch%-windows
 
-set vcpkg_dir=%~dp0vcpkg\%vcpkg_triplet%
+set vcpkg_dir=%~dp0clone
 
 REM | -------------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ set vcpkg_downloads=%vcpkg_dir%\downloads
 set vcpkg_buildtrees=%vcpkg_dir%\buildtrees
 set vcpkg_packages=%vcpkg_dir%\packages
 REM set vcpkg_archives=%vcpkg_dir%\archives
-set vcpkg_archives=%~dp0vcpkg\archives
+set vcpkg_archives=%~dp0archives
 
 echo -------------------------------------------------------------------------
 echo Build ^& install vcpkg ...
