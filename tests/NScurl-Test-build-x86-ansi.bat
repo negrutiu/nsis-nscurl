@@ -11,8 +11,8 @@ echo ***************************************************************************
 echo %NSIS%\makensis.exe
 echo ********************************************************************************
 
-"%NSIS%\makensis.exe" /DDEVEL /V4 /DANSI "%~dp0\NScurl-Test.nsi"
-if %errorlevel% neq 0 pause && exit /B %errorlevel%
+"%NSIS%\makensis.exe" /V4 /DANSI /DPLUGIN_DIR=..\Release-mingw-x86-ansi "%~dp0\NScurl-Test.nsi"
+if %errorlevel% neq 0 pause && exit /b %errorlevel%
 
 REM echo ----------------------------------------------------------
 REM set exe=NScurl-Test-x86-ansi.exe

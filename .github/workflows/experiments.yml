@@ -4,14 +4,50 @@ on:
 
 jobs:
   experiments:
+    outputs:
+      # accessible from other jobs as ${{needs.experiments.outputs.version}}
+      version: ${{steps.version.outputs.version}}
+
     runs-on: windows-latest
     steps:
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+      #   with:
+      #     submodules: 'true'
 
-      - name: Test
+      - name: Print environment
+        shell: cmd
         run: |
-          echo TODO: test here
+              echo ----------------------------------------------------
+              set
+              echo ====================================================
+              py -0p
+              echo ----------------------------------------------------
+              py -3 -V
+              py -3 -m pip list
+        
+      - id: version
+        name: Version
+        shell: python
+        run: |
+          import os
+          from datetime import datetime, timezone
+          date = datetime.now(tz=timezone.utc)
+          with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+            print(     f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+            fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+
+      - name: Print version
+        shell: cmd
+        run: |
+          echo -- version is ${{steps.version.outputs.version}}
+
+  results:
+    runs-on: windows-latest
+    needs: experiments
+    steps:
+      - name: Print version
+        shell: cmd
+        run: |
+            echo previous version=${{needs.experiments.outputs.version}}
