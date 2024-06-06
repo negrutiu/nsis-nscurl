@@ -12,6 +12,15 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Test
+      - name: Version
+        shell: python
         run: |
-          echo TODO: test here
+          from datetime import datetime, timezone
+          date = datetime.now(tz=timezone.utc)
+          with open($GITHUB_OUTPUT, 'w') as fout:
+            fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}"")
+
+      - name: Print version
+        shell: cmd
+        run: |
+          echo -- version is ${{steps.Version.output.VERSION}}
