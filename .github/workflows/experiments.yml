@@ -29,10 +29,12 @@ jobs:
           import os
           from datetime import datetime, timezone
           date = datetime.now(tz=timezone.utc)
+          print(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}")
+          print(f"run_id=${{github.run_id}}, run_number=${{github.run_number}}, run_attempt=${{github.run_attempt}}")
           with open(os.getenv('GITHUB_OUTPUT'), 'w') as fout:
             fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}")
 
       - name: Print version
         shell: cmd
         run: |
-          echo -- version is ${{steps.Version.output.VERSION}}
+          echo -- version is ${{steps.version.output.VERSION}}
