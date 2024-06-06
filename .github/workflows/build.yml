@@ -34,6 +34,7 @@ jobs:
           from datetime import datetime, timezone
           date = datetime.now(tz=timezone.utc)
           with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+            print(     f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
             fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
 
       - name: Upgrade msys2/mingw32
@@ -87,16 +88,14 @@ jobs:
           submodules: 'true'
 
       - name: Patch version
-        run: |
-            py -3 src/nscurl/_set_version.py --version=${{steps.version.outputs.version}}
+        working-directory: src/nscurl
+        run: py -3 _set_version.py --version=${{steps.version.outputs.version}}
 
       - name: Build
-        run: |
-            _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
+        run: _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
 
       - name: Print packages
-        run: |
-            dir /s /b /a-d packages
+        run: dir /s /b /a-d packages
 
       - name: Upload
         if: success()
