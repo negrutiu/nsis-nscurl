@@ -45,14 +45,6 @@ jobs:
             print(     f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
             fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
 
-      - name: Restore msys2 from cache
-        if: runner.os == 'windows'
-        id: cache-msys2-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: C:\\msys64
-          key: msys2-${{runner.os}}-${{matrix.arch}}
-    
       - name: Upgrade msys2/mingw32
         if: matrix.arch == 'x86'
         uses: msys2/setup-msys2@v2
@@ -71,14 +63,6 @@ jobs:
             update: true
             install: mingw-w64-x86_64-toolchain
 
-      - name: Save msys2 to cache
-        if: success() && runner.os == 'windows'
-        id: cache-msys2-save
-        uses: actions/cache/save@v4
-        with:
-          path: C:\\msys64
-          key: ${{ steps.cache-msys2-restore.outputs.cache-primary-key }}
-    
       - name: Print environment
         if: failure()
         run: |
