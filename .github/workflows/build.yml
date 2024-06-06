@@ -93,6 +93,13 @@ jobs:
         working-directory: src/nscurl
         run: py -3 _set_version.py --version=${{steps.version.outputs.version}}
 
+      - name: Restore vcpkg/archives from cache
+        id: cache-vcpkg-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: vcpkg/archives
+          key: ${{runner.os}}-vcpkg
+
       - name: Build
         run: _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
 
@@ -111,6 +118,14 @@ jobs:
         with:
           name: curl-${{matrix.arch}}
           path: packages/Release-mingw-${{matrix.arch}}-curl/*
+
+      - name: Save vcpkg/archives to cache
+        if: success()
+        id: cache-vcpkg-save
+        uses: actions/cache/save@v4
+        with:
+          path: vcpkg/archives
+          key: ${{ steps.cache-vcpkg-restore.outputs.cache-primary-key }}
 
   package:
     name: Package
