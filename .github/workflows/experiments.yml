@@ -31,8 +31,9 @@ jobs:
           date = datetime.now(tz=timezone.utc)
           print(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}")
           print(f"run_id=${{github.run_id}}, run_number=${{github.run_number}}, run_attempt=${{github.run_attempt}}")
-          with open(os.getenv('GITHUB_OUTPUT'), 'w') as fout:
-            fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_attempt}}")
+          print(f"GITHUB_OUTPUT={os.getenv('GITHUB_OUTPUT')}")
+          with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+            fout.write(f"VERSION={date.year}.{date.month}.{date.day}.${{github.run_number}}")
 
       - name: Print version
         shell: cmd
