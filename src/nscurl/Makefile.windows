@@ -120,12 +120,12 @@ RCFLAGS += \
 	$(CUSTOM_RCFLAGS)
 
 
-.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle update-file-version vcpkg-install
+.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install
 
 clean:
 	cmd /c if exist $(OUTDIR) rd /S /Q $(OUTDIR)
 
-all: all-before nsis-sdk curl-ca-bundle update-file-version vcpkg-install $(_BIN) all-after
+all: all-before nsis-sdk curl-ca-bundle vcpkg-install $(_BIN) all-after
 
 all-before:
 	cmd /c if not exist $(OUTDIR) mkdir $(OUTDIR)
@@ -135,9 +135,6 @@ nsis-sdk:
 
 curl-ca-bundle:
 	py -3 _get_curl-ca-bundle.py
-
-update-file-version:
-	py -3 _update_resource_version.py
 
 vcpkg-install:
 	cmd /c call ..\..\_install_vcpkg.bat $(_arch) mingw static

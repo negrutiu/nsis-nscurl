@@ -5,6 +5,10 @@ on:
 jobs:
   build:
     name: Build
+    outputs:
+      # accessible from other jobs as ${{needs.experiments.outputs.version}}
+      version: ${{steps.version.outputs.VERSION}}
+
     strategy:
       matrix:
         os: [windows-latest]
@@ -22,6 +26,16 @@ jobs:
           shell: cmd
 
     steps:
+      - id: version
+        name: Version
+        shell: python
+        run: |
+          import os
+          from datetime import datetime, timezone
+          date = datetime.now(tz=timezone.utc)
+          with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+            fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+
       - name: Upgrade msys2/mingw32
         if: matrix.arch == 'x86'
         uses: msys2/setup-msys2@v2
@@ -71,6 +85,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'true'
+
+      - name: Patch version
+        run: |
+            py -3 src/nscurl/_set_version.py --version=${{steps.version.outputs.version}}
 
       - name: Build
         run: |
