@@ -146,5 +146,24 @@ call :copy vcpkg\%triplet%\installed\%triplet%\tools\curl\curl.exe %outdir%\
 call :copy src\nscurl\curl-ca-bundle.crt %outdir%\
 :end_curl_package
 
+:versions
+echo.
+echo --------------------------------------------------------
+
+echo.
+echo NScurl
+powershell -C "(Get-Item 'Release-%compiler%-%platform_nsis%-%charset%\NScurl.dll').VersionInfo.FileVersion"
+
+echo.
+echo curl.exe
+vcpkg\%triplet%\installed\%triplet%\tools\curl\curl.exe -V
+
+echo.
+echo curl-ca-bundle.crt
+type src\nscurl\curl-ca-bundle.crt | findstr /C:"as of:"
+
+if "%compiler%" equ "mingw" echo.&& gcc --version
+:end_versions
+
 echo all done. errorlevel %errorlevel%
 REM pause
