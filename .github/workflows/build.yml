@@ -175,3 +175,52 @@ jobs:
         with:
           name: NScurl-Tests
           path: artifacts/Examples/NScurl/NScurl-Test-*.exe
+
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/master'
+    needs: [build, package]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+  
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: |
+            NScurl.zip
+            curl-*.zip
+
+      - name: Prepare release notes
+        shell: python
+        run: |
+          lines = []
+          with open(".github/workflows/release-body.md") as fin:
+            line = fin.read()
+            #line = line.replace('{version-libs}', 'libcurl/todo, OpenSSL/todo, zlib/todo, brotli/todo, zstd/todo, nghttp2/todo')
+            #line = line.replace('{version-gcc}', 'todo')
+            line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
+            lines.append(line)
+          with open(".github/workflows/release-body.md", "w") as fout:
+            for line in lines:
+              fout.write(line)
+  
+      - name: Create GitHub release draft
+        uses: ncipollo/release-action@v1
+        with:
+          # note: `tag` is the release key
+          tag: release-candidate
+          name: v${{needs.build.outputs.version}}
+          artifacts: artifacts/*
+          bodyFile: .github/workflows/release-body.md
+          draft: true
+          makeLatest: true
+          allowUpdates: true
+          updateOnlyUnreleased: true
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true
