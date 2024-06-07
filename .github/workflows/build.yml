@@ -188,13 +188,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
   
+      # note: we're using dawidd6/action-download-artifact@v5 because of `skip_unpack`
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v5
         with:
           path: artifacts
-          pattern: |
+          name: |
             NScurl
             curl-*
+          skip_unpack: true
 
       - name: Prepare release notes
         shell: python
