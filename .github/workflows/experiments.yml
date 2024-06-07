@@ -68,7 +68,8 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          tag: release-candidate
+          name: release-candidate
+          tag: v${{needs.experiments.outputs.version}}
           artifacts: "test.txt"
           bodyFile: .github/workflows/release-body.md
           draft: true

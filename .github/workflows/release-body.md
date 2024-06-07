@@ -1,5 +1,6 @@
 ## Changelog
 
+* run-number: ${{github.run_number}}
 * todo: ...
 
 ## Release Notes
