@@ -61,16 +61,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - shell: python
+      - name: Download artifacts
+        shell: python
         run: |
           with open("test.txt", "w") as fout:
             fout.write(f"Artifact sample for version ${{needs.experiments.outputs.version}}")
 
-      # note: `tag` is the release key
+      - name: Prepare release body
+        shell: python
+        run: |
+          lines = []
+          with open("release-body.md") as fin:
+            line = fin.read()
+            line = line.replace('{version-libs}', 'libcurl/8.8.0 OpenSSL/3.3.0')
+            line = line.replace('{version-gcc}', '14.1.0-3')
+            line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
+            lines.append(line)
+          with open("release-body.md", "w") as fout:
+            for line in lines:
+              fout.write(line)
+
       - uses: ncipollo/release-action@v1
         with:
-          name: v${{needs.experiments.outputs.version}}
+          # note: `tag` is the release key
           tag: release-candidate
+          name: v${{needs.experiments.outputs.version}}
           artifacts: "test.txt"
           bodyFile: .github/workflows/release-body.md
           draft: true
