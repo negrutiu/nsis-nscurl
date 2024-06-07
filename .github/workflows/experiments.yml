@@ -35,8 +35,8 @@ jobs:
           from datetime import datetime, timezone
           date = datetime.now(tz=timezone.utc)
           with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
-            print(     f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
-            fout.write(f"version={date.year}.{date.month}.{date.day}.${{github.run_number}}")
+            print(     f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
+            fout.write(f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
 
       - name: Print version
         shell: cmd
@@ -66,6 +66,7 @@ jobs:
           with open("test.txt", "w") as fout:
             fout.write(f"Artifact sample for version ${{needs.experiments.outputs.version}}")
 
+      # note: `tag` is the release key
       - uses: ncipollo/release-action@v1
         with:
           name: v${{needs.experiments.outputs.version}}
