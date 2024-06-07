@@ -72,4 +72,4 @@ jobs:
           allowUpdates: true
           updateOnlyUnreleased: true
           artifactErrorsFailBuild: true
-          replaceArtifacts: true
+          replacesArtifacts: true
