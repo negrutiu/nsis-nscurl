@@ -58,9 +58,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - shell: cmd
+      - shell: python
         run: |
-          echo Artifact sample for version ${{needs.experiments.outputs.version}}> test.txt
+          with open("test.txt", "w") as fout:
+            fout.write(f"Artifact sample for version ${{needs.experiments.outputs.version}}")
       - uses: ncipollo/release-action@v1
         with:
           tag: release-candidate
