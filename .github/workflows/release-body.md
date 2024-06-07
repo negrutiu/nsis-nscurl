@@ -1,11 +1,11 @@
 ## Changelog
 
-* run-number: ${{github.run_number}}
-* todo: ...
+* TODO
 
 ## Release Notes
 
-* todo: versions
-* Built with `mingw-w64 gcc/...`
+* {library-versions}
+* Built with `mingw-w64 gcc/{gcc-version}`
+* GitHub workflow run: {github-run-url}
 * Contains `amd64-unicode`, `x86-unicode`, `x86-ansi` binaries
 * Included in my unofficial [NSIS fork](https://github.com/negrutiu/nsis)
