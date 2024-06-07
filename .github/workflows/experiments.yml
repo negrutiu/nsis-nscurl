@@ -58,15 +58,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - shell: python
         run: |
           with open("test.txt", "w") as fout:
             fout.write(f"Artifact sample for version ${{needs.experiments.outputs.version}}")
+
       - uses: ncipollo/release-action@v1
         with:
           tag: release-candidate
           artifacts: "test.txt"
-          body: "Test body"
+          bodyFile: .github/workflows/release-body.md
           draft: true
           makeLatest: true
           allowUpdates: true
