@@ -193,9 +193,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v5
         with:
           path: artifacts
-          name: |
-            NScurl
-            curl-*
+          name: NScurl
           skip_unpack: true
 
       - name: Prepare release notes
