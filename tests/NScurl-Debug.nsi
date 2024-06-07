@@ -376,7 +376,7 @@ Section "github.com/get (Encoding)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!insertmacro STACK_VERIFY_START
-	!define /redef LINK  "https://raw.githubusercontent.com/negrutiu/nsis-nscurl/master/curl.c"
+	!define /redef LINK  "https://raw.githubusercontent.com/negrutiu/nsis-nscurl/master/src/nscurl/curl.c"
 	!define /redef FILE  "$EXEDIR\_curl.c"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 

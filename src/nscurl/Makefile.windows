@@ -52,7 +52,7 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 
 # vcpkg
 VCPKG_TRIPLET = $(_arch)-mingw-static
-VCPKG_INSTALLED = ../../vcpkg/$(VCPKG_TRIPLET)/installed/$(VCPKG_TRIPLET)
+VCPKG_INSTALLED = ../../vcpkg/clone/installed/$(VCPKG_TRIPLET)
 
 INC += -I$(VCPKG_INSTALLED)/include -I$(VCPKG_INSTALLED)/include/openssl
 ifeq ($(_config), debug)
@@ -137,7 +137,7 @@ curl-ca-bundle:
 	py -3 _get_curl-ca-bundle.py
 
 vcpkg-install:
-	cmd /c call ..\..\_install_vcpkg.bat $(_arch) mingw static
+	cmd /c call ..\..\vcpkg\build.bat $(_arch) mingw static
 
 # Link
 $(_BIN): $(_OBJ)
