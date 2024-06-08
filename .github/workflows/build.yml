@@ -188,7 +188,14 @@ jobs:
           run_id: ${{github.run_id}}
           skip_unpack: true
 
-      - name: Read `versions.json`
+      # note: we need `versions` artifact unzipped
+      - name: Download versions.json
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: versions
+
+      - name: Read versions.json
         id: versions
         shell: python
         run: |
