@@ -188,14 +188,22 @@ jobs:
           run_id: ${{github.run_id}}
           skip_unpack: true
 
+      - name: Read `versions.json`
+        id: versions
+        shell: python
+        run: |
+          with open('artifacts/versions.json') as fin:
+            with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+              fout.write(f"versions_json={fin.read()}")
+
       - name: Prepare release notes
         shell: python
         run: |
           lines = []
           with open(".github/workflows/release-body.md") as fin:
             line = fin.read()
-            line = line.replace('{version-engines}', '${{fromJson('artifacts/versions.json').curl_md}}')
-            line = line.replace('{version-gcc}', '${{fromJson('artifacts/versions.json').gcc}}')
+            line = line.replace('{version-engines}', '${{fromJson(steps.versions.outputs.versions_json).curl_md}}')
+            line = line.replace('{version-gcc}', '${{fromJson(steps.versions.outputs.versions_json).gcc}}')
             line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
             lines.append(line)
           with open(".github/workflows/release-body.md", "w") as fout:
