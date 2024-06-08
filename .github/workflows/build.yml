@@ -196,6 +196,12 @@ jobs:
           pattern: versions
           merge-multiple: true
 
+      - name: Investigate versions.json
+        shell: bash
+        run: |
+          find artifacts/ -ls
+          cat artifacts/versions.json
+
       - name: Read versions.json
         id: versions
         shell: python
