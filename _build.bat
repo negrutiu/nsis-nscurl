@@ -120,6 +120,7 @@ echo.
 
 set bindir=Release-%compiler%-%platform_nsis%-%charset%
 set pkgdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
+set curldir=packages\%configuration%-%compiler%-%platform_nsis%-curl
 set vcpkginstdir=vcpkg\clone\installed\%triplet%
 
 rmdir /s /q %pkgdir% 2> nul
@@ -145,8 +146,8 @@ call :copy tests\NScurl-Test-build.bat %pkgdir%\Examples\NScurl\
 :curl_package
 if /i "%charset%" neq "unicode" goto :end_curl_package
 echo.
-call :copy %vcpkginstdir%\tools\curl\curl.exe %pkgdir%\
-call :copy src\nscurl\curl-ca-bundle.crt %pkgdir%\
+call :copy %vcpkginstdir%\tools\curl\curl.exe %curldir%\
+call :copy src\nscurl\curl-ca-bundle.crt %curldir%\
 :end_curl_package
 
 :versions
