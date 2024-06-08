@@ -2,6 +2,7 @@ import argparse
 from subprocess import Popen, PIPE
 import re
 import json
+from datetime import datetime
 
 def get_resource_version(filename):
     with open(filename, 'rb') as fin:
@@ -69,6 +70,16 @@ def get_curl_versions(curlPath, markdown=False):
             versions += f"{name}/{version} "
     return versions.removesuffix(', ')
 
+def get_cacert_version():
+    with open('src/nscurl/curl-ca-bundle.crt', 'rb') as fin:
+        for line in fin.read().decode('utf-8').split("\n"):
+            if line.startswith("## Certificate data from Mozilla as of: "):
+                datestr = line.removeprefix('## Certificate data from Mozilla as of: ')
+                # example: "Mon Mar 11 15:25:27 2024 GMT"
+                date = datetime.strptime(datestr, '%c GMT')
+                return "{:%Y-%m-%d}".format(date)
+    return ""
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--curl", type=str, default="curl.exe")
 parser.add_argument("-g", "--gcc", type=str, default="gcc.exe")
@@ -81,5 +92,6 @@ versions = {
     "curl_md": get_curl_versions(args.curl, True),
     "engines": get_curl_engines_versions(args.curl),
     "gcc": get_gcc_version(args.gcc),
+    "cacert": get_cacert_version(),
 }
 print(json.dumps(versions, indent=args.indent))

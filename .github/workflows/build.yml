@@ -196,6 +196,7 @@ jobs:
           lines = []
           with open(".github/workflows/release-body.md") as fin:
             line = fin.read()
+            line = line.replace('{version-cacert}', '${{fromJson(needs.build.outputs.versions_json).cacert}}')
             line = line.replace('{version-engines}', '${{fromJson(needs.build.outputs.versions_json).curl_md}}')
             line = line.replace('{version-gcc}', '${{fromJson(needs.build.outputs.versions_json).gcc}}')
             line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
