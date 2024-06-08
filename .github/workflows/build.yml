@@ -111,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: curl-${{matrix.arch}}
-          path: packages/Release-mingw-${{matrix.arch}}-curl/*
+          path: packages/Release-mingw-${{matrix.arch}}-${{matrix.charset}}-curl/*
 
   package:
     name: Final Package
