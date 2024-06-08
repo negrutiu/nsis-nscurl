@@ -5,6 +5,8 @@ on:
       - master
       - 'feature/**'
       - 'bugfix/**'
+      - 'github/**'
+
   workflow_dispatch:
 
 jobs:
@@ -60,27 +62,6 @@ jobs:
             update: true
             install: mingw-w64-x86_64-toolchain
 
-      - name: Print environment
-        if: failure()
-        run: |
-            echo ----------------------------------------------------
-            set
-            echo ----------------------------------------------------
-            dir /OG %SystemDrive%\
-            echo ----------------------------------------------------
-            dir /s /b c:\msys64\*.exe
-            echo ----------------------------------------------------
-            echo -- 1 && %SystemDrive%\msys64\mingw32\bin\gcc.exe -v
-            echo -- 2 && %SystemDrive%\msys64\mingw64\bin\gcc.exe -v
-            echo -- 3 && %SystemDrive%\mingw32\bin\gcc.exe -v
-            echo -- 4 && %SystemDrive%\mingw64\bin\gcc.exe -v
-            echo -- 5 && gcc.exe -v
-            echo ====================================================
-            py -0p
-            echo ----------------------------------------------------
-            py -3 -V
-            py -3 -m pip list
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -102,13 +83,15 @@ jobs:
           path: vcpkg/archives
           key: ${{runner.os}}-${{matrix.arch}}-${{matrix.charset}}-${{hashFiles('vcpkg/overlay_*', 'vcpkg/clone/ports/curl', 'vcpkg/clone/ports/openssl', 'vcpkg/clone/ports/nghttp2', 'vcpkg/clone/ports/zlib', 'vcpkg/clone/ports/brotli', 'vcpkg/clone/ports/zstd')}}
 
+      # -----------------------------------------------------------------------
       - name: Build
         run: _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
+      # -----------------------------------------------------------------------
 
-      - name: Print packages
+      - name: List `packages` files
         run: dir /s /b /a-d packages
 
-      - name: Upload
+      - name: Upload plugin
         uses: actions/upload-artifact@v4
         with:
           name: package-${{matrix.arch}}-${{matrix.charset}}
@@ -122,7 +105,7 @@ jobs:
           path: packages/Release-mingw-${{matrix.arch}}-curl/*
 
   package:
-    name: Package
+    name: Final Package
     needs: build
     runs-on: windows-latest
     steps:
@@ -156,7 +139,7 @@ jobs:
         shell: cmd
         run: |
           set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+          "%ProgramFiles%\NSIS\makensis.exe" /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (x86-ansi)
         shell: cmd
@@ -178,7 +161,7 @@ jobs:
 
   release:
     name: Release
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/github/')
     needs: [build, package]
     runs-on: ubuntu-latest
     permissions:
@@ -193,7 +176,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v5
         with:
           path: artifacts
-          name: NScurl
+          name: NScurl|curl-.*
+          name_is_regexp: true
           skip_unpack: true
 
       - name: Prepare release notes
