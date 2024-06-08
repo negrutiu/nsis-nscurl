@@ -4,7 +4,7 @@
 
 ## Release Notes
 
-* {version-libs}
+* {version-engines}
 * Built with mingw-w64 `gcc/{version-gcc}`
 * GitHub workflow run: {url-workflow}
 * Contains `amd64-unicode`, `x86-unicode`, `x86-ansi` binaries
