@@ -156,7 +156,7 @@ jobs:
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4
         with:
-          name: NScurl-Tests
+          name: NScurl-Examples
           path: artifacts/Examples/NScurl/NScurl-Test-*.exe
 
   release:
@@ -176,7 +176,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v5
         with:
           path: artifacts
-          name: NScurl|curl-.*
+          name: ^NScurl$|^NScurl-Examples$
           name_is_regexp: true
           skip_unpack: true
 
