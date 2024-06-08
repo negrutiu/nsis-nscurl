@@ -39,29 +39,26 @@ def get_gcc_version(gccPath):
         return ""
 
 def get_curl_engines_versions(curlPath):
-    try:
-        process = Popen([curlPath, "--version"], stdout=PIPE, stderr=PIPE)
-        (cout, cerr) = process.communicate()
-        exit_code = process.wait()
+    process = Popen([curlPath, "--version"], stdout=PIPE, stderr=PIPE)
+    (cout, cerr) = process.communicate()
+    exit_code = process.wait()
 
-        # possible outputs:
-        # "curl 7.70.0 (x86_64-pc-win32) libcurl/7.70.0 OpenSSL/1.1.1g (Schannel) zlib/1.2.11 brotli/1.0.7 WinIDN libssh2/1.9.0 nghttp2/1.41.0"
-        # "curl 8.8.0 (x86_64-windows-gnu) libcurl/8.8.0 OpenSSL/3.3.0 zlib/1.3.1 brotli/1.1.0 zstd/1.5.6 nghttp2/1.62.1"
-        # "curl 8.4.0 (Windows) libcurl/8.4.0 Schannel WinIDN"
-        if cout != None:
-            for line in cout.decode('utf-8').split("\r\n"):
-                # print(f"out: {line}")
-                if re.match(r'^curl [\d\.]+\s', line) != None:
-                    versions = {}
-                    for group in re.findall(r'(\S+\/\S+)', line):
-                        versions[group.split('/')[0].lower()] = group.split('/')[1]
-                    return versions
-        if cerr != None:
-            for line in cerr.decode('utf-8').split("\r\n"):
-                print(f"err: {line}")
-        return {}
-    except:
-        return {}
+    # possible outputs:
+    # "curl 7.70.0 (x86_64-pc-win32) libcurl/7.70.0 OpenSSL/1.1.1g (Schannel) zlib/1.2.11 brotli/1.0.7 WinIDN libssh2/1.9.0 nghttp2/1.41.0"
+    # "curl 8.8.0 (x86_64-windows-gnu) libcurl/8.8.0 OpenSSL/3.3.0 zlib/1.3.1 brotli/1.1.0 zstd/1.5.6 nghttp2/1.62.1"
+    # "curl 8.4.0 (Windows) libcurl/8.4.0 Schannel WinIDN"
+    if cout != None:
+        for line in cout.decode('utf-8').split("\r\n"):
+            # print(f"out: {line}")
+            if re.match(r'^curl [\d\.]+\s', line) != None:
+                versions = {}
+                for group in re.findall(r'(\S+\/\S+)', line):
+                    versions[group.split('/')[0].lower()] = group.split('/')[1]
+                return versions
+    if cerr != None:
+        for line in cerr.decode('utf-8').split("\r\n"):
+            print(f"err: {line}")
+    return {}
 
 def get_curl_versions(curlPath, markdown=False):
     versions = ''
