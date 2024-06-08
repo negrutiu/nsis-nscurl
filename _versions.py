@@ -1,17 +1,16 @@
 import argparse
-from win32api import GetFileVersionInfo, LOWORD, HIWORD
 from subprocess import Popen, PIPE
 import re
 import json
 
-def get_file_version(filename):
-    try:
-        info = GetFileVersionInfo (filename, "\\")
-        ms = info['FileVersionMS']
-        ls = info['FileVersionLS']
-        return f"{HIWORD(ms)}.{LOWORD(ms)}.{HIWORD(ls)}.{LOWORD(ls)}"
-    except:
-        return ""
+def get_resource_version(filename):
+    with open(filename, 'rb') as fin:
+        for line in fin.read().decode('utf-8').split("\r\n"):
+            # print(line)
+            match = re.match(r'^\s*VALUE\s*"FileVersion"\s*,\s*"(.*)"\s*$', line)
+            if match != None:
+                return match[1]
+    return ""
 
 def get_gcc_version(gccPath):
     try:
@@ -76,12 +75,11 @@ def get_curl_versions(curlPath, markdown=False):
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--curl", type=str, default="curl.exe")
 parser.add_argument("-g", "--gcc", type=str, default="gcc.exe")
-parser.add_argument("-n", "--nscurl", type=str, default="")
 parser.add_argument("-i", "--indent", type=int, default=None)
 args = parser.parse_args()
 
 versions = {
-    "nscurl": get_file_version(args.nscurl),
+    "nscurl": get_resource_version('src/nscurl/resource.rc'),
     "curl": get_curl_versions(args.curl),
     "curl_md": get_curl_versions(args.curl, True),
     "engines": get_curl_engines_versions(args.curl),

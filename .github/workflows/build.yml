@@ -183,7 +183,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v5
         with:
           path: artifacts
-          name: ^NScurl$|^NScurl-Examples$|^versions$
+          name: ^NScurl$|^NScurl-Examples$
           name_is_regexp: true
           run_id: ${{github.run_id}}
           skip_unpack: true
