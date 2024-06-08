@@ -113,4 +113,6 @@ jobs:
               fout.write(f"versions_json={fin.read()}")
       - name: Use versions.json
         shell: python
-        run: print(${{fromJson(steps.versions.outputs.versions_json).value2}})
+        run: |
+          print(f"-- value1 is \"${{fromJson(steps.versions.outputs.versions_json).value1}}\"")
+          print(f"-- value2 is \"${{fromJson(steps.versions.outputs.versions_json).value2}}\"")
