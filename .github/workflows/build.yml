@@ -178,6 +178,7 @@ jobs:
           path: artifacts
           name: ^NScurl$|^NScurl-Examples$
           name_is_regexp: true
+          run_id: ${{github.run_id}}
           skip_unpack: true
 
       - name: Prepare release notes
@@ -207,4 +208,4 @@ jobs:
           allowUpdates: true
           updateOnlyUnreleased: true
           artifactErrorsFailBuild: true
-          replacesArtifacts: true
+          removeArtifacts: true
