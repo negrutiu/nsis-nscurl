@@ -155,7 +155,7 @@ echo.
 echo --------------------------------------------------------
 echo.
 
-py -3 _versions.py --nscurl=%bindir%\NScurl.dll --indent=2 --curl=%vcpkginstall%\tools\curl\curl.exe --gcc=gcc.exe> "%bindir%\versions.json"
+py -3 _versions.py --indent=2 --curl=%vcpkginstall%\tools\curl\curl.exe --gcc=gcc.exe> "%bindir%\versions.json"
 type %bindir%\versions.json
 :end_versions
 
