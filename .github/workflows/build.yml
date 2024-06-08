@@ -200,6 +200,7 @@ jobs:
         id: versions
         shell: python
         run: |
+          import os
           with open('artifacts/versions.json') as fin:
             with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
               fout.write(f"versions_json={fin.read()}")
