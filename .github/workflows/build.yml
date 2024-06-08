@@ -196,12 +196,6 @@ jobs:
           pattern: versions
           merge-multiple: true
 
-      - name: Investigate versions.json
-        shell: bash
-        run: |
-          find artifacts/ -ls
-          cat artifacts/versions.json
-
       - name: Read versions.json
         id: versions
         shell: python
@@ -209,7 +203,7 @@ jobs:
           import os
           with open('artifacts/versions.json') as fin:
             with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
-              data = fin.read().decode('utf-8')
+              data = fin.read()
               print(data)
               fout.write(f"versions_json={data}")
 
