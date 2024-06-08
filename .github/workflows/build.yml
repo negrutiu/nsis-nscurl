@@ -194,6 +194,7 @@ jobs:
         with:
           path: artifacts
           pattern: versions
+          merge-multiple: true
 
       - name: Read versions.json
         id: versions
