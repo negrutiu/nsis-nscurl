@@ -201,10 +201,12 @@ jobs:
         shell: python
         run: |
           import os
+          import json
           with open('artifacts/versions.json') as fin:
             with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
               data = fin.read()
               print(data)
+              data = json.dumps(json.loads(data))   # reformat as one liner
               fout.write(f"versions_json={data}")
 
       - name: Prepare release notes
