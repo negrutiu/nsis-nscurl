@@ -15,6 +15,7 @@ jobs:
     outputs:
       # accessible from other jobs as ${{needs.experiments.outputs.version}}
       version: ${{steps.version.outputs.version}}
+      versions_json: ${{steps.versions_json.outputs.versions_json}}
 
     strategy:
       matrix:
@@ -88,16 +89,17 @@ jobs:
         run: _build.bat mingw release ${{matrix.arch}} ${{matrix.charset}}
       # -----------------------------------------------------------------------
 
-      - name: List `packages` files
-        run: dir /s /b /a-d packages
-
-      - name: Upload versions.json
-        if: matrix.arch == 'x86' && matrix.charset == 'unicode'
-        uses: actions/upload-artifact@v4
-        with:
-          name: versions
-          path: Release-mingw-${{matrix.arch}}-${{matrix.charset}}/versions.json
-
+      - name: Output versions.json
+        id: versions_json
+        shell: python
+        run: |
+          import os, json
+          with open('Release-mingw-${{matrix.arch}}-${{matrix.charset}}/versions.json') as fin:
+            with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+              data = json.dumps(json.loads(fin.read()))   # reformat as one liner
+              print(     f"versions_json={data}")
+              fout.write(f"versions_json={data}")
+          
       - name: Upload plugin
         uses: actions/upload-artifact@v4
         with:
@@ -188,35 +190,14 @@ jobs:
           run_id: ${{github.run_id}}
           skip_unpack: true
 
-      # note: we need `versions` artifact unzipped
-      - name: Download versions.json
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: versions
-          merge-multiple: true
-
-      - name: Read versions.json
-        id: versions
-        shell: python
-        run: |
-          import os
-          import json
-          with open('artifacts/versions.json') as fin:
-            with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
-              data = fin.read()
-              print(data)
-              data = json.dumps(json.loads(data))   # reformat as one liner
-              fout.write(f"versions_json={data}")
-
       - name: Prepare release notes
         shell: python
         run: |
           lines = []
           with open(".github/workflows/release-body.md") as fin:
             line = fin.read()
-            line = line.replace('{version-engines}', '${{fromJson(steps.versions.outputs.versions_json).curl_md}}')
-            line = line.replace('{version-gcc}', '${{fromJson(steps.versions.outputs.versions_json).gcc}}')
+            line = line.replace('{version-engines}', '${{fromJson(needs.build.outputs.versions_json).curl_md}}')
+            line = line.replace('{version-gcc}', '${{fromJson(needs.build.outputs.versions_json).gcc}}')
             line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
             lines.append(line)
           with open(".github/workflows/release-body.md", "w") as fout:
