@@ -148,8 +148,9 @@ jobs:
                       with request.urlopen(asset['browser_download_url']) as http:
                           with open(asset['name'], 'wb') as fout:
                               fout.write(http.read())
-                              print('install ' + asset['name'] + ' ...')
-                              subprocess.Popen([asset['name'], '/S']).wait()
+                      print('install ' + asset['name'] + ' ...')
+                      subprocess.Popen([asset['name'], '/S']).wait()
+                      exit()
 
       - name: Build NSIS example (x86-unicode)
         run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
