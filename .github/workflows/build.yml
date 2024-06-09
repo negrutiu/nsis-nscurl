@@ -148,7 +148,7 @@ jobs:
         shell: cmd
         run: |
           set PATH=%ProgramFiles%\NSIS;%PATH%
-          "%ProgramFiles%\NSIS\makensis.exe" /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (x86-ansi)
         shell: cmd
