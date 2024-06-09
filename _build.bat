@@ -117,52 +117,45 @@ exit /b
 
 :package
 echo.
-set outdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
-rmdir /s /q %outdir% 2> nul
 
-call :copy README.md   %outdir%\README.md
-call :copy LICENSE.md  %outdir%\LICENSE.md
-call :copy vcpkg\clone\installed\%triplet%\share\brotli\copyright   %outdir%\LICENSE.brotli.md
-call :copy vcpkg\clone\installed\%triplet%\share\curl\copyright     %outdir%\LICENSE.curl.md
-call :copy vcpkg\clone\installed\%triplet%\share\nghttp2\copyright  %outdir%\LICENSE.nghttp2.md
-call :copy vcpkg\clone\installed\%triplet%\share\openssl\copyright  %outdir%\LICENSE.openssl.md
-call :copy vcpkg\clone\installed\%triplet%\share\zlib\copyright     %outdir%\LICENSE.zlib.md
-call :copy vcpkg\clone\installed\%triplet%\share\zstd\copyright     %outdir%\LICENSE.zstd.md
+set bindir=Release-%compiler%-%platform_nsis%-%charset%
+set pkgdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
+set curldir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%-curl
+set vcpkginstdir=vcpkg\clone\installed\%triplet%
 
-call :copy Release-%compiler%-%platform_nsis%-%charset%\NScurl.dll %outdir%\Plugins\%platform_nsis%-%charset%\
+rmdir /s /q %pkgdir% 2> nul
 
-call :copy tests\NScurl-Test.nsi       %outdir%\Examples\NScurl\
-call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
+call :copy README.md   %pkgdir%\README.md
+call :copy LICENSE.md  %pkgdir%\LICENSE.md
+call :copy %vcpkginstdir%\share\brotli\copyright   %pkgdir%\LICENSE.brotli.md
+call :copy %vcpkginstdir%\share\curl\copyright     %pkgdir%\LICENSE.curl.md
+call :copy %vcpkginstdir%\share\nghttp2\copyright  %pkgdir%\LICENSE.nghttp2.md
+call :copy %vcpkginstdir%\share\openssl\copyright  %pkgdir%\LICENSE.openssl.md
+call :copy %vcpkginstdir%\share\zlib\copyright     %pkgdir%\LICENSE.zlib.md
+call :copy %vcpkginstdir%\share\zstd\copyright     %pkgdir%\LICENSE.zstd.md
 
-call :copy src\nscurl\NScurl.readme.md %outdir%\Docs\NScurl\
-call :copy tests\NScurl-Test-build.bat %outdir%\Examples\NScurl\
+call :copy %bindir%\NScurl.dll %pkgdir%\Plugins\%platform_nsis%-%charset%\
+
+call :copy tests\NScurl-Test.nsi       %pkgdir%\Examples\NScurl\
+call :copy tests\NScurl-Test-build.bat %pkgdir%\Examples\NScurl\
+
+call :copy src\nscurl\NScurl.readme.md %pkgdir%\Docs\NScurl\
+call :copy tests\NScurl-Test-build.bat %pkgdir%\Examples\NScurl\
 :end_package
 
 :curl_package
-if /i "%charset%" neq "unicode" goto :end_curl_package
 echo.
-set outdir=packages\%configuration%-%compiler%-%platform_nsis%-curl
-call :copy vcpkg\clone\installed\%triplet%\tools\curl\curl.exe %outdir%\
-call :copy src\nscurl\curl-ca-bundle.crt %outdir%\
+call :copy %vcpkginstdir%\tools\curl\curl.exe %curldir%\
+call :copy src\nscurl\curl-ca-bundle.crt %curldir%\
 :end_curl_package
 
 :versions
 echo.
 echo --------------------------------------------------------
-
 echo.
-echo NScurl
-powershell -C "(Get-Item 'Release-%compiler%-%platform_nsis%-%charset%\NScurl.dll').VersionInfo.FileVersion"
 
-echo.
-echo curl.exe
-vcpkg\clone\installed\%triplet%\tools\curl\curl.exe -V
-
-echo.
-echo curl-ca-bundle.crt
-type src\nscurl\curl-ca-bundle.crt | findstr /C:"as of:"
-
-if "%compiler%" equ "mingw" echo.&& gcc --version
+py -3 _versions.py --indent=2 --curl=%curldir%\curl.exe --gcc=gcc.exe> "%bindir%\versions.json"
+type %bindir%\versions.json
 :end_versions
 
 echo all done. errorlevel %errorlevel%

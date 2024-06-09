@@ -21,6 +21,9 @@ jobs:
         run: |
               echo ----------------------------------------------------
               set
+              echo ----------------------------------------------------
+              where gcc.exe
+              gcc.exe -v
               echo ====================================================
               py -0p
               echo ----------------------------------------------------
@@ -94,3 +97,22 @@ jobs:
           updateOnlyUnreleased: true
           artifactErrorsFailBuild: true
           replacesArtifacts: true
+
+  jsons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read versions.json
+        id: versions
+        shell: python
+        run: |
+          import os
+          with open('versions.json', 'w') as fout:
+            fout.write('{"value1":1, "value2":"2"}')
+          with open('versions.json') as fin:
+            with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
+              fout.write(f"versions_json={fin.read()}")
+      - name: Use versions.json
+        shell: python
+        run: |
+          print(f"-- value1 is \"${{fromJson(steps.versions.outputs.versions_json).value1}}\"")
+          print(f"-- value2 is \"${{fromJson(steps.versions.outputs.versions_json).value2}}\"")
