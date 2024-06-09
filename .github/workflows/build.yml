@@ -131,18 +131,25 @@ jobs:
           name: NScurl
           path: artifacts/*
 
-        # Install an NSIS fork with amd64 support
-        # note: NSIS-negrutiu sits in C:\Program Files\NSIS
-        # note: NSIS-official sits in C:\Program Files (x86)\NSIS
+      # Download an NSIS fork with amd64 support
+      - name: Download NSIS-negrutiu
+        uses: nilsschmidt1337/download-release-asset@v1.3.4
+        with:
+          owner: negrutiu
+          repo: nsis
+          tag: latest
+          file: '/nsis-.*-amd64.exe/'
+          path: tools
+
+        # After installing the NSIS fork:
+        # - `NSIS-negrutiu` sits in C:\Program Files\NSIS
+        # - The official NSIS sits in C:\Program Files (x86)\NSIS
       - name: Install NSIS-negrutiu
         shell: cmd
         run: |
-          setlocal enabledelayedexpansion
-          set version=3.10.7422.0
-          set arch=amd64
-          curl -L --fail -o nsis-%version%-negrutiu-%arch%.exe https://github.com/negrutiu/nsis/releases/download/v%version%/nsis-%version%-negrutiu-%arch%.exe || exit /b !errorlevel!
-          echo installing...
-          nsis-%version%-negrutiu-%arch%.exe /S
+          for /f "delims=*" %%f in ('dir /b tools\nsis-*.exe') do set installer=%%~f
+          echo installing %installer%...
+          "%installer%" /S
 
       - name: Build NSIS example (x86-unicode)
         shell: cmd
