@@ -117,6 +117,10 @@ jobs:
     name: Final Package
     needs: build
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -132,42 +136,29 @@ jobs:
           path: artifacts/*
 
       # Download an NSIS fork with amd64 support
-      - name: Download NSIS-negrutiu
-        uses: nilsschmidt1337/download-release-asset@v1.3.4
-        with:
-          owner: negrutiu
-          repo: nsis
-          tag: latest
-          file: '/nsis-.*-amd64.exe/'
-          path: tools
-
-        # After installing the NSIS fork:
-        # - `NSIS-negrutiu` sits in C:\Program Files\NSIS
-        # - The official NSIS sits in C:\Program Files (x86)\NSIS
       - name: Install NSIS-negrutiu
-        shell: cmd
+        shell: python
         run: |
-          for /f "delims=*" %%f in ('dir /b tools\nsis-*.exe') do set installer=%%~f
-          echo installing %installer%...
-          "%installer%" /S
+          from urllib import request
+          import json, re, subprocess
+          with request.urlopen('https://api.github.com/repos/negrutiu/nsis/releases/latest') as http:
+              for asset in json.loads(http.read())['assets']:
+                  if (re.match(r'nsis-.*-x86.exe', asset['name'])):
+                      print('download ' + asset['browser_download_url'] + ' ...')
+                      with request.urlopen(asset['browser_download_url']) as http:
+                          with open(asset['name'], 'wb') as fout:
+                              fout.write(http.read())
+                              print('install ' + asset['name'] + ' ...')
+                              subprocess.Popen([asset['name'], '/S']).wait()
 
       - name: Build NSIS example (x86-unicode)
-        shell: cmd
-        run: |
-          set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (x86-ansi)
-        shell: cmd
-        run: |
-          set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DANSI artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DANSI artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (amd64-unicode)
-        shell: cmd
-        run: |
-          set PATH=%ProgramFiles%\NSIS;%PATH%
-          makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DAMD64 artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DAMD64 artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4
