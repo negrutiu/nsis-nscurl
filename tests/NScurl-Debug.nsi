@@ -5,13 +5,13 @@
 
 !ifdef AMD64
 	!define _TARGET_ amd64-unicode
+	Target ${_TARGET_}
 !else ifdef ANSI
 	!define _TARGET_ x86-ansi
+	Target ${_TARGET_}
 !else
 	!define _TARGET_ x86-unicode		; Default
 !endif
-
-Target ${_TARGET_}
 
 # /dll commandline parameter
 Var /global DLL

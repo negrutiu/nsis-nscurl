@@ -4,13 +4,13 @@
 
 !ifdef AMD64
 	!define _TARGET_ amd64-unicode
+	Target ${_TARGET_}
 !else ifdef ANSI
 	!define _TARGET_ x86-ansi
+	Target ${_TARGET_}
 !else
 	!define _TARGET_ x86-unicode        ; Default
 !endif
-
-Target ${_TARGET_}
 
 !if /fileexists "${NSISDIR}\Include\ModernXXL.nsh"
 	!include "ModernXXL.nsh"		    ; Available in the NSIS fork from https://github.com/negrutiu/nsis
