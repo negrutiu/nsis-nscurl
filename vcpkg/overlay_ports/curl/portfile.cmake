@@ -13,6 +13,7 @@ vcpkg_from_github(
         export-components.patch
         dependencies.patch
         cmake-config.patch
+        fix-mbedtls.patch # From https://github.com/curl/curl/commit/0c4b4c1e93c8e869af230090f32346fdfd548f21
         nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_ftruncate_config-win32.patch
         nscurl/curl_ftruncate_WindowsCache.patch
