@@ -68,7 +68,7 @@ def get_curl_versions(curlPath, markdown=False):
             versions += f"`{name}/{version}`, "
         else:
             versions += f"{name}/{version} "
-    return versions.removesuffix(', ')
+    return versions.removesuffix(' ').removesuffix(',')
 
 def get_cacert_version():
     with open('src/nscurl/curl-ca-bundle.crt', 'rb') as fin:
