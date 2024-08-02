@@ -76,13 +76,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'Microsoft/vcpkg'
-          path: vcpkg/clone
+          path: vcpkg/repository
 
       - name: Setup vcpkg cache
         uses: actions/cache@v4
         with:
           path: vcpkg/archives
-          key: ${{runner.os}}-${{matrix.arch}}-${{matrix.charset}}-${{hashFiles('vcpkg/overlay_*', 'vcpkg/clone/ports/curl', 'vcpkg/clone/ports/openssl', 'vcpkg/clone/ports/nghttp2', 'vcpkg/clone/ports/zlib', 'vcpkg/clone/ports/brotli', 'vcpkg/clone/ports/zstd')}}
+          key: ${{runner.os}}-${{matrix.arch}}-${{matrix.charset}}-${{hashFiles('vcpkg/overlay_*', 'vcpkg/repository/ports/curl', 'vcpkg/repository/ports/openssl', 'vcpkg/repository/ports/nghttp2', 'vcpkg/repository/ports/zlib', 'vcpkg/repository/ports/brotli', 'vcpkg/repository/ports/zstd')}}
 
       # -----------------------------------------------------------------------
       - name: Build

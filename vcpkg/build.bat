@@ -26,7 +26,7 @@ if /i "%compiler%" equ "mingw" set vcpkg_triplet=%arch%-mingw-%runtime%
 if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "static"  set vcpkg_triplet=%arch%-windows-%runtime%
 if /i "%compiler%" equ "msbuild" if /i "%runtime%" equ "dynamic" set vcpkg_triplet=%arch%-windows
 
-set vcpkg_dir=%~dp0clone
+set vcpkg_dir=%~dp0repository
 
 REM | -------------------------------------------------------------------------
 

@@ -52,7 +52,7 @@ STATIC   = $(OUTDIR)/lib$(PROJECT).a
 
 # vcpkg
 VCPKG_TRIPLET = $(_arch)-mingw-static
-VCPKG_INSTALLED = ../../vcpkg/clone/installed/$(VCPKG_TRIPLET)
+VCPKG_INSTALLED = ../../vcpkg/repository/installed/$(VCPKG_TRIPLET)
 
 INC += -I$(VCPKG_INSTALLED)/include -I$(VCPKG_INSTALLED)/include/openssl
 ifeq ($(_config), debug)

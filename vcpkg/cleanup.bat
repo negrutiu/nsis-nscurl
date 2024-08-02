@@ -12,8 +12,8 @@ echo.
 pushd "%~dp0"
 
 rd /q /s archives
-rd /q /s clone
 rd /q /s latest
+rd /q /s repository
 
 popd
 exit /b

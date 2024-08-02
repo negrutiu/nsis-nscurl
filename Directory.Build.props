@@ -4,7 +4,7 @@
   <PropertyGroup>
     <VcpkgTriplet Condition="'$(VcpkgTriplet)'=='' And '$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
     <VcpkgTriplet Condition="'$(VcpkgTriplet)'=='' And '$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
-    <VcpkgRootDir Condition="'$(VcpkgRootDir)'==''">$(SolutionDir)vcpkg\clone\</VcpkgRootDir>
+    <VcpkgRootDir Condition="'$(VcpkgRootDir)'==''">$(SolutionDir)vcpkg\repository\</VcpkgRootDir>
     <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(VcpkgRootDir)installed\$(VcpkgTriplet)\</VcpkgInstalledDir>
 
     <NsisPlatform Condition="'$(Platform)'=='Win32'">x86</NsisPlatform>
