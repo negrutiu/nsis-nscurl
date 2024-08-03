@@ -14,6 +14,9 @@
 /// \brief Filename reserved for in-memory transfers.
 #define FILENAME_MEMORY		_T("Memory")
 
+#define CACERT_BUILTIN      NULL
+#define CACERT_NONE         ((LPCSTR)1)
+
 //+ struct CURL_REQUEST
 typedef struct _CURL_REQUEST {
 	LPCSTR		pszURL;
@@ -37,8 +40,9 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bMarkOfTheWeb : 1;
 	BOOLEAN     bHttp11       : 1;
 	BOOLEAN     bEncoding     : 1;
-	LPCSTR		pszCacert;				/// can be NULL. If valid and empty ("") no cacert.pem is used
-	struct curl_slist *pCertList;		/// can be NULL. If pszCacert=="" and pCertList==NULL, the SSL validation is turned off
+	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
+	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
+	struct curl_slist *pCertList;		/// can be NULL
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
@@ -96,6 +100,7 @@ static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
 	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
+	pReq->bCastore = TRUE;
 }
 
 //+ CurlRequestDestroy

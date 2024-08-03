@@ -70,9 +70,11 @@ static LPVOID MyAlloc( _In_ ULONG iSize ) {
 //+ MyFree
 #define MyFree(_ptr) { \
 	if ( _ptr ) { \
-		g_MemStats.FreeBytes += GlobalSize((HGLOBAL)(_ptr)); \
-		g_MemStats.FreeCalls++; \
-		GlobalFree((HGLOBAL)(_ptr)); \
+	    if ((ULONG_PTR)(_ptr) > 0x1000) { \
+			g_MemStats.FreeBytes += GlobalSize((HGLOBAL)(_ptr)); \
+			g_MemStats.FreeCalls++; \
+			GlobalFree((HGLOBAL)(_ptr)); \
+		} \
 		(_ptr) = NULL; \
 	}}
 

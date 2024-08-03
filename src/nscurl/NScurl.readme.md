@@ -355,30 +355,48 @@ Be aware that during the transfer, the _content length_ indicates the compressed
 
 ### /CACERT
 ```nsis
-/CACERT "path\to\cacert.pem"
-/CACERT ""
+/CACERT builtin|none|""|<file>
 ```
-Validate webserver identity using a custom `cacert.pem` certificate database.  
-By default, a built-in `cacert.pem` is extracted and used at runtime.  
-`/CACERT ""` disables SSL validation (aka _insecure transfer_).
+
+Specify a `cacert.pem` database to be used for SSL certificate validation.
+
+Parameter      | Details
+:------------- | :---------------------------------------
+`builtin`      | Use a built-in `cacert.pem` database, embedded into `NScurl.dll` at build time <br> This is the default option
+`none` or `""` | Disable `cacert.pem` database usage
+`<file>`       | Use an external `cacert.pem` file
 
 > [!caution]
-> The embedded `cacert.pem` can become outdated.  
-> That would lead to legitimate websites failing the SSL validation.  
-> The `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted.
+> The built-in `cacert.pem` can become outdated.  
+> That could lead to legitimate webservers failing the SSL validation.  
+> `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted.
 > Feel free to embed the latest version into your installer and feed it to `NScurl`
+
+> [!caution]
+> If all certificate sources are empty (e.g. `/CACERT none /CASTORE false` and no `/CERT` arguments), SSL certificate validation is disabled. `NScurl` will connect to any server, including untrusted ones (aka _insecure transfers_)
+
+### /CASTORE
+```nsis
+/CASTORE true|false
+```
+Specify that Windows' native CA store should be used for SSL certificate validation.  
+This option is __enabled__ by default.  
+When enabled, the native CA store is used __in addition__ to the other trusted certificate sources ([/CACERT](#cacert) and [/CERT](#cert))
 
 ### /CERT
 ```
 /CERT "sha1 thumbprint"
 ```
-Specify an additional trusted certificate (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`)  
-Trusted certificates are used for SSL validation in addition to the `cacert.pem` database.  
+Specify an additional __trusted certificate__ (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`).  
+When specified, trusted certificates are used for SSL certificate validation __in addition__ to other trusted certificate sources ([/CACERT](#cacert) and [/CASTORE](#castore)).  
 Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).  
 Multiple `/CERT` parameters are allowed.
 
-> [!tip]
-> `cacert.pem` database can be disabled (`/CACERT ""`) leaving the `/CERT` trusted certificates in charge with the SSL validation (aka _certificate pinning_)
+Example:
+```nsis
+# Certificate pinning (accepts only 1111.. and 2222.. certificates)
+NScurl::http GET ${url} ${file} /CACERT none /CASTORE false /CERT 1111111111111111111111111111111111111111 /CERT 2222222222222222222222222222222222222222 /END
+```
 
 ### /DEPEND
 ```

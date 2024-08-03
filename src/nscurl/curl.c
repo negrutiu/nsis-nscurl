@@ -4,7 +4,7 @@
 
 #include "main.h"
 #include "curl.h"
-#include <openssl/ssl.h>
+#include "openssl/ssl.h"
 #include "crypto.h"
 
 
@@ -469,10 +469,28 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
-			LPTSTR path = MyCanonicalizePath(pszParam);
-			MyFree( pReq->pszCacert );
-			pReq->pszCacert = MyStrDup( eT2A, path );
-			MyFree(path);
+			if (lstrcmpi(pszParam, _T("builtin")) == 0) {
+				MyFree(pReq->pszCacert);
+				pReq->pszCacert = CACERT_BUILTIN;
+			} else if (lstrcmpi(pszParam, _T("none")) == 0 || lstrcmp(pszParam, _T("")) == 0) {
+				MyFree(pReq->pszCacert);
+				pReq->pszCacert = CACERT_NONE;
+			} else {
+				LPTSTR path = MyCanonicalizePath(pszParam);
+				MyFree(pReq->pszCacert);
+				pReq->pszCacert = MyStrDup(eT2A, path);
+				MyFree(path);
+			}
+		}
+	} else if (lstrcmpi( pszParam, _T( "/CASTORE" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			if (lstrcmpi(pszParam, _T("true")) == 0) {
+				pReq->bCastore = TRUE;
+			} else if (lstrcmpi(pszParam, _T("false")) == 0) {
+				pReq->bCastore = FALSE;
+			} else {
+				err = ERROR_INVALID_PARAMETER;
+			}
 		}
 	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
@@ -1031,29 +1049,39 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt(curl, CURLOPT_SSL_ENABLE_ALPN, 0L);        /// Disable ALPN. No negotiation for HTTP2 takes place
 
 			/// SSL
-			if (!StringIsEmpty(pReq->pszCacert) || pReq->pCertList) {
+			if (pReq->pszCacert != CACERT_NONE || pReq->bCastore || pReq->pCertList) {
+
 				// SSL validation enabled
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 2 );		/// Validate host name
+
 				// cacert.pem
-				if (pReq->pszCacert == NULL) {
+				if (pReq->pszCacert == CACERT_BUILTIN) {
 					struct curl_blob cacert;
-					CurlBuiltinCacert( &cacert );
-					assert( cacert.data );
-					assert( cacert.len > 0 );
-					curl_easy_setopt( curl, CURLOPT_CAINFO_BLOB, &cacert );		/// Embedded cacert.pem
-				} else if (!StringIsEmpty( pReq->pszCacert )) {
-					curl_easy_setopt( curl, CURLOPT_CAINFO, pReq->pszCacert );	/// Custom cacert.pem
-					assert( MyFileExistsA( pReq->pszCacert ) );
+					CurlBuiltinCacert(&cacert);
+					assert(cacert.data);
+					assert(cacert.len > 0);
+					curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &cacert);		/// Embedded cacert.pem
+				} else if (pReq->pszCacert == CACERT_NONE) {
+					curl_easy_setopt(curl, CURLOPT_CAINFO, NULL);				/// No cacert.pem
 				} else {
-					curl_easy_setopt( curl, CURLOPT_CAINFO, NULL );			/// No cacert.pem
+					assert(pReq->pszCacert&& lstrlenA(pReq->pszCacert) > 0);
+					assert(MyFileExistsA(pReq->pszCacert));
+					curl_easy_setopt(curl, CURLOPT_CAINFO, pReq->pszCacert);	/// Custom cacert.pem
 				}
+
 				// Additional trusted certificates
 				if (pReq->pCertList) {
 					// SSL callback
 					curl_easy_setopt( curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback );
 					curl_easy_setopt( curl, CURLOPT_SSL_CTX_DATA, pReq );
 				}
+
+			    ULONG sslopt = CURLSSLOPT_NO_PARTIALCHAIN;						// full chains only
+				if (pReq->bCastore)
+					sslopt |= CURLSSLOPT_NATIVE_CA;
+				curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, sslopt);
+
 			} else {
 				// SSL validation disabled
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
