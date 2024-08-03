@@ -428,7 +428,8 @@ SectionGroup /e "Tests"
     ${If} `${cert}` == ""
         StrCpy $R0 '$R0_nocert'
     ${Else}
-        StrCpy $R0 '$R0_${cert}'
+        StrCpy $0 `${cert}` 8
+        StrCpy $R0 '$R0_$0'
     ${EndIf}
 
 	DetailPrint 'NScurl::http "${url}" "$R0.html"'
@@ -474,45 +475,97 @@ SectionGroup /e "Tests"
     IntOp $g_testCount $g_testCount + 1
     ${If} $1 == ${errortype}
     ${AndIf} $2 = ${errorcode}
-        DetailPrint "(OK) $1 $2"
+        DetailPrint "[ OK ] $1/$2"
     ${Else}
         IntOp $g_testFails $g_testFails + 1
-        DetailPrint "----- FAIL ----- $1 $2 => expected ${errortype} ${errorcode}"
+        DetailPrint "----- FAIL ----- $1/$2 => expected ${errortype}/${errorcode}"
     ${EndIf}
 !macroend
+
+Section "Expired certificate"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://expired.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_expired'
+
+    !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
+
+Section "Wrong host"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://wrong.host.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_wronghost'
+
+    !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
+
+Section "Untrusted root"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://untrusted-root.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_untrustroot'
+
+    !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
+    !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} http 200
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
 
 Section "Self-signed certificate"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://self-signed.badssl.com'
-	!define /redef FILE '$EXEDIR\_testcert'
+	!define /redef FILE '$EXEDIR\_test_selfsigned'
 
     ; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
     ${IfNot} ${FileExists} "$PLUGINSDIR\badssl-selfsigned.crt"
         File "/oname=$PLUGINSDIR\badssl-selfsigned.crt" "badssl-selfsigned.crt"
     ${EndIf}
-    !define /ifndef SELFSIGNED_CERT '9dff24e1dbeec15f90751e7af364d417d65cb8cd' ; `badssl-selfsigned.crt` thumbprint
+    !define /ifndef SELFSIGNED_CERT '9dff24e1dbeec15f90751e7af364d417d65cb8cd'  ; `badssl-selfsigned.crt` thumbprint
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' 'curl' 0x3c
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' 'curl' 0x3c
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' 'curl' 0x3c
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '$PLUGINSDIR\badssl-selfsigned.crt'  '' '' 'http' 200
+    !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' 'curl' 0x3c
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' 'curl' 0x3c
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '$PLUGINSDIR\badssl-selfsigned.crt'  '' '' http 200
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' 'http' 200       ; SSL validation disabled
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' 'curl' 0x3c  ; CURLE_PEER_FAILED_VERIFICATION
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' 'curl' 0x23  ; CURLE_SSL_CONNECT_ERROR
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${SELFSIGNED_CERT} 'http' 200
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${SELFSIGNED_CERT} 'http' 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${SELFSIGNED_CERT} http 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${SELFSIGNED_CERT} http 200
 
     NScurl::cancel /TAG "test" /REMOVE
-
 SectionEnd
 
 SectionGroupEnd
@@ -907,5 +960,5 @@ SectionGroupEnd		; Extra
 
 
 Section -Final
-    DetailPrint 'Total tests: $g_testCount, Failed tests: $g_testFails'
+    DetailPrint '[ TESTS ] Total: $g_testCount, Failed: $g_testFails'
 SectionEnd

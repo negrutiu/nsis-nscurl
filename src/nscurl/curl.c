@@ -84,6 +84,11 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 			if (pbSuccess) *pbSuccess = FALSE;
 			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "0x%lx \"%s\"" ), pReq->Error.iWin32, pReq->Error.pszWin32 );
 			if (piErrorCode) *piErrorCode = pReq->Error.iWin32;
+		} else if (pReq->Error.iX509 != X509_V_OK) {
+			// openssl/x509 error
+			if (pbSuccess) *pbSuccess = FALSE;
+			if (pszError)  _sntprintf( pszError, iErrorLen, _T( "%d \"%hs\"" ), pReq->Error.iX509, pReq->Error.pszX509 );
+			if (piErrorCode) *piErrorCode = (ULONG)pReq->Error.iX509;
 		} else if (pReq->Error.iCurl != CURLE_OK) {
 			// CURL error
 			if (pbSuccess) *pbSuccess = FALSE;
@@ -146,6 +151,8 @@ LPCSTR CurlRequestErrorType( _In_ PCURL_REQUEST pReq )
 	if (pReq) {
 		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
 			return "win32";
+		} else if (pReq->Error.iX509 != X509_V_OK) {
+			return "x509";
 		} else if (pReq->Error.iCurl != CURLE_OK) {
 			return "curl";
 		} else if (pReq->Error.iHttp >= 0) {
@@ -162,6 +169,8 @@ ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq )
 	if (pReq) {
 		if (pReq->Error.iWin32 != ERROR_SUCCESS) {
 			return pReq->Error.iWin32;
+		} else if (pReq->Error.iX509 != X509_V_OK) {
+			return pReq->Error.iX509;
 		} else if (pReq->Error.iCurl != CURLE_OK) {
 			return pReq->Error.iCurl;
 		} else if (pReq->Error.iHttp > 0) {
@@ -544,64 +553,83 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 //++ OpenSSLVerifyCallback
 int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 {
-	//? This function gets called to evaluate server's SSL certificate chain
-	//? The calls are made sequentially for each certificate in the chain
-	//? This usually happens three times per connection: #2(root certificate), #1(intermediate certificate), #0(user certificate)
+	// This function gets called to evaluate server's SSL certificate chain
+	// The calls are made sequentially for each certificate in the chain
+	// This usually happens three times per connection: #2(root certificate), #1(intermediate certificate), #0(peer certificate)
 
-	//? Our logic:
-	//? * We return TRUE for every certificate, to get a chance to inspect the next in chain
-	//? * We return the final value when we reach the last certificate (depth 0)
-	//?   If we're dealing with a TRUSTED certificate we force a positive response
-	//?   Otherwise we return whatever verdict OpenSSL has already assigned to the chain
-
-	UCHAR Thumbprint[20];		/// sha1
-	char szThumbprint[41];
-	struct curl_slist *p;
+	int ret = preverify_ok;
 
 	SSL *ssl = X509_STORE_CTX_get_ex_data( x509_ctx, SSL_get_ex_data_X509_STORE_CTX_idx() );
-	SSL_CTX *ssl_ctx = SSL_get_SSL_CTX( ssl );
-	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( ssl_ctx );
+	SSL_CTX *sslctx = SSL_get_SSL_CTX( ssl );
+	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( sslctx );
 
-	X509 *cert = X509_STORE_CTX_get_current_cert( x509_ctx );		/// Current certificate in chain
-	int err    = X509_STORE_CTX_get_error( x509_ctx );				/// Current OpenSSL certificate validation error
-	int depth  = X509_STORE_CTX_get_error_depth( x509_ctx );		/// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with user certificate (#0)
+	if (pReq->pCertList)
+	{
+	    // Our logic:
+	    // * We return TRUE for every certificate, to get a chance to inspect the next in chain
+	    // * We return the final value when we reach the last certificate (depth 0)
+	    //   If we're dealing with a TRUSTED certificate we force a positive response
+	    //   Otherwise we return whatever verdict OpenSSL has already assigned to the chain
 
-	//x X509_NAME_oneline( X509_get_subject_name( cert ), szSubject, ARRAYSIZE( szSubject ) );
-	//x X509_NAME_oneline( X509_get_issuer_name( cert ), szIssuer, ARRAYSIZE( szIssuer ) );
+		X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);		// Current certificate in the chain
+		int err = X509_STORE_CTX_get_error(x509_ctx);				// Current OpenSSL certificate validation error
+		int depth = X509_STORE_CTX_get_error_depth(x509_ctx);		// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with peer certificate (#0)
 
-	DBG_UNREFERENCED_LOCAL_VARIABLE(err);
+		//x X509_NAME_oneline( X509_get_subject_name( cert ), szSubject, ARRAYSIZE( szSubject ) );
+		//x X509_NAME_oneline( X509_get_issuer_name( cert ), szIssuer, ARRAYSIZE( szIssuer ) );
 
-	// Extract certificate SHA1 fingerprint
-	X509_digest( cert, EVP_sha1(), Thumbprint, NULL );
-	MyFormatBinaryHexA( Thumbprint, sizeof( Thumbprint ), szThumbprint, sizeof( szThumbprint ) );
+		// Extract certificate SHA1 fingerprint
+		UCHAR Thumbprint[20];		// sha1
+		char szThumbprint[41];
+		X509_digest(cert, EVP_sha1(), Thumbprint, NULL);
+		MyFormatBinaryHexA(Thumbprint, sizeof(Thumbprint), szThumbprint, sizeof(szThumbprint));
 
-	// Verify against our trusted certificate list
-	for (p = pReq->pCertList; p; p = p->next) {
-		if (lstrcmpiA( p->data, szThumbprint ) == 0) {
+		// Verify against our trusted certificate list
+		struct curl_slist* p;
+		for (p = pReq->pCertList; p; p = p->next)
+		{
+			if (lstrcmpiA(p->data, szThumbprint) == 0)
+			{
 
-			pReq->Runtime.bTrustedCert = TRUE;
-			X509_STORE_CTX_set_error( x509_ctx, X509_V_OK );
-			break;
+				pReq->Runtime.bTrustedCert = TRUE;
+				X509_STORE_CTX_set_error(x509_ctx, X509_V_OK);
+				break;
+			}
+		}
+
+		// Verdict
+		if (depth > 0)
+		{
+			TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", err);
+			ret = TRUE;
+		}
+		else
+		{
+			if (pReq->Runtime.bTrustedCert)
+			{
+				// We've found at least one TRUSTED certificate
+				// Clear all errors, return a positive verdict
+				X509_STORE_CTX_set_error(x509_ctx, X509_V_OK);
+				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", X509_V_OK);
+				ret = TRUE;
+			} else {
+				// We haven't found any TRUSTED certificate
+				// Return whatever verdict already made by OpenSSL
+				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", preverify_ok ? "TRUE" : "FALS", err);
+			}
 		}
 	}
 
-	// Verdict
-	if (depth > 0) {
-		TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", err );
-		return TRUE;
-	} else {
-		if (pReq->Runtime.bTrustedCert) {
-			/// We've found at least one TRUSTED certificate
-			/// Clear all errors, return a positive verdict
-			X509_STORE_CTX_set_error( x509_ctx, X509_V_OK );
-			TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", X509_V_OK );
-			return TRUE;
-		}
-		/// We haven't found any TRUSTED certificate
-		/// Return whatever verdict already made by OpenSSL
-		TRACE( _T( "Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n" ), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", preverify_ok ? "TRUE" : "FALS", err );
-		return preverify_ok;
+	// Remember the last x509 error
+	int ex509 = X509_STORE_CTX_get_error(x509_ctx);
+	if (ex509 != X509_V_OK && ex509 != pReq->Error.iX509)
+	{
+		pReq->Error.iX509 = ex509;
+		MyFree(pReq->Error.pszX509);
+		pReq->Error.pszX509 = MyStrDup(eA2A, X509_verify_cert_error_string(ex509));
 	}
+
+	return ret;
 }
 
 
@@ -1070,12 +1098,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					curl_easy_setopt(curl, CURLOPT_CAINFO, pReq->pszCacert);	/// Custom cacert.pem
 				}
 
-				// Additional trusted certificates
-				if (pReq->pCertList) {
-					// SSL callback
-					curl_easy_setopt( curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback );
-					curl_easy_setopt( curl, CURLOPT_SSL_CTX_DATA, pReq );
-				}
+				// SSL callback
+				curl_easy_setopt( curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback );
+				curl_easy_setopt( curl, CURLOPT_SSL_CTX_DATA, pReq );
 
 			    ULONG sslopt = CURLSSLOPT_NO_PARTIALCHAIN;						// full chains only
 				if (pReq->bCastore)
@@ -1277,8 +1302,9 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 
 					// Finished?
 					CurlRequestFormatError( pReq, NULL, 0, &bSuccess, &e );
-					TRACE(_T("curl_easy_perform() = {win32:0x%lx \"%s\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%lus/%lus, insist:%s\n"),
+					TRACE(_T("curl_easy_perform() = {win32:0x%lx \"%s\", x509:%d \"%hs\", curl:%u \"%hs\", http:%u \"%hs\"}, re/connect:%lus/%lus, insist:%s\n"),
 						pReq->Error.iWin32, pReq->Error.pszWin32 ? pReq->Error.pszWin32 : _T(""),
+						pReq->Error.iX509, pReq->Error.pszX509 ? pReq->Error.pszX509 : "",
 						pReq->Error.iCurl, pReq->Error.pszCurl ? pReq->Error.pszCurl : "",
 						pReq->Error.iHttp, pReq->Error.pszHttp ? pReq->Error.pszHttp : "",
 						(GetTickCount() - iConnectionTimeStart) / 1000,
@@ -1314,7 +1340,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						((pReq->iCompleteTimeout > 0) && (pReq->Runtime.iTimeElapsed >= pReq->iCompleteTimeout)))	/// Enforce "Complete" timeout
 					{
 						// NOTE: Don't overwrite previous error codes
-						if (pReq->Error.iWin32 == ERROR_SUCCESS && pReq->Error.iCurl == CURLE_OK && pReq->Error.iHttp == 0) {
+						if (pReq->Error.iWin32 == ERROR_SUCCESS && pReq->Error.iX509 == X509_V_OK && pReq->Error.iCurl == CURLE_OK && pReq->Error.iHttp == 0) {
 							MyFree( pReq->Error.pszWin32 );
 							pReq->Error.iWin32 = ERROR_TIMEOUT;
 							pReq->Error.pszWin32 = MyFormatError( pReq->Error.iWin32 );

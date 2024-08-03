@@ -373,7 +373,8 @@ Parameter      | Details
 > Feel free to embed the latest version into your installer and feed it to `NScurl`
 
 > [!caution]
-> If all certificate sources are empty (e.g. `/CACERT none /CASTORE false` and no `/CERT` arguments), SSL certificate validation is disabled. `NScurl` will connect to any server, including untrusted ones (aka _insecure transfers_)
+> If all certificate sources are empty (e.g. `/CACERT none /CASTORE false` and no `/CERT` arguments), SSL certificate validation is disabled. `NScurl` would connect to any server, including untrusted ones (aka _insecure transfers_).
+> By default, both the built-in `cacert.pem` and the __native CA store__ are used for validation.
 
 ### /CASTORE
 ```nsis
@@ -710,14 +711,21 @@ Failed transfers return various error messages (e.g `0x2a "Callback aborted"`, e
 
 ### @ERRORCODE@
 The numeric _transfer status_ code.  
-It can be either an HTTP status code (i.e. 200, 206, 404), a libcurl error code (7, 10), or a Win32 error code (i.e. 0x2a)
+A value of `0` indicates success. See [@ERRORTYPE@](#errortype) for details.
 
 ### @ERRORTYPE@
-Returns `win32`, `curl` or `http` error type.
+The _transfer status_ error type.
+
+Type       | Meaning                        | Docs
+:--------- | :----------------------------- | :-----
+`win32`    | Win32 error code               | `ERROR_SUCCESS`(0) indicates success <br> https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
+`x509`     | `openssl/x509` certificate error | `X509_V_OK`(0) indicates success <br> https://github.com/openssl/openssl/blob/ca1d2db291530a827555b40974ed81efb91c2d19/include/openssl/x509_vfy.h.in#L206
+`curl`     | `libcurl` error code           | `CURLE_OK`(0) indicates success <br> https://curl.se/libcurl/c/libcurl-errors.html
+`HTTP`     | HTTP status code               | `2xx` indicates success <br> https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
 ### @CANCELLED@
 Indicates whether the transfer was cancelled by the user.  
-Returns boolean values `0` or `1`
+Returns boolean value `0` or `1`
 
 *******************************************************************************
 

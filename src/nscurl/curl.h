@@ -90,6 +90,8 @@ typedef struct _CURL_REQUEST {
 		LPCTSTR		pszWin32;
 		CURLcode	iCurl;
 		LPCSTR		pszCurl;
+		int			iX509;
+		LPCSTR		pszX509;
 		int			iHttp;
 		LPCSTR		pszHttp;
 	} Error;
@@ -138,6 +140,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->Runtime.pszServerIP );
 	MyFree( pReq->Error.pszWin32 );
 	MyFree( pReq->Error.pszCurl );
+	MyFree( pReq->Error.pszX509 );
 	MyFree( pReq->Error.pszHttp );
 	ZeroMemory( pReq, sizeof( *pReq ) );
 }
