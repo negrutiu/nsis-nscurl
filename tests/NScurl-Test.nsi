@@ -63,6 +63,9 @@ RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 
+Var /global g_testCount
+Var /global g_testFails
+
 #---------------------------------------------------------------#
 # .onInit                                                       #
 #---------------------------------------------------------------#
@@ -70,6 +73,8 @@ Function .onInit
 
 	; Initializations
 	InitPluginsDir
+    StrCpy $g_testCount 0
+    StrCpy $g_testFails 0
 
 	; Language selection
 	!define MUI_LANGDLL_ALLLANGUAGES
@@ -401,6 +406,116 @@ Section "Big file (10GB)"
 	DetailPrint "Status: $0"
 
 SectionEnd
+
+
+SectionGroup /e "Tests"
+
+!macro CERT_TEST url file cacert castore cert errortype errorcode
+    StrCpy $R0 '${file}'
+    ${If} `${cacert}` == ""
+        StrCpy $R0 '$R0_default'
+    ${ElseIf} `${cacert}` == "none"
+    ${OrIf}   `${cacert}` == "builtin"
+        StrCpy $R0 '$R0_${cacert}'
+    ${Else}
+        StrCpy $R0 '$R0_file'
+    ${EndIf}
+    ${If} `${castore}` == ""
+        StrCpy $R0 '$R0_default'
+    ${Else}
+        StrCpy $R0 '$R0_${castore}'
+    ${EndIf}
+    ${If} `${cert}` == ""
+        StrCpy $R0 '$R0_nocert'
+    ${Else}
+        StrCpy $R0 '$R0_${cert}'
+    ${EndIf}
+
+	DetailPrint 'NScurl::http "${url}" "$R0.html"'
+
+	Push "/END"
+    ${If} `${cacert}` != ""
+        Push `${cacert}`
+        Push /CACERT
+    ${EndIf}
+    ${If} `${castore}` != ""
+        Push `${castore}`
+        Push /CASTORE
+    ${EndIf}
+    ${If} `${cert}` != ""
+        Push `${cert}`
+        Push /CERT
+    ${EndIf}
+    Push "$R0.debug.txt"
+    Push "nodata"
+    Push /DEBUG
+    Push "test"
+    Push /TAG
+    Push "@ID@"
+    Push /RETURN
+	Push "$R0.html"
+	Push "${url}"
+	Push "GET"
+	CallInstDLL "$PLUGINSDIR\NScurl.dll" http
+	Pop $0
+
+    NScurl::query /ID $0 "@Error@"
+    Pop $1
+    ${If} $1 != "OK"
+        DetailPrint "Status: $1"
+    ${EndIf}
+
+    NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+
+    NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+
+    IntOp $g_testCount $g_testCount + 1
+    ${If} $1 == ${errortype}
+    ${AndIf} $2 = ${errorcode}
+        DetailPrint "(OK) $1 $2"
+    ${Else}
+        IntOp $g_testFails $g_testFails + 1
+        DetailPrint "----- FAIL ----- $1 $2 => expected ${errortype} ${errorcode}"
+    ${EndIf}
+!macroend
+
+Section "Self-signed certificate"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://self-signed.badssl.com'
+	!define /redef FILE '$EXEDIR\_testcert'
+
+    ; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
+    ${IfNot} ${FileExists} "$PLUGINSDIR\badssl-selfsigned.crt"
+        File "/oname=$PLUGINSDIR\badssl-selfsigned.crt" "badssl-selfsigned.crt"
+    ${EndIf}
+    !define /ifndef SELFSIGNED_CERT '9dff24e1dbeec15f90751e7af364d417d65cb8cd' ; `badssl-selfsigned.crt` thumbprint
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '$PLUGINSDIR\badssl-selfsigned.crt'  '' '' 'http' 200
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' 'curl' 0x3c
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '' 'curl' 0x3c
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' 'http' 200       ; SSL validation disabled
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' 'curl' 0x3c  ; CURLE_PEER_FAILED_VERIFICATION
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' 'curl' 0x23  ; CURLE_SSL_CONNECT_ERROR
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${SELFSIGNED_CERT} 'http' 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${SELFSIGNED_CERT} 'http' 200
+
+    NScurl::cancel /TAG "test" /REMOVE
+
+SectionEnd
+
+SectionGroupEnd
 
 
 SectionGroup /e "Errors"
@@ -789,3 +904,8 @@ SectionEnd
 
 
 SectionGroupEnd		; Extra
+
+
+Section -Final
+    DetailPrint 'Total tests: $g_testCount, Failed tests: $g_testFails'
+SectionEnd
