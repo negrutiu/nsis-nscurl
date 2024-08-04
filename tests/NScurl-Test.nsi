@@ -410,6 +410,33 @@ SectionEnd
 
 SectionGroup /e "Tests"
 
+; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
+!define BADSSL_SELFSIGNED_CRT \
+"-----BEGIN CERTIFICATE-----$\n\
+MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
+c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
+NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
+DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
+BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
+PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
+hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
+xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
+ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
+QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
+BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
+hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
+ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
+4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
+ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
+SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
+juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+-----END CERTIFICATE-----"
+
+!define BADSSL_SELFSIGNED_THUMBPRINT '9dff24e1dbeec15f90751e7af364d417d65cb8cd'
+
+
 !macro CERT_TEST url file cacert castore cert errortype errorcode
     StrCpy $R0 '${file}'
     ${If} `${cacert}` == ""
@@ -447,6 +474,10 @@ SectionGroup /e "Tests"
         Push `${cert}`
         Push /CERT
     ${EndIf}
+    Push /CANCEL
+    Push /INSIST
+    Push 60s
+    Push /TIMEOUT           ; badssl.com can be laggy sometimes
     Push "$R0.debug.txt"
     Push "nodata"
     Push /DEBUG
@@ -540,18 +571,13 @@ Section "Self-signed certificate"
 	!define /redef LINK 'https://self-signed.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_selfsigned'
 
-    ; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
-    ${IfNot} ${FileExists} "$PLUGINSDIR\badssl-selfsigned.crt"
-        File "/oname=$PLUGINSDIR\badssl-selfsigned.crt" "badssl-selfsigned.crt"
-    ${EndIf}
-    !define /ifndef SELFSIGNED_CERT '9dff24e1dbeec15f90751e7af364d417d65cb8cd'  ; `badssl-selfsigned.crt` thumbprint
-
     !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
 
     !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '$PLUGINSDIR\badssl-selfsigned.crt'  '' '' http 200
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' http 200
 
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
@@ -562,8 +588,8 @@ Section "Self-signed certificate"
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${SELFSIGNED_CERT} http 200
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${SELFSIGNED_CERT} http 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
