@@ -504,15 +504,24 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 	} else if (lstrcmpi( pszParam, _T( "/CERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			/// Validate SHA1 hash
-			if (lstrlen( pszParam ) == 40) {
+			int len = lstrlen(pszParam);
+			if (len == 40) {
 				int i;
 				for (i = 0; isxdigit( pszParam[i] ); i++);
 				if (i == 40) {
+					// /CERT sha1
 					LPSTR psz = MyStrDup( eT2A, pszParam );
 					if (psz) {
 						pReq->pCertList = curl_slist_append( pReq->pCertList, psz );
 						MyFree( psz );
 					}
+				}
+			} else if (len > 64 && _tcsstr(pszParam, _T("-----BEGIN CERTIFICATE-----"))) {
+				// /CERT pem_blob
+				LPSTR psz = MyStrDup(eT2A, pszParam);
+				if (psz) {
+					pReq->pPemList = curl_slist_append(pReq->pPemList, psz);
+					MyFree(psz);
 				}
 			}
 		}
@@ -633,14 +642,51 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 }
 
 
+CURLcode CurlSSLInit(PCURL_REQUEST req, SSL_CTX* sslctx)
+{
+	// Add all `/CERT ...` certificates to the SSL_CTX store
+	const struct curl_slist* pem;
+	for (pem = req->pPemList; pem; pem = pem->next)
+	{
+	    BIO* bio = BIO_new_mem_buf(pem->data, -1);
+		if (bio)
+		{
+			X509_STORE* store = SSL_CTX_get_cert_store(sslctx);
+
+		    // read certificates one by one
+			X509* cert;
+			while ((cert = PEM_read_bio_X509(bio, NULL, NULL, NULL)) != NULL)
+			{
+				if (X509_STORE_add_cert(store, cert) != 0)
+				{
+					// todo: warning
+				}
+				X509_free(cert);
+			}
+
+			BIO_free(bio);
+		}
+	}
+
+	return CURLE_OK;
+}
+
+
 //++ CurlSSLCallback
 //? This callback function gets called by libcurl just before the initialization of an SSL connection
-CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void *userptr )
+CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 {
-	SSL_CTX *pssl = ssl_ctx;
-	SSL_CTX_set_app_data( pssl, userptr );
-	SSL_CTX_set_verify( pssl, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
-	UNREFERENCED_PARAMETER( curl );
+	SSL_CTX *sslctx = ssl_ctx;
+
+	// Import `/CERT pem` certificates
+    PCURL_REQUEST req = userdata;
+	CurlSSLInit(req, sslctx);
+
+	// Additional callback to validate `/CERT sha1` certificates
+    SSL_CTX_set_app_data(sslctx, userdata);
+	SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
+
+    UNREFERENCED_PARAMETER( curl );
 	return CURLE_OK;
 }
 

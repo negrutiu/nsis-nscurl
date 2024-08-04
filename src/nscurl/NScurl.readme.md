@@ -386,17 +386,50 @@ When enabled, the native CA store is used __in addition__ to the other trusted c
 
 ### /CERT
 ```
-/CERT "sha1 thumbprint"
+/CERT sha1|pem
 ```
-Specify an additional __trusted certificate__ (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`).  
-When specified, trusted certificates are used for SSL certificate validation __in addition__ to other trusted certificate sources ([/CACERT](#cacert) and [/CASTORE](#castore)).  
-Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).  
+Specify additional trusted certificates to be used for SSL certificate validation __in addition__ to other certificate sources ([/CACERT](#cacert) and [/CASTORE](#castore)).  
 Multiple `/CERT` parameters are allowed.
 
-Example:
+Parameter | Details
+:---------------- | :---------------------
+sha1 | `sha1` certificate thumbprint. The thumbprint can reference any certificate in the chain (the root, intermediate certificates, end-entity certificate)
+pem  | `pem` blob containing one or more trusted root certificates <br> NOTE: Limited in size to `${NSIS_MAX_STRLEN}`
+
+Examples:
 ```nsis
 # Certificate pinning (accepts only 1111.. and 2222.. certificates)
 NScurl::http GET ${url} ${file} /CACERT none /CASTORE false /CERT 1111111111111111111111111111111111111111 /CERT 2222222222222222222222222222222222222222 /END
+Pop $0
+```
+
+```nsis
+; Trust self-signed certificate
+!define BADSSL_SELFSIGNED_CRT \
+"-----BEGIN CERTIFICATE-----$\n\
+MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
+c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
+NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
+DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
+BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
+PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
+hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
+xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
+ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
+QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
+BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
+hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
+ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
+4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
+ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
+SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
+juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+-----END CERTIFICATE-----"
+
+NScurl::http GET "https://self-signed.badssl.com" "${file}" /CERT '${BADSSL_SELFSIGNED_CRT}' /END
+Pop $0
 ```
 
 ### /DEPEND

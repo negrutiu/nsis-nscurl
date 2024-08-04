@@ -42,7 +42,8 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN     bEncoding     : 1;
 	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
 	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
-	struct curl_slist *pCertList;		/// can be NULL
+	struct curl_slist *pCertList;		/// List of sha1 certificate thumprints. can be NULL
+	struct curl_slist *pPemList;		/// List of pem blobs. can be NULL
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
@@ -122,6 +123,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszAgent );
 	MyFree( pReq->pszReferrer );
 	curl_slist_free_all( pReq->pCertList );
+	curl_slist_free_all( pReq->pPemList );
 	MyFree( pReq->pszCacert );
 	MyFree( pReq->pszDebugFile );
 	MyFree( pReq->pszTag );
