@@ -25,6 +25,7 @@ Var /global DLL
 !include "Sections.nsh"
 
 !include "FileFunc.nsh"
+!insertmacro GetFileName
 !insertmacro GetOptions
 !insertmacro GetParameters
 
@@ -714,7 +715,9 @@ juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
         StrCpy $R0 '$R0_$0'
     ${EndIf}
 
-	DetailPrint 'NScurl::http "${url}" "$R0.html"'
+    ${GetFileName} $R0 $0
+	DetailPrint 'NScurl::http "${url}" "$0"'
+
 	!insertmacro STACK_VERIFY_START
 	Push "/END"
     ${If} `${cacert}` != ""
@@ -740,7 +743,7 @@ juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
     Push /TAG
     Push "@ID@"
     Push /RETURN
-	Push "$R0.html"
+	Push memory
 	Push "${url}"
 	Push "GET"
 	CallInstDLL $DLL http

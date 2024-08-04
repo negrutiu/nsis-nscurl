@@ -20,6 +20,9 @@
 !include "LogicLib.nsh"
 !include "Sections.nsh"
 
+!include "FileFunc.nsh"
+!insertmacro GetFileName
+
 !define /ifndef NULL 0
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
@@ -459,7 +462,8 @@ juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
         StrCpy $R0 '$R0_$0'
     ${EndIf}
 
-	DetailPrint 'NScurl::http "${url}" "$R0.html"'
+    ${GetFileName} $R0 $0
+	DetailPrint 'NScurl::http "${url}" "$0"'
 
 	Push "/END"
     ${If} `${cacert}` != ""
@@ -485,7 +489,7 @@ juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
     Push /TAG
     Push "@ID@"
     Push /RETURN
-	Push "$R0.html"
+	Push memory
 	Push "${url}"
 	Push "GET"
 	CallInstDLL "$PLUGINSDIR\NScurl.dll" http
