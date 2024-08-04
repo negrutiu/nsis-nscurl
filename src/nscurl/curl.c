@@ -1320,6 +1320,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						break;		/// Canceled
 					if (pReq->Error.iHttp > 0 && (pReq->Error.iHttp < 200 || pReq->Error.iHttp >= 300))
 						break;		/// HTTP error
+					if (pReq->Error.iCurl == CURLE_PEER_FAILED_VERIFICATION || pReq->Error.iX509 != X509_V_OK)
+						break;		/// SSL error
 
 					// Cancel?
 					if (CurlRequestGetAbortFlag( pReq ) != FALSE) {
