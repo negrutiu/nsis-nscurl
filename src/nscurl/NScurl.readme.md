@@ -355,30 +355,82 @@ Be aware that during the transfer, the _content length_ indicates the compressed
 
 ### /CACERT
 ```nsis
-/CACERT "path\to\cacert.pem"
-/CACERT ""
+/CACERT builtin|none|""|<file>
 ```
-Validate webserver identity using a custom `cacert.pem` certificate database.  
-By default, a built-in `cacert.pem` is extracted and used at runtime.  
-`/CACERT ""` disables SSL validation (aka _insecure transfer_).
+
+Specify a `cacert.pem` database to be used for SSL certificate validation.
+
+Parameter      | Details
+:------------- | :---------------------------------------
+`builtin`      | Use a built-in `cacert.pem` database, embedded into `NScurl.dll` at build time <br> This is the default option
+`none` or `""` | Disable `cacert.pem` database usage
+`<file>`       | Use an external `cacert.pem` file
 
 > [!caution]
-> The embedded `cacert.pem` can become outdated.  
-> That would lead to legitimate websites failing the SSL validation.  
-> The `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted.
+> The built-in `cacert.pem` can become outdated.  
+> That could lead to legitimate webservers failing the SSL validation.  
+> `libcurl project` maintains an online [cacert.pem](https://curl.haxx.se/docs/caextract.html) database that is generally considered trusted.
 > Feel free to embed the latest version into your installer and feed it to `NScurl`
+
+> [!caution]
+> If all certificate sources are empty (e.g. `/CACERT none /CASTORE false` and no `/CERT` arguments), SSL certificate validation is disabled. `NScurl` would connect to any server, including untrusted ones (aka _insecure transfers_).
+> By default, both the built-in `cacert.pem` and the __native CA store__ are used for validation.
+
+### /CASTORE
+```nsis
+/CASTORE true|false
+```
+Specify that Windows' native CA store should be used for SSL certificate validation.  
+This option is __enabled__ by default.  
+When enabled, the native CA store is used __in addition__ to the other trusted certificate sources ([/CACERT](#cacert) and [/CERT](#cert))
 
 ### /CERT
 ```
-/CERT "sha1 thumbprint"
+/CERT sha1|pem
 ```
-Specify an additional trusted certificate (e.g. `/CERT 917e732d330f9a12404f73d8bea36948b929dffc`)  
-Trusted certificates are used for SSL validation in addition to the `cacert.pem` database.  
-Trusted certificates can reference any certificate in the chain (end-entity cert, intermediate cert, root cert).  
+Specify additional trusted certificates to be used for SSL certificate validation __in addition__ to other certificate sources ([/CACERT](#cacert) and [/CASTORE](#castore)).  
 Multiple `/CERT` parameters are allowed.
 
-> [!tip]
-> `cacert.pem` database can be disabled (`/CACERT ""`) leaving the `/CERT` trusted certificates in charge with the SSL validation (aka _certificate pinning_)
+Parameter | Details
+:---------------- | :---------------------
+sha1 | `sha1` certificate thumbprint. The thumbprint can reference any certificate in the chain (the root, intermediate certificates, end-entity certificate)
+pem  | `pem` blob containing one or more trusted root certificates <br> NOTE: Limited in size to `${NSIS_MAX_STRLEN}`
+
+Examples:
+```nsis
+# Certificate pinning (accepts only 1111.. and 2222.. certificates)
+NScurl::http GET ${url} ${file} /CACERT none /CASTORE false /CERT 1111111111111111111111111111111111111111 /CERT 2222222222222222222222222222222222222222 /END
+Pop $0
+```
+
+```nsis
+; Trust self-signed certificate
+!define BADSSL_SELFSIGNED_CRT \
+"-----BEGIN CERTIFICATE-----$\n\
+MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
+c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
+NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
+DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
+BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
+PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
+hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
+xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
+ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
+QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
+BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
+hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
+ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
+4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
+ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
+SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
+juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+-----END CERTIFICATE-----"
+
+NScurl::http GET "https://self-signed.badssl.com" "${file}" /CERT '${BADSSL_SELFSIGNED_CRT}' /END
+Pop $0
+```
 
 ### /DEPEND
 ```
@@ -692,14 +744,21 @@ Failed transfers return various error messages (e.g `0x2a "Callback aborted"`, e
 
 ### @ERRORCODE@
 The numeric _transfer status_ code.  
-It can be either an HTTP status code (i.e. 200, 206, 404), a libcurl error code (7, 10), or a Win32 error code (i.e. 0x2a)
+A value of `0` indicates success. See [@ERRORTYPE@](#errortype) for details.
 
 ### @ERRORTYPE@
-Returns `win32`, `curl` or `http` error type.
+The _transfer status_ error type.
+
+Type       | Meaning                        | Docs
+:--------- | :----------------------------- | :-----
+`win32`    | Win32 error code               | `ERROR_SUCCESS`(0) indicates success <br> https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
+`x509`     | `openssl/x509` certificate error | `X509_V_OK`(0) indicates success <br> https://github.com/openssl/openssl/blob/ca1d2db291530a827555b40974ed81efb91c2d19/include/openssl/x509_vfy.h.in#L206
+`curl`     | `libcurl` error code           | `CURLE_OK`(0) indicates success <br> https://curl.se/libcurl/c/libcurl-errors.html
+`HTTP`     | HTTP status code               | `2xx` indicates success <br> https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
 ### @CANCELLED@
 Indicates whether the transfer was cancelled by the user.  
-Returns boolean values `0` or `1`
+Returns boolean value `0` or `1`
 
 *******************************************************************************
 

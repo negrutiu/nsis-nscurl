@@ -14,6 +14,9 @@
 /// \brief Filename reserved for in-memory transfers.
 #define FILENAME_MEMORY		_T("Memory")
 
+#define CACERT_BUILTIN      NULL
+#define CACERT_NONE         ((LPCSTR)1)
+
 //+ struct CURL_REQUEST
 typedef struct _CURL_REQUEST {
 	LPCSTR		pszURL;
@@ -37,8 +40,10 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bMarkOfTheWeb : 1;
 	BOOLEAN     bHttp11       : 1;
 	BOOLEAN     bEncoding     : 1;
-	LPCSTR		pszCacert;				/// can be NULL. If valid and empty ("") no cacert.pem is used
-	struct curl_slist *pCertList;		/// can be NULL. If pszCacert=="" and pCertList==NULL, the SSL validation is turned off
+	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
+	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
+	struct curl_slist *pCertList;		/// List of sha1 certificate thumprints. can be NULL
+	struct curl_slist *pPemList;		/// List of pem blobs. can be NULL
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
@@ -86,6 +91,8 @@ typedef struct _CURL_REQUEST {
 		LPCTSTR		pszWin32;
 		CURLcode	iCurl;
 		LPCSTR		pszCurl;
+		int			iX509;
+		LPCSTR		pszX509;
 		int			iHttp;
 		LPCSTR		pszHttp;
 	} Error;
@@ -96,6 +103,7 @@ static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	if (!pReq) return;
 	ZeroMemory( pReq, sizeof( *pReq ) );
 	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
+	pReq->bCastore = TRUE;
 }
 
 //+ CurlRequestDestroy
@@ -115,6 +123,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszAgent );
 	MyFree( pReq->pszReferrer );
 	curl_slist_free_all( pReq->pCertList );
+	curl_slist_free_all( pReq->pPemList );
 	MyFree( pReq->pszCacert );
 	MyFree( pReq->pszDebugFile );
 	MyFree( pReq->pszTag );
@@ -133,6 +142,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->Runtime.pszServerIP );
 	MyFree( pReq->Error.pszWin32 );
 	MyFree( pReq->Error.pszCurl );
+	MyFree( pReq->Error.pszX509 );
 	MyFree( pReq->Error.pszHttp );
 	ZeroMemory( pReq, sizeof( *pReq ) );
 }

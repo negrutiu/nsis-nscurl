@@ -25,6 +25,7 @@ Var /global DLL
 !include "Sections.nsh"
 
 !include "FileFunc.nsh"
+!insertmacro GetFileName
 !insertmacro GetOptions
 !insertmacro GetParameters
 
@@ -64,6 +65,9 @@ RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 
+Var /global g_testCount
+Var /global g_testFails
+
 !macro STACK_VERIFY_START
 	Push "MyStackTop"			        ; Mark the top of the stack
 !macroend
@@ -81,6 +85,8 @@ Function .onInit
 
 	; Initializations
 	InitPluginsDir
+    StrCpy $g_testCount 0
+    StrCpy $g_testFails 0
 
 	; Language selection
 	!define MUI_LANGDLL_ALLLANGUAGES
@@ -656,6 +662,220 @@ Section "Big file (10GB)"
 	DetailPrint "Status: $0"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
+
+
+SectionGroup /e "Tests"
+
+; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
+!define BADSSL_SELFSIGNED_CRT \
+"-----BEGIN CERTIFICATE-----$\n\
+MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
+c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
+NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
+DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
+BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
+PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
+hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
+xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
+ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
+QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
+BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
+hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
+ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
+4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
+ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
+SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
+juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+-----END CERTIFICATE-----"
+
+!define BADSSL_SELFSIGNED_THUMBPRINT '9dff24e1dbeec15f90751e7af364d417d65cb8cd'
+
+
+!macro CERT_TEST url file cacert castore cert errortype errorcode
+    StrCpy $R0 '${file}'
+    ${If} `${cacert}` == ""
+        StrCpy $R0 '$R0_default'
+    ${ElseIf} `${cacert}` == "none"
+    ${OrIf}   `${cacert}` == "builtin"
+        StrCpy $R0 '$R0_${cacert}'
+    ${Else}
+        StrCpy $R0 '$R0_file'
+    ${EndIf}
+    ${If} `${castore}` == ""
+        StrCpy $R0 '$R0_default'
+    ${Else}
+        StrCpy $R0 '$R0_${castore}'
+    ${EndIf}
+    ${If} `${cert}` == ""
+        StrCpy $R0 '$R0_nocert'
+    ${Else}
+        StrCpy $0 `${cert}` 8
+        StrCpy $R0 '$R0_$0'
+    ${EndIf}
+
+    ${GetFileName} $R0 $0
+	DetailPrint 'NScurl::http "${url}" "$0"'
+
+	!insertmacro STACK_VERIFY_START
+	Push "/END"
+    ${If} `${cacert}` != ""
+        Push `${cacert}`
+        Push /CACERT
+    ${EndIf}
+    ${If} `${castore}` != ""
+        Push `${castore}`
+        Push /CASTORE
+    ${EndIf}
+    ${If} `${cert}` != ""
+        Push `${cert}`
+        Push /CERT
+    ${EndIf}
+    Push /CANCEL
+    Push /INSIST
+    Push 60s
+    Push /TIMEOUT           ; badssl.com can be laggy sometimes
+    Push "$R0.debug.txt"
+    Push "nodata"
+    Push /DEBUG
+    Push "test"
+    Push /TAG
+    Push "@ID@"
+    Push /RETURN
+	Push memory
+	Push "${url}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+    Push "@Error@"
+    Push $0
+    Push /ID
+    CallInstDLL $DLL query
+    Pop $1
+    ${If} $1 != "OK"
+        DetailPrint "Status: $1"
+    ${EndIf}
+
+    Push "@ErrorType@"
+    Push $0
+    Push /ID
+    CallInstDLL $DLL query
+    Pop $1
+
+    Push "@ErrorCode@"
+    Push $0
+    Push /ID
+    CallInstDLL $DLL query
+    Pop $2
+
+    IntOp $g_testCount $g_testCount + 1
+    ${If} $1 == ${errortype}
+    ${AndIf} $2 = ${errorcode}
+        DetailPrint "[ OK ] $1/$2"
+    ${Else}
+        IntOp $g_testFails $g_testFails + 1
+        DetailPrint "----- FAIL ----- $1/$2 => expected ${errortype}/${errorcode}"
+    ${EndIf}
+	!insertmacro STACK_VERIFY_END
+!macroend
+
+Section "Expired certificate"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://expired.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_expired'
+
+    !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+SectionEnd
+
+Section "Wrong host"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://wrong.host.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_wronghost'
+
+    !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+SectionEnd
+
+Section "Untrusted root"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://untrusted-root.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_untrustroot'
+
+    !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
+    !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} http 200
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+SectionEnd
+
+Section "Self-signed certificate"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://self-signed.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_selfsigned'
+
+    !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' http 200
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
+    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+
+SectionEnd
+
+SectionGroupEnd
 
 
 SectionGroup /e "Errors"
@@ -1334,3 +1554,8 @@ SectionEnd
 
 
 SectionGroupEnd		; Extra
+
+
+Section -Final
+    DetailPrint '[ TESTS ] Total: $g_testCount, Failed: $g_testFails'
+SectionEnd
