@@ -41,6 +41,10 @@ vcpkg_list(SET CONFIGURE_OPTIONS
     no-pinshared            # nscurl: prevent link to kernel32!GetModuleHandleEx (inexistent in NT4)
 )
 
+# nscurl: prevent crypto/init.c from registering atexit callback
+string(APPEND VCPKG_C_FLAGS   " -DOPENSSL_NO_ATEXIT")
+string(APPEND VCPKG_CXX_FLAGS " -DOPENSSL_NO_ATEXIT")
+
 set(INSTALL_FIPS "")
 if("fips" IN_LIST FEATURES)
     vcpkg_list(APPEND INSTALL_FIPS install_fips)

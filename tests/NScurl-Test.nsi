@@ -413,13 +413,13 @@ SectionEnd
 
 SectionGroup /e "Tests"
 
-; Valid to: ‎Sunday, ‎May ‎17, ‎2026 8:59:33 PM
+; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
 !define BADSSL_SELFSIGNED_CRT \
 "-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+MIIDeTCCAmGgAwIBAgIJAPEMFZO/+ZHXMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
 BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
 c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+NDA4MDkxNjA5MjFaFw0yNjA4MDkxNjA5MjFaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
 VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
 DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
 BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
@@ -429,35 +429,60 @@ xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
 ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
 QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
 BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
-ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
-4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
-ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
-SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
-juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+hvcNAQELBQADggEBADwahI1HUmazX3I3p0c53AZ5z4BO+Ezb4+bBph3MX8xR+gZr$\n\
+bQPJ/N47wWHR4EdZt9/zLZA6n2tU6GPVieC/WdoSSaU7XtdzFxts+Crz0K2bXohR$\n\
+KkobUTN1fHkJyZHPTKmUybI+CTEaZOR7j7epU9NOVWYT2p0sK9LavgtR3O852Oaw$\n\
+QdWrSO7SmmaE6Yh3k1b34KfiPvOQFkScJop0Kr8Vz4jWHh6ahdmbsJOoFdzj+1gM$\n\
+/1UbOcwLBARrY7gZIJZbejqpAiein6bCPHlKZ4w8iwXu9m2I3GRRscydT2KXuPv9$\n\
+9WnX6thCEmtyZ+v7Rbs7W7Lh1SiktlxhP/GL56k=$\n\
 -----END CERTIFICATE-----"
 
-!define BADSSL_SELFSIGNED_THUMBPRINT '9dff24e1dbeec15f90751e7af364d417d65cb8cd'
+!define BADSSL_SELFSIGNED_THUMBPRINT 'a66bca8a797de3e4df6c4dd86f639d6f1accd893'
 
+
+
+Var /global testCacertName
+Var /global testCacertValue
+Var /global testCastoreName
+Var /global testCastoreValue
+Var /global testCertName
+Var /global testCertValue
 
 !macro CERT_TEST url file cacert castore cert errortype errorcode
     StrCpy $R0 '${file}'
+
     ${If} `${cacert}` == ""
+        StrCpy $testCacertName ""
+        StrCpy $testCacertValue ""
         StrCpy $R0 '$R0_default'
     ${ElseIf} `${cacert}` == "none"
-    ${OrIf}   `${cacert}` == "builtin"
+    ${OrIf} `${cacert}` == "builtin"
+        StrCpy $testCacertName "/CACERT"
+        StrCpy $testCacertValue `${cacert}`
         StrCpy $R0 '$R0_${cacert}'
     ${Else}
+        StrCpy $testCacertName "/CACERT"
+        StrCpy $testCacertValue `${cacert}`
         StrCpy $R0 '$R0_file'
     ${EndIf}
+
     ${If} `${castore}` == ""
+        StrCpy $testCastoreName ""
+        StrCpy $testCastoreValue ""
         StrCpy $R0 '$R0_default'
     ${Else}
+        StrCpy $testCastoreName "/CASTORE"
+        StrCpy $testCastoreValue `${castore}`
         StrCpy $R0 '$R0_${castore}'
     ${EndIf}
+
     ${If} `${cert}` == ""
+        StrCpy $testCertName ""
+        StrCpy $testCertValue ""
         StrCpy $R0 '$R0_nocert'
     ${Else}
+        StrCpy $testCertName "/CERT"
+        StrCpy $testCertValue `${cert}`
         StrCpy $0 `${cert}` 8
         StrCpy $R0 '$R0_$0'
     ${EndIf}
@@ -465,35 +490,20 @@ juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
     ${GetFileName} $R0 $0
 	DetailPrint 'NScurl::http "${url}" "$0"'
 
-	Push "/END"
-    ${If} `${cacert}` != ""
-        Push `${cacert}`
-        Push /CACERT
-    ${EndIf}
-    ${If} `${castore}` != ""
-        Push `${castore}`
-        Push /CASTORE
-    ${EndIf}
-    ${If} `${cert}` != ""
-        Push `${cert}`
-        Push /CERT
-    ${EndIf}
-    Push /CANCEL
-    Push /INSIST
-    Push 60s
-    Push /TIMEOUT           ; badssl.com can be laggy sometimes
-    Push "$R0.debug.txt"
-    Push "nodata"
-    Push /DEBUG
-    Push "test"
-    Push /TAG
-    Push "@ID@"
-    Push /RETURN
-	Push memory
-	Push "${url}"
-	Push "GET"
-	CallInstDLL "$PLUGINSDIR\NScurl.dll" http
-	Pop $0
+    ; badssl.com can be laggy sometimes (/TIMEOUT 60s)
+    NScurl::http \
+        GET \
+        "${url}" \
+        memory \
+        $testCacertName $testCacertValue \
+        $testCastoreName $testCastoreValue  \
+        $testCertName $testCertValue \
+        /TIMEOUT 60s /INSIST /CANCEL \
+        /RETURN "@ID@" \
+        /TAG "test" \
+        /DEBUG "nodata" "$R0.debug.txt" \
+        /END
+	Pop $0  ; transfer ID
 
     NScurl::query /ID $0 "@Error@"
     Pop $1

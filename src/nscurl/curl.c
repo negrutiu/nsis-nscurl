@@ -9,8 +9,6 @@
 
 
 typedef struct {
-	volatile HMODULE		hPinnedModule;
-	CRITICAL_SECTION		csLock;
 	CHAR					szVersion[64];
 	CHAR					szUserAgent[128];
 } CURL_GLOBALS;
@@ -190,7 +188,6 @@ ULONG CurlInitialize(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
-	InitializeCriticalSection( &g_Curl.csLock );
 	{
 		// Plugin version
 		// Default user agent
@@ -201,51 +198,32 @@ ULONG CurlInitialize(void)
 		_snprintf( g_Curl.szUserAgent, ARRAYSIZE( g_Curl.szUserAgent ), "nscurl/%s", g_Curl.szVersion );
 	}
 
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 	return ERROR_SUCCESS;
 }
-
 
 //++ CurlDestroy
 void CurlDestroy(void)
 {
 	TRACE( _T( "%hs()\n" ), __FUNCTION__ );
 
-	DeleteCriticalSection( &g_Curl.csLock );
-}
+	// Before curl/7.84.0 (June 2022) it's unsafe to call curl_global_cleanup()
+	// from modules that are about to unload.
+	// It's confirmed that NScurl.dll used to crash in XP and Vista when unloaded after curl_global_cleanup().
+	assert(curl_version_info(CURLVERSION_NOW)->features & CURL_VERSION_THREADSAFE);
+	curl_global_cleanup();
 
-
-//++ CurlInitializeLibcurl
-ULONG CurlInitializeLibcurl(void)
-{
-	if (InterlockedCompareExchangePointer( (void*)&g_Curl.hPinnedModule, NULL, NULL ) == NULL) {
-
-		TCHAR szPath[MAX_PATH];
-		TRACE( _T( "%hs()\n" ), __FUNCTION__ );
-
-		// Initialize libcurl
-		curl_global_init( CURL_GLOBAL_ALL );
-
-		//! CAUTION:
-		//? https://curl.haxx.se/libcurl/c/curl_global_cleanup.html
-		//? curl_global_cleanup does not block waiting for any libcurl-created threads
-		//? to terminate (such as threads used for name resolving). If a module containing libcurl
-		//? is dynamically unloaded while libcurl-created threads are still running then your program
-		//? may crash or other corruption may occur. We recommend you do not run libcurl from any module
-		//? that may be unloaded dynamically. This behavior may be addressed in the future.
-
-		// It's confirmed that NScurl.dll crashes when unloaded after curl_global_cleanup() gets called
-		// Easily reproducible in XP and Vista
-		//! We'll pin it in memory forever and never call curl_global_cleanup()
-		if (GetModuleFileName( g_hInst, szPath, ARRAYSIZE( szPath ) ) > 0) {
-			g_Curl.hPinnedModule = LoadLibrary( szPath );
-			assert( g_Curl.hPinnedModule );
-		}
-
-		// kernel32!GetModuleHandleEx is available in XP+
-		//x	GetModuleHandleEx( GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)__FUNCTION__, (HMODULE*)&g_Curl.hPinnedModule );
-	}
-
-	return ERROR_SUCCESS;
+	// [GH-15] Mitigate unload crash on older platforms (XP..8)
+	// The issue:
+	// - openssl/crypto/init.c calls `atexit(OPENSSL_cleanup)` to register its `atexit` callback
+	// - `OPENSSL_cleanup` routine sits in our openssl-hosted module (NScurl.dll)
+	// - at runtime NScurl.dll gets unloaded by the NSIS plugin framework, yet the `atexit` callback remains registered
+	// - at process exit, the `atexit` callback gets called, but by now it points inside an unloaded dll
+	// - on older platforms (XP..8) the process crashes. Newer platforms (10, 11) somehow mitigate this issue and the crash doesn't happen
+	// The fix:
+	// - we build openssl with `-DOPENSSL_NO_ATEXIT` to prevent openssl/crypto/init.c from calling `atexit(OPENSSL_cleanup)`
+	// - with automatic cleanup disabled, we manually call `OPENSSL_cleanup` while NScurl.dll is still loaded
+	OPENSSL_cleanup();
 }
 
 
@@ -326,6 +304,8 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			pReq->pszPath = MyCanonicalizePath(pszParam);
 			assert(pReq->pszPath != NULL);
 		}
+	} else if (lstrcmpi( pszParam, _T( "" ) ) == 0) {
+		// just skip empty parameters
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			// The string may contain multiple headers delimited by \r\n
