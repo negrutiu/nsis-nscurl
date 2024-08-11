@@ -326,6 +326,8 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			pReq->pszPath = MyCanonicalizePath(pszParam);
 			assert(pReq->pszPath != NULL);
 		}
+	} else if (lstrcmpi( pszParam, _T( "" ) ) == 0) {
+		// just skip empty parameters
 	} else if (lstrcmpi( pszParam, _T( "/HEADER" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			// The string may contain multiple headers delimited by \r\n
