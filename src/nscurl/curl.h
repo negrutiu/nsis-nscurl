@@ -170,8 +170,6 @@ ULONG  CurlRequestErrorCode( _In_ PCURL_REQUEST pReq );		//? e.g. 404
 ULONG CurlInitialize(void);
 void  CurlDestroy(void);
 
-ULONG CurlInitializeLibcurl(void);	//! Must be called only when starting transfers. This will lock NScurl.dll in memory until the process exists
-
 //+ CurlParseRequestParam
 // Returns Win32 error code (ERROR_NOT_SUPPORTED for unknown parameters)
 ULONG CurlParseRequestParam(

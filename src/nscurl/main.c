@@ -96,6 +96,8 @@ void __cdecl md5( HWND parent, int string_size, TCHAR *variables, stack_t **stac
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
 	psz[0] = 0;
@@ -131,6 +133,8 @@ void __cdecl sha1( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
@@ -168,6 +172,8 @@ void __cdecl sha256( HWND parent, int string_size, TCHAR *variables, stack_t **s
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
 	psz[0] = 0;
@@ -202,6 +208,8 @@ void __cdecl echo( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
 
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	psz2 = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
@@ -242,12 +250,9 @@ void __cdecl http( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
-	// Lock the plugin in memory (against NSIS framework trying to unload it)
+	// Lock the plugin in memory
+	// NScurl.dll won't unload until the process ends
 	extra->RegisterPluginCallback( g_hInst, UnloadCallback );
-
-	// Lock the plugin in memory (against Windows itself trying to FreeLibrary it)
-	// Once curl_global_init gets called, the current module must never unload
-	CurlInitializeLibcurl();
 
 	// Working structures
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
@@ -338,6 +343,8 @@ void __cdecl wait( HWND parent, int string_size, TCHAR *variables, stack_t **sta
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	// Working structures
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	pGui = (PGUI_REQUEST)MyAlloc( sizeof( *pGui ) );
@@ -391,6 +398,8 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	// Working buffer
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
 	assert( psz );
@@ -438,6 +447,8 @@ void __cdecl cancel( HWND parent, int string_size, TCHAR *variables, stack_t **s
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
 
 	// Working buffer
 	psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) );
@@ -487,6 +498,8 @@ void __cdecl enumerate( HWND parent, int string_size, TCHAR *variables, stack_t 
 	EXDLL_VALIDATE();
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
+
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
 
 	if ((psz = (LPTSTR)MyAlloc( string_size * sizeof( TCHAR ) )) != NULL) {
 
@@ -557,6 +570,8 @@ void __cdecl escape( HWND parent, int string_size, TCHAR *variables, stack_t **s
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
 
@@ -588,6 +603,8 @@ void __cdecl unescape( HWND parent, int string_size, TCHAR *variables, stack_t *
 
 	TRACE( _T( "%s!%hs\n" ), PLUGINNAME, __FUNCTION__ );
 
+	// extra->RegisterPluginCallback(g_hInst, UnloadCallback);
+
 	psz = (LPTSTR)MyAlloc( string_size * sizeof(TCHAR) );
 	assert( psz );
 
@@ -612,8 +629,10 @@ EXTERN_C
 BOOL WINAPI DllMain( HMODULE hInst, UINT iReason, LPVOID lpReserved )
 {
 	if ( iReason == DLL_PROCESS_ATTACH ) {
+		TRACE(_T("DllMain( DLL_PROCESS_ATTACH )\n"));
 		PluginInit( hInst );
 	} else if ( iReason == DLL_PROCESS_DETACH ) {
+		TRACE(_T("DllMain( DLL_PROCESS_DETACH )\n"));
 		PluginUninit();
 	}
 	UNREFERENCED_PARAMETER( lpReserved );
