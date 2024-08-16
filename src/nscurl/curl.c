@@ -1140,6 +1140,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, FALSE );
 			}
 
+			// GH-31: allow "unsafe legacy renegotiation"
+			// Symptomatic URL: https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=PLS&lang=en
+			pReq->opensslSetFlags |= SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+
 			// SSL callback
 			curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback);
 			curl_easy_setopt(curl, CURLOPT_SSL_CTX_DATA, pReq);
