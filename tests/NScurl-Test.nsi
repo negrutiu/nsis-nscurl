@@ -629,7 +629,7 @@ Section "Unsafe legacy renegociation"
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
 
@@ -645,7 +645,7 @@ Section "Weak protocols"
 	!define /redef LINK 'https://tls-v1-0.badssl.com:1010/'
 	!define /redef FILE '$EXEDIR\_test_weaktls10'
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR}    ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
 
@@ -653,7 +653,7 @@ Section "Weak protocols"
 	!define /redef LINK 'https://tls-v1-1.badssl.com:1011/'
 	!define /redef FILE '$EXEDIR\_test_weaktls11'
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR}    ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
 

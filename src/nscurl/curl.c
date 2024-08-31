@@ -459,9 +459,9 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 	} else if (lstrcmpi( pszParam, _T( "/SECURITY" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {
 			if (lstrcmpi(pszParam, _T("weak")) == 0) {
-				pReq->bStrongSecurity = FALSE;
+				pReq->bWeakSecurity = TRUE;
 			} else if (lstrcmpi(pszParam, _T("strong")) == 0) {
-				pReq->bStrongSecurity = TRUE;
+				pReq->bWeakSecurity = FALSE;
 			} else {
 				err = ERROR_INVALID_PARAMETER;
 			}
@@ -650,7 +650,7 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 	}
 
 	// https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour
-	if (!req->bStrongSecurity)
+	if (req->bWeakSecurity)
 	{
 		SSL_CTX_set_security_level(sslctx, 0);
 	}
@@ -1157,7 +1157,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			// Security level
-			if (!pReq->bStrongSecurity)
+			if (pReq->bWeakSecurity)
 			{
 				// GH-31: allow "unsafe legacy renegotiation"
 				// Symptomatic URL: https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=PLS&lang=en
