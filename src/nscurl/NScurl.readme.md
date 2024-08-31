@@ -381,7 +381,7 @@ Parameter      | Details
 /CASTORE true|false
 ```
 Specify that Windows' native CA store should be used for SSL certificate validation.  
-This option is __enabled__ by default.  
+This option is `true` by default.  
 When enabled, the native CA store is used __in addition__ to the other trusted certificate sources ([/CACERT](#cacert) and [/CERT](#cert))
 
 ### /CERT

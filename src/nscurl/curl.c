@@ -643,12 +643,12 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 	const struct curl_slist* pem;
 	for (pem = req->pPemList; pem; pem = pem->next)
 	{
-	    BIO* bio = BIO_new_mem_buf(pem->data, -1);
+		BIO* bio = BIO_new_mem_buf(pem->data, -1);
 		if (bio)
 		{
 			X509_STORE* store = SSL_CTX_get_cert_store(sslctx);
 
-		    // read certificates one by one
+			// read certificates one by one
 			X509* cert;
 			while ((cert = PEM_read_bio_X509(bio, NULL, NULL, NULL)) != NULL)
 			{
