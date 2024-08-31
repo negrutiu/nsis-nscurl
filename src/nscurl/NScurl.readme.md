@@ -375,6 +375,7 @@ Parameter      | Details
 > [!caution]
 > If all certificate sources are empty (e.g. `/CACERT none /CASTORE false` and no `/CERT` arguments), SSL certificate validation is disabled. `NScurl` would connect to any server, including untrusted ones (aka _insecure transfers_).
 > By default, both the built-in `cacert.pem` and the __native CA store__ are used for validation.
+> See [/SECURITY](#security) for more security options.
 
 ### /CASTORE
 ```nsis
@@ -435,18 +436,18 @@ Pop $0
 
 ### /SECURITY
 ```
-/SECURITY weak|strong
+/SECURITY strong|weak
 ```
 Configure the security level for the current transfer.  
-The default security is `weak` to favor compatibility with legacy servers.
+The default security is `strong`.
+
+Security level `strong`:
+- use the default `openssl` crypto algorithms and standards that are considered secure
 
 Security level `weak`:
 - call [SSL_CTX_set_options(..., SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);](https://docs.openssl.org/3.1/man3/SSL_CTX_set_options/#notes) to enable unsafe legacy renegociation
 - call [SSL_CTX_set_security_level( 0 )](https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour) to enable weak cryptographic algorithms
 - call [curl_easy_setopt(..., CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);](https://curl.se/libcurl/c/CURLOPT_SSLVERSION.html) to enable `SSL3`, `TLS 1.0` and `TLS 1.1` protocols
-
-Security level `strong`:
-- use the default `openssl` crypto algorithms and standards that are considered secure
 
 
 ### /DEPEND
