@@ -622,9 +622,24 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 }
 
 
-CURLcode CurlSSLInit(PCURL_REQUEST req, SSL_CTX* sslctx)
+
+//++ CurlSSLCallback
+//? This callback function gets called by libcurl just before the initialization of an SSL connection
+CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 {
-	// Add all `/CERT ...` certificates to the SSL_CTX store
+	SSL_CTX *sslctx = ssl_ctx;
+    PCURL_REQUEST req = userdata;
+
+	// Custom SSL_CTX options
+	if (req->opensslSetFlags || req->opensslClearFlags)
+	{
+		uint64_t flags = SSL_CTX_get_options(sslctx);
+		flags |= req->opensslSetFlags;
+		flags &= ~req->opensslClearFlags;
+		SSL_CTX_set_options(sslctx, flags);
+	}
+
+    // Add `/CERT pem` certificates to the SSL_CTX store
 	const struct curl_slist* pem;
 	for (pem = req->pPemList; pem; pem = pem->next)
 	{
@@ -648,23 +663,13 @@ CURLcode CurlSSLInit(PCURL_REQUEST req, SSL_CTX* sslctx)
 		}
 	}
 
-	return CURLE_OK;
-}
-
-
-//++ CurlSSLCallback
-//? This callback function gets called by libcurl just before the initialization of an SSL connection
-CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
-{
-	SSL_CTX *sslctx = ssl_ctx;
-
-	// Import `/CERT pem` certificates
-    PCURL_REQUEST req = userdata;
-	CurlSSLInit(req, sslctx);
-
-	// Additional callback to validate `/CERT sha1` certificates
-    SSL_CTX_set_app_data(sslctx, userdata);
-	SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
+	// Additional SSL callback to:
+	// - validate `/CERT sha1` certificates
+	// - collect last X509 error
+	if (SSL_CTX_get_verify_mode(sslctx) == SSL_VERIFY_PEER) {
+		SSL_CTX_set_app_data(sslctx, userdata);
+		SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
+	}
 
     UNREFERENCED_PARAMETER( curl );
 	return CURLE_OK;
@@ -1124,10 +1129,6 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					curl_easy_setopt(curl, CURLOPT_CAINFO, pReq->pszCacert);	/// Custom cacert.pem
 				}
 
-				// SSL callback
-				curl_easy_setopt( curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback );
-				curl_easy_setopt( curl, CURLOPT_SSL_CTX_DATA, pReq );
-
 			    ULONG sslopt = CURLSSLOPT_NO_PARTIALCHAIN;						// full chains only
 				if (pReq->bCastore)
 					sslopt |= CURLSSLOPT_NATIVE_CA;
@@ -1138,6 +1139,14 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, FALSE );
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, FALSE );
 			}
+
+			// GH-31: allow "unsafe legacy renegotiation"
+			// Symptomatic URL: https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=PLS&lang=en
+			pReq->opensslSetFlags |= SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+
+			// SSL callback
+			curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback);
+			curl_easy_setopt(curl, CURLOPT_SSL_CTX_DATA, pReq);
 
 			/// Request method
 			if (bGET) {

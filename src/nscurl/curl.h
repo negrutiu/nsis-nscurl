@@ -44,6 +44,8 @@ typedef struct _CURL_REQUEST {
 	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
 	struct curl_slist *pCertList;		/// List of sha1 certificate thumprints. can be NULL
 	struct curl_slist *pPemList;		/// List of pem blobs. can be NULL
+	uint64_t	opensslSetFlags;		// set additional SSL_CTX flags during SSL handshake (see SSL_CTX_set_options)
+	uint64_t	opensslClearFlags;		// clear SSL_CTX flags during SSL handshake (see SSL_CTX_set_options)
 	LPCTSTR		pszDebugFile;			/// can be NULL
 	ULONG		iConnectTimeout;		/// can be 0. Connecting timeout
 	ULONG		iCompleteTimeout;		/// can be 0. Complete (connect + transfer) timeout
