@@ -381,7 +381,7 @@ Parameter      | Details
 /CASTORE true|false
 ```
 Specify that Windows' native CA store should be used for SSL certificate validation.  
-This option is __enabled__ by default.  
+This option is `true` by default.  
 When enabled, the native CA store is used __in addition__ to the other trusted certificate sources ([/CACERT](#cacert) and [/CERT](#cert))
 
 ### /CERT
@@ -405,12 +405,13 @@ Pop $0
 
 ```nsis
 ; Trust self-signed certificate
+; NOTE: This cert might quickly become deprecated. Make sure you use the latest for testing
 !define BADSSL_SELFSIGNED_CRT \
 "-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJANuSS2L+9oTlMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+MIIDeTCCAmGgAwIBAgIJAPhNZrCAQp0/MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
 BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
 c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDA1MTcxNzU5MzNaFw0yNjA1MTcxNzU5MzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+NDA4MjAxNjI0NDVaFw0yNjA4MjAxNjI0NDVaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
 VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
 DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
 BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
@@ -420,17 +421,33 @@ xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
 ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
 QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
 BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAH1tiJTqI9nW4Vr3q6joNV7+hNKS2OtgqBxQhMVWWWr4mRDf$\n\
-ayfr4eAJkiHv8/Fvb6WqbGmzClCVNVOrfTzHeLsfROLLmlkYqXSST76XryQR6hyt$\n\
-4qWqGd4M+MUNf7ty3zcVF0Yt2vqHzp4y8m+mE5nSqRarAGvDNJv+I6e4Edw19u1j$\n\
-ddjiqyutdMsJkgvfNvSLQA8u7SAVjnhnoC6n2jm2wdFbrB+9rnrGje+Q8r1ERFyj$\n\
-SG26SdQCiaG5QBCuDhrtLSR1N90URYCY0H6Z57sWcTKEusb95Pz6cBTLGuiNDKJq$\n\
-juBzebaanR+LTh++Bleb9I0HxFFCTwlQhxo/bfY=$\n\
+hvcNAQELBQADggEBAF9F2x4tuIATEa5jZY86nEaa3Py2Rd0tjNywlryS1TKXWIqu$\n\
+yim+0HpNU/R6cpkN1MZ1iN7dUKTtryLJIAXgaZC1TC6sRyuOMzV/rDHShT3WY0MW$\n\
++/sebaJZ4kkLUzQ1k5/FW/AmZ3su739vLQbcEEfn7UUK5cdRgcqEHA4SePhq5zQX$\n\
+5/FSILsStpu+9hZ6OGxVdLVWKOM5GZ8LCXw3cJCNbJvW1APCz+3bP3bGBANeCUJp$\n\
+gt0b83u4YBs1t66ZV/rcDQiyQzjAY6th2UfRggZxeIRDO7qbRa+M0pVW3qugMytf$\n\
+bPw02aMbgH96rX61u0sd1M0slJHFEeqquqbtPcU=$\n\
 -----END CERTIFICATE-----"
 
 NScurl::http GET "https://self-signed.badssl.com" "${file}" /CERT '${BADSSL_SELFSIGNED_CRT}' /END
 Pop $0
 ```
+
+### /SECURITY
+```
+/SECURITY weak|strong
+```
+Configure the security level for the current transfer.  
+The default security is `weak` to favor compatibility with legacy servers.
+
+Security level `weak`:
+- call [SSL_CTX_set_options(..., SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);](https://docs.openssl.org/3.1/man3/SSL_CTX_set_options/#notes) to enable unsafe legacy renegociation
+- call [SSL_CTX_set_security_level( 0 )](https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour) to enable weak cryptographic algorithms
+- call [curl_easy_setopt(..., CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);](https://curl.se/libcurl/c/CURLOPT_SSLVERSION.html) to enable `SSL3`, `TLS 1.0` and `TLS 1.1` protocols
+
+Security level `strong`:
+- use the default `openssl` crypto algorithms and standards that are considered secure
+
 
 ### /DEPEND
 ```

@@ -4,14 +4,14 @@
   "version": "1.0.0.0",
   "dependencies":
   [
-	{
-       "name": "curl",
-       "default-features": false,
-       "features": ["http2", "openssl", "brotli", "zstd", "tool"]
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": ["http2", "openssl", "brotli", "zstd", "tool"]
     }
   ],
   "vcpkg-configuration": {
-    "overlay-ports":    [ "overlay_ports" ],
-    "overlay-triplets": [ "overlay_triplets" ]
+    "overlay-ports":    ["overlay_ports"],
+    "overlay-triplets": ["overlay_triplets"]
   }
 }

@@ -40,6 +40,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bMarkOfTheWeb : 1;
 	BOOLEAN     bHttp11       : 1;
 	BOOLEAN     bEncoding     : 1;
+	BOOLEAN     bStrongSecurity : 1;	/// Use default openssl security level. By default, we use SSL_CTX_set_security_level(0) and SSL3 as minimum protocol
 	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
 	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
 	struct curl_slist *pCertList;		/// List of sha1 certificate thumprints. can be NULL

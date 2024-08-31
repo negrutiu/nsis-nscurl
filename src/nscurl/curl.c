@@ -456,6 +456,16 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			if (popstring( pszParam ) == NOERROR)
 				pReq->pszTlsPass = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/SECURITY" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			if (lstrcmpi(pszParam, _T("weak")) == 0) {
+				pReq->bStrongSecurity = FALSE;
+			} else if (lstrcmpi(pszParam, _T("strong")) == 0) {
+				pReq->bStrongSecurity = TRUE;
+			} else {
+				err = ERROR_INVALID_PARAMETER;
+			}
+		}
 	} else if (lstrcmpi( pszParam, _T( "/CACERT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR) {						/// pszParam may be empty ("")
 			if (lstrcmpi(pszParam, _T("builtin")) == 0) {
@@ -639,16 +649,22 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 		SSL_CTX_set_options(sslctx, flags);
 	}
 
-    // Add `/CERT pem` certificates to the SSL_CTX store
+	// https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour
+	if (!req->bStrongSecurity)
+	{
+		SSL_CTX_set_security_level(sslctx, 0);
+	}
+
+	// Add `/CERT pem` certificates to the SSL_CTX store
 	const struct curl_slist* pem;
 	for (pem = req->pPemList; pem; pem = pem->next)
 	{
-	    BIO* bio = BIO_new_mem_buf(pem->data, -1);
+		BIO* bio = BIO_new_mem_buf(pem->data, -1);
 		if (bio)
 		{
 			X509_STORE* store = SSL_CTX_get_cert_store(sslctx);
 
-		    // read certificates one by one
+			// read certificates one by one
 			X509* cert;
 			while ((cert = PEM_read_bio_X509(bio, NULL, NULL, NULL)) != NULL)
 			{
@@ -1140,9 +1156,16 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, FALSE );
 			}
 
-			// GH-31: allow "unsafe legacy renegotiation"
-			// Symptomatic URL: https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=PLS&lang=en
-			pReq->opensslSetFlags |= SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+			// Security level
+			if (!pReq->bStrongSecurity)
+			{
+				// GH-31: allow "unsafe legacy renegotiation"
+				// Symptomatic URL: https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=PLS&lang=en
+				pReq->opensslSetFlags |= SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION;
+
+				// Allow TLS 1.0, TLS 1.1
+				curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_0);
+			}
 
 			// SSL callback
 			curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback);
@@ -1355,7 +1378,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						break;		/// Canceled
 					if (pReq->Error.iHttp > 0 && (pReq->Error.iHttp < 200 || pReq->Error.iHttp >= 300))
 						break;		/// HTTP error
-					if (pReq->Error.iCurl == CURLE_PEER_FAILED_VERIFICATION || pReq->Error.iX509 != X509_V_OK)
+					if (pReq->Error.iCurl == CURLE_SSL_CONNECT_ERROR || pReq->Error.iCurl == CURLE_PEER_FAILED_VERIFICATION || pReq->Error.iX509 != X509_V_OK)
 						break;		/// SSL error
 
 					// Cancel?

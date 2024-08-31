@@ -669,10 +669,10 @@ SectionGroup /e "Tests"
 ; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
 !define BADSSL_SELFSIGNED_CRT \
 "-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJAPEMFZO/+ZHXMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+MIIDeTCCAmGgAwIBAgIJAPhNZrCAQp0/MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
 BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
 c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDA4MDkxNjA5MjFaFw0yNjA4MDkxNjA5MjFaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+NDA4MjAxNjI0NDVaFw0yNjA4MjAxNjI0NDVaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
 VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
 DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
 BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
@@ -682,15 +682,15 @@ xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
 ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
 QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
 BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBADwahI1HUmazX3I3p0c53AZ5z4BO+Ezb4+bBph3MX8xR+gZr$\n\
-bQPJ/N47wWHR4EdZt9/zLZA6n2tU6GPVieC/WdoSSaU7XtdzFxts+Crz0K2bXohR$\n\
-KkobUTN1fHkJyZHPTKmUybI+CTEaZOR7j7epU9NOVWYT2p0sK9LavgtR3O852Oaw$\n\
-QdWrSO7SmmaE6Yh3k1b34KfiPvOQFkScJop0Kr8Vz4jWHh6ahdmbsJOoFdzj+1gM$\n\
-/1UbOcwLBARrY7gZIJZbejqpAiein6bCPHlKZ4w8iwXu9m2I3GRRscydT2KXuPv9$\n\
-9WnX6thCEmtyZ+v7Rbs7W7Lh1SiktlxhP/GL56k=$\n\
+hvcNAQELBQADggEBAF9F2x4tuIATEa5jZY86nEaa3Py2Rd0tjNywlryS1TKXWIqu$\n\
+yim+0HpNU/R6cpkN1MZ1iN7dUKTtryLJIAXgaZC1TC6sRyuOMzV/rDHShT3WY0MW$\n\
++/sebaJZ4kkLUzQ1k5/FW/AmZ3su739vLQbcEEfn7UUK5cdRgcqEHA4SePhq5zQX$\n\
+5/FSILsStpu+9hZ6OGxVdLVWKOM5GZ8LCXw3cJCNbJvW1APCz+3bP3bGBANeCUJp$\n\
+gt0b83u4YBs1t66ZV/rcDQiyQzjAY6th2UfRggZxeIRDO7qbRa+M0pVW3qugMytf$\n\
+bPw02aMbgH96rX61u0sd1M0slJHFEeqquqbtPcU=$\n\
 -----END CERTIFICATE-----"
 
-!define BADSSL_SELFSIGNED_THUMBPRINT 'a66bca8a797de3e4df6c4dd86f639d6f1accd893'
+!define BADSSL_SELFSIGNED_THUMBPRINT '8577cec7988ad89d72400f5933988221984e3009'
 
 
 Var /global testCacertName
@@ -699,14 +699,16 @@ Var /global testCastoreName
 Var /global testCastoreValue
 Var /global testCertName
 Var /global testCertValue
+Var /global testSecurityName
+Var /global testSecurityValue
 
-!macro CERT_TEST url file cacert castore cert errortype errorcode
+!macro TRANSFER_TEST url file cacert castore cert security errortype errorcode
     StrCpy $R0 '${file}'
 
     ${If} `${cacert}` == ""
         StrCpy $testCacertName ""
         StrCpy $testCacertValue ""
-        StrCpy $R0 '$R0_default'
+        StrCpy $R0 '$R0_defcacert'
     ${ElseIf} `${cacert}` == "none"
     ${OrIf} `${cacert}` == "builtin"
         StrCpy $testCacertName "/CACERT"
@@ -721,7 +723,7 @@ Var /global testCertValue
     ${If} `${castore}` == ""
         StrCpy $testCastoreName ""
         StrCpy $testCastoreValue ""
-        StrCpy $R0 '$R0_default'
+        StrCpy $R0 '$R0_defcastore'
     ${Else}
         StrCpy $testCastoreName "/CASTORE"
         StrCpy $testCastoreValue `${castore}`
@@ -731,12 +733,22 @@ Var /global testCertValue
     ${If} `${cert}` == ""
         StrCpy $testCertName ""
         StrCpy $testCertValue ""
-        StrCpy $R0 '$R0_nocert'
+        StrCpy $R0 '$R0_defcert'
     ${Else}
         StrCpy $testCertName "/CERT"
         StrCpy $testCertValue `${cert}`
         StrCpy $0 `${cert}` 8
         StrCpy $R0 '$R0_$0'
+    ${EndIf}
+
+    ${If} `${security}` == ""
+        StrCpy $testSecurityName ""
+        StrCpy $testSecurityValue ""
+        StrCpy $R0 '$R0_defsecurity'
+    ${Else}
+        StrCpy $testSecurityName "/SECURITY"
+        StrCpy $testSecurityValue `${security}`
+        StrCpy $R0 '$R0_${security}'
     ${EndIf}
 
     ${GetFileName} $R0 $0
@@ -761,6 +773,8 @@ Var /global testCertValue
     Push $testCastoreName
     Push $testCacertValue
     Push $testCacertName
+    Push $testSecurityValue
+    Push $testSecurityName
 	Push memory
 	Push "${url}"
 	Push "GET"
@@ -808,9 +822,9 @@ Section "Expired certificate"
 
     !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     Push /REMOVE
     Push "test"
@@ -827,9 +841,9 @@ Section "Wrong host"
 
     !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     Push /REMOVE
     Push "test"
@@ -847,11 +861,11 @@ Section "Untrusted root"
     !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} '' http 200
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     Push /REMOVE
     Push "test"
@@ -868,23 +882,23 @@ Section "Self-signed certificate"
 
     !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''        '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' '' http 200
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
 
     Push /REMOVE
     Push "test"
@@ -892,6 +906,70 @@ Section "Self-signed certificate"
     CallInstDLL $DLL cancel     ; no return
 
 SectionEnd
+
+Section "Unsafe legacy renegociation"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
+	!define /redef FILE '$EXEDIR\_test_legacynego'
+
+    !define /redef CURLE_SSL_CONNECT_ERROR 35
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+SectionEnd
+
+Section "Weak protocols"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+    !define /redef CURLE_SSL_CONNECT_ERROR 35
+    
+	!define /redef LINK 'https://tls-v1-0.badssl.com:1010/'
+	!define /redef FILE '$EXEDIR\_test_weaktls10'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
+
+
+	!define /redef LINK 'https://tls-v1-1.badssl.com:1011/'
+	!define /redef FILE '$EXEDIR\_test_weaktls11'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
+
+
+    !define /redef LINK 'https://tls-v1-2.badssl.com:1012/'
+	!define /redef FILE '$EXEDIR\_test_weaktls12'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200   ; TLS 1.2 should always work
+
+    ; ----------------------------------------------
+
+    !define /redef LINK 'https://dh2048.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_weakdh2k'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+SectionEnd
+
 
 SectionGroupEnd
 
