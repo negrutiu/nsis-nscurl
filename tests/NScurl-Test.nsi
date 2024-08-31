@@ -446,14 +446,16 @@ Var /global testCastoreName
 Var /global testCastoreValue
 Var /global testCertName
 Var /global testCertValue
+Var /global testSecurityName
+Var /global testSecurityValue
 
-!macro CERT_TEST url file cacert castore cert errortype errorcode
+!macro TRANSFER_TEST url file cacert castore cert security errortype errorcode
     StrCpy $R0 '${file}'
 
     ${If} `${cacert}` == ""
         StrCpy $testCacertName ""
         StrCpy $testCacertValue ""
-        StrCpy $R0 '$R0_default'
+        StrCpy $R0 '$R0_defcacert'
     ${ElseIf} `${cacert}` == "none"
     ${OrIf} `${cacert}` == "builtin"
         StrCpy $testCacertName "/CACERT"
@@ -468,7 +470,7 @@ Var /global testCertValue
     ${If} `${castore}` == ""
         StrCpy $testCastoreName ""
         StrCpy $testCastoreValue ""
-        StrCpy $R0 '$R0_default'
+        StrCpy $R0 '$R0_defcastore'
     ${Else}
         StrCpy $testCastoreName "/CASTORE"
         StrCpy $testCastoreValue `${castore}`
@@ -478,12 +480,22 @@ Var /global testCertValue
     ${If} `${cert}` == ""
         StrCpy $testCertName ""
         StrCpy $testCertValue ""
-        StrCpy $R0 '$R0_nocert'
+        StrCpy $R0 '$R0_defcert'
     ${Else}
         StrCpy $testCertName "/CERT"
         StrCpy $testCertValue `${cert}`
         StrCpy $0 `${cert}` 8
         StrCpy $R0 '$R0_$0'
+    ${EndIf}
+
+    ${If} `${security}` == ""
+        StrCpy $testSecurityName ""
+        StrCpy $testSecurityValue ""
+        StrCpy $R0 '$R0_defsecurity'
+    ${Else}
+        StrCpy $testSecurityName "/SECURITY"
+        StrCpy $testSecurityValue `${security}`
+        StrCpy $R0 '$R0_${security}'
     ${EndIf}
 
     ${GetFileName} $R0 $0
@@ -494,6 +506,7 @@ Var /global testCertValue
         GET \
         "${url}" \
         memory \
+        $testSecurityName $testSecurityValue \
         $testCacertName $testCacertValue \
         $testCastoreName $testCastoreValue  \
         $testCertName $testCertValue \
@@ -535,9 +548,9 @@ Section "Expired certificate"
 
     !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
@@ -551,9 +564,9 @@ Section "Wrong host"
 
     !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
@@ -568,11 +581,11 @@ Section "Untrusted root"
     !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} '' http 200
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
@@ -586,23 +599,80 @@ Section "Self-signed certificate"
 
     !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' ''        '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''        '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' '' http 200
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none'    'true'  '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
-    !insertmacro CERT_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
+
+Section "Unsafe legacy renegociation"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
+	!define /redef FILE '$EXEDIR\_test_legacynego'
+
+    !define /redef CURLE_SSL_CONNECT_ERROR 35
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
+
+Section "Weak protocols"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+    !define /redef CURLE_SSL_CONNECT_ERROR 35
+    
+	!define /redef LINK 'https://tls-v1-0.badssl.com:1010/'
+	!define /redef FILE '$EXEDIR\_test_weaktls10'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
+
+
+	!define /redef LINK 'https://tls-v1-1.badssl.com:1011/'
+	!define /redef FILE '$EXEDIR\_test_weaktls11'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR}    ; OpenSSL/3.3.1: error:0A000102:SSL routines::unsupported protocol
+
+
+    !define /redef LINK 'https://tls-v1-2.badssl.com:1012/'
+	!define /redef FILE '$EXEDIR\_test_weaktls12'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200   ; TLS 1.2 should always work
+
+    ; ----------------------------------------------
+
+    !define /redef LINK 'https://dh2048.badssl.com'
+	!define /redef FILE '$EXEDIR\_test_weakdh2k'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
