@@ -16,11 +16,17 @@ jobs:
       #   with:
       #     submodules: 'true'
 
-      - name: Print environment
+      - name: Print environment (before)
         shell: cmd
         run: |
               echo ----------------------------------------------------
               set
+              echo ----------------------------------------------------
+              for %%d in (%SystemDrive%\msys64\mingw32 %SystemDrive%\msys64\mingw64 %SystemDrive%\mingw32 %SystemDrive%\mingw64) do (
+                if exist "%%d\bin\gcc.exe" echo ---------- %%d\bin\gcc.exe ---------- && "%%d\bin\gcc.exe" -v
+              )
+              echo ----------------------------------------------------
+              dir /b /s %SystemDrive%\msys64\*.exe
               echo ----------------------------------------------------
               where gcc.exe
               gcc.exe -v
@@ -29,7 +35,61 @@ jobs:
               echo ----------------------------------------------------
               py -3 -V
               py -3 -m pip list
-        
+
+      # [note] Pulls latest mingw-w64 (14.2.0) using msys2/pacman
+      # [note] Quite slow (4-5m)
+      # - name: Setup msys2/mingw32
+      #   id: setup-msys2-mingw32
+      #   uses: msys2/setup-msys2@v2
+      #   with:
+      #     msystem: mingw32
+      #     release: false
+      #     update: true
+      #     install: mingw-w64-i686-toolchain
+          
+      # - name: Setup msys2/mingw64
+      #   id: setup-msys2-mingw64
+      #   uses: msys2/setup-msys2@v2
+      #   with:
+      #       msystem: mingw64
+      #       release: false
+      #       update: true
+      #       install: mingw-w64-x86_64-toolchain
+      
+      # [note] Downloads an older mingw-w64 (13.2.0) with Chocolately
+      # [note] Runtime error: Cannot find path 'C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw32\i686-w64-mingw32\lib\libpthread.dll.a' because it does not exist
+      # - name: Setup mingw32
+      #   id: setup-mingw32
+      #   uses: egor-tensin/setup-mingw@v2
+      #   with:
+      #     platform: x86
+
+      # - name: Setup mingw64
+      #   id: setup-mingw64
+      #   uses: egor-tensin/setup-mingw@v2
+      #   with:
+      #     platform: x64
+
+      - name: Print environment
+        shell: cmd
+        run: |
+              echo ----------------------------------------------------
+              set
+              echo ----------------------------------------------------
+              for %%d in (%SystemDrive%\msys64\mingw32 %SystemDrive%\msys64\mingw64 %SystemDrive%\mingw32 %SystemDrive%\mingw64) do (
+                if exist "%%d\bin\gcc.exe" echo ---------- %%d\bin\gcc.exe ---------- && "%%d\bin\gcc.exe" -v
+              )
+              echo ----------------------------------------------------
+              dir /b /s %SystemDrive%\msys64\*.exe
+              echo ----------------------------------------------------
+              where gcc.exe
+              gcc.exe -v
+              echo ====================================================
+              py -0p
+              echo ----------------------------------------------------
+              py -3 -V
+              py -3 -m pip list
+
       - id: version
         name: Version
         shell: python
@@ -54,65 +114,3 @@ jobs:
         shell: cmd
         run: |
             echo previous version=${{needs.experiments.outputs.version}}
-
-  release:
-    runs-on: ubuntu-latest
-    needs: experiments
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        shell: python
-        run: |
-          with open("test.txt", "w") as fout:
-            fout.write(f"Artifact sample for version ${{needs.experiments.outputs.version}}")
-
-      - name: Prepare release notes
-        shell: python
-        run: |
-          lines = []
-          with open(".github/workflows/release-body.md") as fin:
-            line = fin.read()
-            #line = line.replace('{version-libs}', 'libcurl/todo, OpenSSL/todo, zlib/todo, brotli/todo, zstd/todo, nghttp2/todo')
-            #line = line.replace('{version-gcc}', 'todo')
-            line = line.replace('{url-workflow}', 'https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}')
-            lines.append(line)
-          with open(".github/workflows/release-body.md", "w") as fout:
-            for line in lines:
-              fout.write(line)
-
-      - uses: ncipollo/release-action@v1
-        with:
-          # note: `tag` is the release key
-          tag: release-candidate
-          name: v${{needs.experiments.outputs.version}}
-          artifacts: "test.txt"
-          bodyFile: .github/workflows/release-body.md
-          draft: true
-          makeLatest: true
-          allowUpdates: true
-          updateOnlyUnreleased: true
-          artifactErrorsFailBuild: true
-          replacesArtifacts: true
-
-  jsons:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Read versions.json
-        id: versions
-        shell: python
-        run: |
-          import os
-          with open('versions.json', 'w') as fout:
-            fout.write('{"value1":1, "value2":"2"}')
-          with open('versions.json') as fin:
-            with open(os.getenv('GITHUB_OUTPUT'), "a") as fout:
-              fout.write(f"versions_json={fin.read()}")
-      - name: Use versions.json
-        shell: python
-        run: |
-          print(f"-- value1 is \"${{fromJson(steps.versions.outputs.versions_json).value1}}\"")
-          print(f"-- value2 is \"${{fromJson(steps.versions.outputs.versions_json).value2}}\"")

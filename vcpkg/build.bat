@@ -63,6 +63,14 @@ set vcpkg_packages=%vcpkg_dir%\packages
 REM set vcpkg_archives=%vcpkg_dir%\archives
 set vcpkg_archives=%~dp0archives
 
+rem | Optional GitHub Actions cache
+rem | https://learn.microsoft.com/en-us/vcpkg/consume/binary-caching-github-actions-cache
+if defined GITHUB_ACTIONS if defined ACTIONS_CACHE_URL if defined ACTIONS_RUNTIME_TOKEN set vcpkg_cache_gha=x-gha,readwrite&& echo --- using GitHub Actions as cache provider
+
+rem | Optional external webserver cache
+rem | https://learn.microsoft.com/en-us/vcpkg/reference/binarycaching
+if defined VCPKG_BINARY_CACHE_URL if defined VCPKG_BINARY_CACHE_AUTH_HEADER set vcpkg_cache_http=http,%VCPKG_BINARY_CACHE_URL%,readwrite,Authorization: %VCPKG_BINARY_CACHE_AUTH_HEADER%&& echo --- using external web server as cache provider
+
 echo -------------------------------------------------------------------------
 echo Build ^& install vcpkg ...
 echo -------------------------------------------------------------------------
@@ -76,7 +84,7 @@ vcpkg.exe ^
   --x-install-root="%vcpkg_installed%" ^
   --downloads-root="%vcpkg_downloads%" ^
   --x-buildtrees-root="%vcpkg_buildtrees%" ^
-  --binarysource=clear;files,"%vcpkg_archives%",readwrite ^
+  --binarysource="clear;files,%vcpkg_archives%,readwrite;%vcpkg_cache_gha%;%vcpkg_cache_http%" ^
   --x-packages-root="%vcpkg_packages%" ^
   --no-print-usage
 
