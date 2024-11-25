@@ -205,7 +205,7 @@ jobs:
   
       # note: we're using dawidd6/action-download-artifact@v5 because of `skip_unpack`
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v5
+        uses: dawidd6/action-download-artifact@v6
         with:
           path: artifacts
           name: ^NScurl$|^NScurl-Examples$
