@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1606,3 +1606,3 @@
+@@ -1622,3 +1622,3 @@
  check_function_exists("eventfd"       HAVE_EVENTFD)
 -check_symbol_exists("ftruncate"       "unistd.h" HAVE_FTRUNCATE)
 +#check_symbol_exists("ftruncate"       "unistd.h" HAVE_FTRUNCATE)           # nscurl: The mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
- check_function_exists("_fseeki64"     HAVE__FSEEKI64)
+ check_symbol_exists("getpeername"     "${CURL_INCLUDES}" HAVE_GETPEERNAME)  # winsock2.h unistd.h proto/bsdsocket.h
