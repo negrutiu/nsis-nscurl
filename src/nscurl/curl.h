@@ -23,6 +23,8 @@ typedef struct _CURL_REQUEST {
 	LPCTSTR		pszPath;				/// Local file path. If NULL, the file will download to RAM
 	LPCSTR		pszMethod;				/// can be NULL
 	LPCSTR		pszProxy;				/// can be NULL
+	LPCSTR		pszProxyUser;			/// can be NULL
+	LPCSTR		pszProxyPass;			/// can be NULL
 	int			iAuthType;				/// can be 0
 	LPCSTR		pszUser;				/// can be NULL
 	LPCSTR		pszPass;				/// can be NULL. Represents OAuth 2.0 token if iAuthType is CURLAUTH_BEARER
@@ -116,6 +118,8 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszPath );
 	MyFree( pReq->pszMethod );
 	MyFree( pReq->pszProxy );
+	MyFree( pReq->pszProxyUser );
+	MyFree( pReq->pszProxyPass );
 	MyFree( pReq->pszUser );
 	MyFree( pReq->pszPass );
 	MyFree( pReq->pszTlsUser );
