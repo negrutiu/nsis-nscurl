@@ -379,6 +379,15 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			MyFree( pReq->pszProxy );
 			pReq->pszProxy = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/PROXYAUTH" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR && *pszParam) {
+			MyFree( pReq->pszProxyUser );
+			pReq->pszProxyUser = MyStrDup( eT2A, pszParam );
+			if (popstring( pszParam ) == NOERROR && *pszParam) {
+				MyFree( pReq->pszProxyPass );
+				pReq->pszProxyPass = MyStrDup( eT2A, pszParam );
+			}
+		}
 	} else if (lstrcmpi( pszParam, _T( "/DATA" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			err = IDataParseParam(pszParam, iParamMaxLen, &pReq->Data);
@@ -1259,6 +1268,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			/// Proxy Server
 			if (pReq->pszProxy)
 				curl_easy_setopt( curl, CURLOPT_PROXY, pReq->pszProxy );
+
+			/// Proxy Authentication
+			if (pReq->pszProxyUser && pReq->pszProxyPass) {
+				curl_easy_setopt( curl, CURLOPT_PROXYAUTH, CURLAUTH_BASIC);
+				curl_easy_setopt( curl, CURLOPT_PROXYUSERNAME, pReq->pszProxyUser );		// TODO: Store it encrypted
+				curl_easy_setopt( curl, CURLOPT_PROXYPASSWORD, pReq->pszProxyPass );		// TODO: Store it encrypted
+			}
 
 			/// TLS Authentication
 			if (pReq->pszTlsUser && pReq->pszTlsPass) {

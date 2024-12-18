@@ -138,6 +138,10 @@ Connect through a web proxy server.
 Supported schemes: `http`, `https`, `socks4`, `socks4a`, `socks5`, `socks5a`.  
 For more information visit libcurl [CURLOPT_PROXY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html) documentation.
 
+### /PROXYAUTH user pass
+Proxy authentication.  
+For more information visit libcurl [CURLOPT_PROXYAUTH](https://curl.se/libcurl/c/CURLOPT_PROXYAUTH.html) documentation.
+
 ### /DOH
 ```
 /DOH "https://<domain>/dns-query"
