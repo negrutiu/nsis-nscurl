@@ -206,6 +206,42 @@ Section "httpbin.org/get"
 SectionEnd
 
 
+Section "httpbun.com/cookies/set"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!insertmacro STACK_VERIFY_START
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbun_cookies_set'
+    !define /redef JAR  '$EXEDIR\_GET_httpbun_cookiejar.txt'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+	Push "/END"
+
+	; Push "${FILE}.md"
+	; Push /DEBUG
+
+    Push "${JAR}"
+    Push "/COOKIEJAR"
+
+	Push "${FILE}"
+	Push "${LINK}"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 "OK (file exists)"
+    ${Else}
+        StrCpy $1 "FAIL (not found: ${JAR})"
+    ${EndIf}
+
+	DetailPrint "Status: $0"
+	DetailPrint "Cookie jar: $1"
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+
 Section "sysinternals.com/get (Page-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='

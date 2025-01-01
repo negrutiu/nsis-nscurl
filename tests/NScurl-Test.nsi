@@ -149,6 +149,29 @@ Section "httpbin.org/get"
 SectionEnd
 
 
+Section "httpbun.com/cookies/set"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbun_cookies_set'
+    !define /redef JAR  '$EXEDIR\_GET_httpbun_cookiejar.txt'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+    NScurl::http get "${LINK}" "${FILE}" /COOKIEJAR "${JAR}" /END
+	Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 "OK (file exists)"
+    ${Else}
+        StrCpy $1 "FAIL (not found: ${JAR})"
+    ${EndIf}
+
+	DetailPrint "Status: $0"
+	DetailPrint "Cookie jar: $1"
+SectionEnd
+
+
 Section "sysinternals.com/get (Page-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
@@ -677,6 +700,38 @@ Section "Weak protocols"
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
 
+
+Section "Cookie jar"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_test_cookiejar_body'
+	!define /redef JAR  '$EXEDIR\_test_cookiejar.txt'
+
+    Delete "${JAR}"
+
+    DetailPrint 'NScurl::http "${LINK}" /COOKIEJAR "${JAR}"'
+    NScurl::http get "${LINK}" "${FILE}" /COOKIEJAR "${JAR}" /TAG "test" /END
+    Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 "OK"
+    ${Else}
+        StrCpy $1 "MISSING"
+    ${EndIf}
+
+    IntOp $g_testCount $g_testCount + 1
+    ${If} $0 == "OK"
+    ${AndIf} $1 == "OK"
+        DetailPrint "[ OK ] status:$0, jar:$1"
+    ${Else}
+        IntOp $g_testFails $g_testFails + 1
+        DetailPrint "----- FAIL ----- status:$0, jar:$1"
+    ${EndIf}
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
 
 SectionGroupEnd
 
