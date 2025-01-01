@@ -1452,8 +1452,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			// Cleanup
-			curl_easy_reset( curl );
-			curl_easy_cleanup( curl );		// TODO: Return to cache
+			curl_easy_cleanup( curl );
 		}
 
 		curl_mime_free( form );
