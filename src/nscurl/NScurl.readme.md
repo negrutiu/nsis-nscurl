@@ -157,6 +157,14 @@ Examples:
 > [!note]
 > DoH server is used for the current transfer only, it's not a global setting
 
+### /COOKIEJAR
+```
+/COOKIEJAR "filepath"
+```
+Specify a custom file where libcurl stores cookies.  
+By default `$PLUGINSDIR\cookies.txt` is used.  
+Specifying an empty string disables cookie engine.
+
 ### /TIMEOUT
 ### /CONNECTTIMEOUT
 ```

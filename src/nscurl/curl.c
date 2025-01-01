@@ -548,6 +548,12 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			if (*pszParam)
 				pReq->pszDOH = MyStrDup( eT2A, pszParam );
 		}
+	} else if (lstrcmpi( pszParam, _T( "/COOKIEJAR" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			MyFree( pReq->pszCookieFile );
+			if (pszParam && pszParam[0])
+				pReq->pszCookieFile = MyStrDup( eT2A, pszParam );
+		}
 	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
 		pReq->bEncoding = TRUE;
 	} else {
@@ -1125,6 +1131,11 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
+
+			if (pReq->pszCookieFile && pReq->pszCookieFile[0]) {
+				curl_easy_setopt(curl, CURLOPT_COOKIEFILE, pReq->pszCookieFile);	// request cookies
+				curl_easy_setopt(curl, CURLOPT_COOKIEJAR, pReq->pszCookieFile);		// response cookies
+			}
 
 			if (pReq->bEncoding && !pReq->bResume && lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0)
 			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings

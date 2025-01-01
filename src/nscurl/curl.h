@@ -58,6 +58,7 @@ typedef struct _CURL_REQUEST {
 	ULONG		iDependencyId;			/// can be 0. This request will not be carried out until its dependency completes
 	LPCSTR		pszTag;					/// can be NULL
 	LPCSTR		pszDOH;					/// can be NULL. DNS-over-HTTPS server (e.g. "https://1.1.1.1/dns-query")
+	LPCSTR		pszCookieFile;
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
@@ -109,6 +110,11 @@ static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
 	ZeroMemory( pReq, sizeof( *pReq ) );
 	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
 	pReq->bCastore = TRUE;
+	{
+		TCHAR buffer[MAX_PATH];
+		_stprintf(buffer, _T("%s\\cookies.txt"), getuservariableEx(INST_PLUGINSDIR));
+		pReq->pszCookieFile = MyStrDup(eT2A, buffer);
+	}
 }
 
 //+ CurlRequestDestroy
@@ -135,6 +141,7 @@ static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
 	MyFree( pReq->pszDebugFile );
 	MyFree( pReq->pszTag );
 	MyFree( pReq->pszDOH );
+	MyFree( pReq->pszCookieFile );
 	pReq->Runtime.pCurl = NULL;
 	if (MyValidHandle( pReq->Runtime.hInFile ))
 		CloseHandle( pReq->Runtime.hInFile );
