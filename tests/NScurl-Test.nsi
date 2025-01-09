@@ -149,6 +149,29 @@ Section "httpbin.org/get"
 SectionEnd
 
 
+Section "httpbun.com/cookies/set"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_GET_httpbun_cookies_set'
+    !define /redef JAR  '$EXEDIR\_GET_httpbun_cookiejar.txt'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+
+    NScurl::http get "${LINK}" "${FILE}" /COOKIEJAR "${JAR}" /END
+	Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 "OK (file exists)"
+    ${Else}
+        StrCpy $1 "FAIL (not found: ${JAR})"
+    ${EndIf}
+
+	DetailPrint "Status: $0"
+	DetailPrint "Cookie jar: $1"
+SectionEnd
+
+
 Section "sysinternals.com/get (Page-Mode)"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
@@ -416,10 +439,10 @@ SectionGroup /e "Tests"
 ; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
 !define BADSSL_SELFSIGNED_CRT \
 "-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJAPhNZrCAQp0/MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
+MIIDeTCCAmGgAwIBAgIJALfFORhDXiFeMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
 BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
 c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDA4MjAxNjI0NDVaFw0yNjA4MjAxNjI0NDVaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
+NDEyMTkyMTAzMzNaFw0yNjEyMTkyMTAzMzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
 VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
 DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
 BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
@@ -429,15 +452,15 @@ xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
 ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
 QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
 BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAF9F2x4tuIATEa5jZY86nEaa3Py2Rd0tjNywlryS1TKXWIqu$\n\
-yim+0HpNU/R6cpkN1MZ1iN7dUKTtryLJIAXgaZC1TC6sRyuOMzV/rDHShT3WY0MW$\n\
-+/sebaJZ4kkLUzQ1k5/FW/AmZ3su739vLQbcEEfn7UUK5cdRgcqEHA4SePhq5zQX$\n\
-5/FSILsStpu+9hZ6OGxVdLVWKOM5GZ8LCXw3cJCNbJvW1APCz+3bP3bGBANeCUJp$\n\
-gt0b83u4YBs1t66ZV/rcDQiyQzjAY6th2UfRggZxeIRDO7qbRa+M0pVW3qugMytf$\n\
-bPw02aMbgH96rX61u0sd1M0slJHFEeqquqbtPcU=$\n\
+hvcNAQELBQADggEBAITHC93SNagVrwUX41aUUJlIg6s+E8LXGZIP77HGSd48R1zS$\n\
++xPQcs2OKJaFESRZTJFgZ+wyPW3VhLm/ObYKbQiqmXc7W91nne+mywOF8cxcOoNw$\n\
+BDkVACyN36A6Bm42zTVdf0CYQR2d4pnI1LzWsGSQVRh+oCnrapxbmmI105rgJ3q5$\n\
+3RRcFPuKDdycqXgCCem8Zmg+Pq4XWZlbcCk1jts1TbFjUmr9G7lBV7cUu3XurbK9$\n\
+6xiRwFqPA/1qwLgyEXwUlsJ63D1GwRNa9N8ynfLvtE3bhE+oGk3xPL2sQN8HMYVw$\n\
+NKDIcX/Eu+lJjdcg3xu8Ym/V8P/s/frahpF4Q1A=$\n\
 -----END CERTIFICATE-----"
 
-!define BADSSL_SELFSIGNED_THUMBPRINT '8577cec7988ad89d72400f5933988221984e3009'
+!define BADSSL_SELFSIGNED_THUMBPRINT '6e3df5d84de941e0b4c3d5f0788b7e0bfc0d42bf'
 
 
 Var /global testCacertName
@@ -677,6 +700,38 @@ Section "Weak protocols"
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
 
+
+Section "Cookie jar"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_test_cookiejar_body'
+	!define /redef JAR  '$EXEDIR\_test_cookiejar.txt'
+
+    Delete "${JAR}"
+
+    DetailPrint 'NScurl::http "${LINK}" /COOKIEJAR "${JAR}"'
+    NScurl::http get "${LINK}" "${FILE}" /COOKIEJAR "${JAR}" /TAG "test" /END
+    Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 "OK"
+    ${Else}
+        StrCpy $1 "MISSING"
+    ${EndIf}
+
+    IntOp $g_testCount $g_testCount + 1
+    ${If} $0 == "OK"
+    ${AndIf} $1 == "OK"
+        DetailPrint "[ OK ] status:$0, jar:$1"
+    ${Else}
+        IntOp $g_testFails $g_testFails + 1
+        DetailPrint "----- FAIL ----- status:$0, jar:$1"
+    ${EndIf}
+
+    NScurl::cancel /TAG "test" /REMOVE
+SectionEnd
 
 SectionGroupEnd
 

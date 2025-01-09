@@ -58,6 +58,7 @@ typedef struct _CURL_REQUEST {
 	ULONG		iDependencyId;			/// can be 0. This request will not be carried out until its dependency completes
 	LPCSTR		pszTag;					/// can be NULL
 	LPCSTR		pszDOH;					/// can be NULL. DNS-over-HTTPS server (e.g. "https://1.1.1.1/dns-query")
+	LPCSTR		pszCookieFile;
 	struct {
 		struct _CURL_REQUEST* pNext;	/// Singly linked list
 		ULONG			iId;			/// Unique ID
@@ -103,56 +104,12 @@ typedef struct _CURL_REQUEST {
 	} Error;
 } CURL_REQUEST, *PCURL_REQUEST;
 
+
 //+ CurlRequestInit
-static void CurlRequestInit( _Inout_ PCURL_REQUEST pReq ) {
-	if (!pReq) return;
-	ZeroMemory( pReq, sizeof( *pReq ) );
-	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
-	pReq->bCastore = TRUE;
-}
+void CurlRequestInit( _Inout_ PCURL_REQUEST pReq );
 
 //+ CurlRequestDestroy
-static void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq ) {
-	if (!pReq) return;
-	MyFree( pReq->pszURL );
-	MyFree( pReq->pszPath );
-	MyFree( pReq->pszMethod );
-	MyFree( pReq->pszProxy );
-	MyFree( pReq->pszProxyUser );
-	MyFree( pReq->pszProxyPass );
-	MyFree( pReq->pszUser );
-	MyFree( pReq->pszPass );
-	MyFree( pReq->pszTlsUser );
-	MyFree( pReq->pszTlsPass );
-	curl_slist_free_all( pReq->pOutHeaders );
-	curl_slist_free_all( pReq->pPostVars );
-	IDataDestroy( &pReq->Data );
-	MyFree( pReq->pszAgent );
-	MyFree( pReq->pszReferrer );
-	curl_slist_free_all( pReq->pCertList );
-	curl_slist_free_all( pReq->pPemList );
-	MyFree( pReq->pszCacert );
-	MyFree( pReq->pszDebugFile );
-	MyFree( pReq->pszTag );
-	MyFree( pReq->pszDOH );
-	pReq->Runtime.pCurl = NULL;
-	if (MyValidHandle( pReq->Runtime.hInFile ))
-		CloseHandle( pReq->Runtime.hInFile );
-	if (MyValidHandle( pReq->Runtime.hOutFile ))
-		CloseHandle( pReq->Runtime.hOutFile );
-	if (MyValidHandle( pReq->Runtime.hDebugFile ))
-		CloseHandle( pReq->Runtime.hDebugFile );
-	VirtualMemoryDestroy( &pReq->Runtime.InHeaders );
-	VirtualMemoryDestroy( &pReq->Runtime.OutHeaders );
-	VirtualMemoryDestroy( &pReq->Runtime.OutData );
-	MyFree( pReq->Runtime.pszFinalURL );
-	MyFree( pReq->Runtime.pszServerIP );
-	MyFree( pReq->Error.pszWin32 );
-	MyFree( pReq->Error.pszCurl );
-	MyFree( pReq->Error.pszX509 );
-	MyFree( pReq->Error.pszHttp );
-	ZeroMemory( pReq, sizeof( *pReq ) );
-}
+void CurlRequestDestroy( _Inout_ PCURL_REQUEST pReq );
 
 //+ CurlRequestSetAbortFlag
 #define CurlRequestSetAbortFlag( pReq ) \

@@ -21,6 +21,64 @@ CURL_GLOBALS g_Curl = {0};
 //x #define DEBUG_TRANSFER_SLOWDOWN		50						/// Delays during transfer
 
 
+void CurlRequestInit(_Inout_ PCURL_REQUEST pReq)
+{
+	if (!pReq) return;
+	ZeroMemory(pReq, sizeof(*pReq));
+	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
+	pReq->bCastore = TRUE;
+	{
+		TCHAR buffer[MAX_PATH];
+		_sntprintf(buffer, ARRAYSIZE(buffer), _T("%s\\cookies.txt"), getuservariableEx(INST_PLUGINSDIR));
+		pReq->pszCookieFile = MyStrDup(eT2A, buffer);
+	}
+}
+
+void CurlRequestDestroy(_Inout_ PCURL_REQUEST pReq)
+{
+	if (!pReq) return;
+	MyFree(pReq->pszURL);
+	MyFree(pReq->pszPath);
+	MyFree(pReq->pszMethod);
+	MyFree(pReq->pszProxy);
+	MyFree(pReq->pszProxyUser);
+	MyFree(pReq->pszProxyPass);
+	MyFree(pReq->pszUser);
+	MyFree(pReq->pszPass);
+	MyFree(pReq->pszTlsUser);
+	MyFree(pReq->pszTlsPass);
+	curl_slist_free_all(pReq->pOutHeaders);
+	curl_slist_free_all(pReq->pPostVars);
+	IDataDestroy(&pReq->Data);
+	MyFree(pReq->pszAgent);
+	MyFree(pReq->pszReferrer);
+	curl_slist_free_all(pReq->pCertList);
+	curl_slist_free_all(pReq->pPemList);
+	MyFree(pReq->pszCacert);
+	MyFree(pReq->pszDebugFile);
+	MyFree(pReq->pszTag);
+	MyFree(pReq->pszDOH);
+	MyFree(pReq->pszCookieFile);
+	pReq->Runtime.pCurl = NULL;
+	if (MyValidHandle(pReq->Runtime.hInFile))
+		CloseHandle(pReq->Runtime.hInFile);
+	if (MyValidHandle(pReq->Runtime.hOutFile))
+		CloseHandle(pReq->Runtime.hOutFile);
+	if (MyValidHandle(pReq->Runtime.hDebugFile))
+		CloseHandle(pReq->Runtime.hDebugFile);
+	VirtualMemoryDestroy(&pReq->Runtime.InHeaders);
+	VirtualMemoryDestroy(&pReq->Runtime.OutHeaders);
+	VirtualMemoryDestroy(&pReq->Runtime.OutData);
+	MyFree(pReq->Runtime.pszFinalURL);
+	MyFree(pReq->Runtime.pszServerIP);
+	MyFree(pReq->Error.pszWin32);
+	MyFree(pReq->Error.pszCurl);
+	MyFree(pReq->Error.pszX509);
+	MyFree(pReq->Error.pszHttp);
+	ZeroMemory(pReq, sizeof(*pReq));
+}
+
+
 //+ CurlRequestComputeNumbers
 void CurlRequestComputeNumbers( _In_ PCURL_REQUEST pReq, _Out_opt_ PULONG64 piSizeTotal, _Out_opt_ PULONG64 piSizeXferred, _Out_opt_ PSHORT piPercent, _Out_opt_ PBOOL pbDown )
 {
@@ -547,6 +605,12 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 			MyFree( pReq->pszDOH );
 			if (*pszParam)
 				pReq->pszDOH = MyStrDup( eT2A, pszParam );
+		}
+	} else if (lstrcmpi( pszParam, _T( "/COOKIEJAR" ) ) == 0) {
+		if (popstring( pszParam ) == NOERROR) {
+			MyFree( pReq->pszCookieFile );
+			if (pszParam && pszParam[0])
+				pReq->pszCookieFile = MyStrDup( eT2A, pszParam );
 		}
 	} else if (lstrcmpi( pszParam, _T( "/ENCODING" ) ) == 0 || lstrcmpi( pszParam, _T( "/accept-encoding" ) ) == 0) {
 		pReq->bEncoding = TRUE;
@@ -1126,6 +1190,11 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->pszDOH)
 				curl_easy_setopt( curl, CURLOPT_DOH_URL, pReq->pszDOH );
 
+			if (pReq->pszCookieFile && pReq->pszCookieFile[0]) {
+				curl_easy_setopt(curl, CURLOPT_COOKIEFILE, pReq->pszCookieFile);	// request cookies
+				curl_easy_setopt(curl, CURLOPT_COOKIEJAR, pReq->pszCookieFile);		// response cookies
+			}
+
 			if (pReq->bEncoding && !pReq->bResume && lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0)
 			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings
 
@@ -1441,8 +1510,7 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			// Cleanup
-			curl_easy_reset( curl );
-			curl_easy_cleanup( curl );		// TODO: Return to cache
+			curl_easy_cleanup( curl );
 		}
 
 		curl_mime_free( form );
