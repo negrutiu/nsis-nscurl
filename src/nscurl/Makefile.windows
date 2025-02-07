@@ -105,6 +105,7 @@ CFLAGS += \
 LDFLAGS += \
 	$(CFLAGS) \
 	-static \
+    -pie \
 	-Wl,--gc-sections \
 	-Wl,--no-seh \
 	-Wl,--nxcompat \
