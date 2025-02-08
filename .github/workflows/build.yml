@@ -177,13 +177,13 @@ jobs:
                       exit()
 
       - name: Build NSIS example (x86-unicode)
-        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode /DTARGET=x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (x86-ansi)
-        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DANSI artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-ansi /DTARGET=x86-ansi artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (amd64-unicode)
-        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DAMD64 artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\amd64-unicode /DTARGET=amd64-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4

@@ -3,14 +3,10 @@
 # Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl
 # Syntax: Test.exe /dll <nscurl.dll>
 
-!ifdef AMD64
-	!define _TARGET_ amd64-unicode
-	Target ${_TARGET_}
-!else ifdef ANSI
-	!define _TARGET_ x86-ansi
-	Target ${_TARGET_}
+!ifdef TARGET
+	Target ${TARGET}                    ; x86-unicode, x86-ansi, amd64-unicode
 !else
-	!define _TARGET_ x86-unicode		; Default
+	!define TARGET x86-unicode          ; Default
 !endif
 
 # /dll commandline parameter
@@ -58,8 +54,8 @@ InstType "Most"			; 2
 !insertmacro MUI_RESERVEFILE_LANGDLL
 
 # Installer details
-Name    "NScurl-Debug-${_TARGET_}"
-OutFile "NScurl-Debug-${_TARGET_}.exe"
+Name    "NScurl-Debug-${TARGET}"
+OutFile "NScurl-Debug-${TARGET}.exe"
 XPStyle on
 RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
