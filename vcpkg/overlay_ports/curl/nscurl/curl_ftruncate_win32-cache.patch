@@ -1,8 +1,8 @@
-diff -git a/CMake/Platforms/WindowsCache.cmake b/CMake/Platforms/WindowsCache.cmake
---- a/CMake/Platforms/WindowsCache.cmake
-+++ b/CMake/Platforms/WindowsCache.cmake
+diff -git a/CMake/win32-cache.cmake b/CMake/win32-cache.cmake
+--- a/CMake/win32-cache.cmake
++++ b/CMake/win32-cache.cmake
 @@ -39,3 +39,3 @@
-   set(HAVE_STRCASECMP 1)
+   set(HAVE_BASENAME 1)
 -  set(HAVE_FTRUNCATE 1)
 +  set(HAVE_FTRUNCATE 0) # nscurl: The mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4 */
    set(HAVE_SYS_PARAM_H 1)

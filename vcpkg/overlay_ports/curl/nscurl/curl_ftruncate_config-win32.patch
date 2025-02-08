@@ -1,8 +1,8 @@
 diff --git a/lib/config-win32.h b/lib/config-win32.h
 --- a/lib/config-win32.h
 +++ b/lib/config-win32.h
-@@ -125,3 +125,4 @@
- #if defined(__MINGW32__)
+@@ -124,3 +124,4 @@
+ #ifdef __MINGW32__
 -#define HAVE_FTRUNCATE 1
 +/* nscurl: The mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4 */
 +/* #define HAVE_FTRUNCATE 1 */
