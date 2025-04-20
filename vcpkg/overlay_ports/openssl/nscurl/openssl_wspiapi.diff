@@ -1,16 +1,11 @@
-diff --git a/include/internal/e_os.h b/include/internal/e_os.h
-index 003d63e17f..66cb605b0a 100644
---- a/include/internal/e_os.h
-+++ b/include/internal/e_os.h
-@@ -107,7 +107,11 @@
-         * at run-time [DSO_global_lookup is recommended]...
-         */
- #    include <winsock2.h>
+diff --git a/include/internal/e_winsock.h b/include/internal/e_winsock.h
+--- a/include/internal/e_winsock.h
++++ b/include/internal/e_winsock.h
+@@ -38,3 +38,7 @@
+ #   include <winsock2.h>
 +#if _WIN32_WINNT >= 0x0501
- #    include <ws2tcpip.h>
+ #   include <ws2tcpip.h>
 +#else
 +#    include <wspiapi.h>
 +#endif
-        /*
-         * Clang-based C++Builder 10.3.3 toolchains cannot find C inline
-         * definitions at link-time.  This header defines WspiapiLoad() as an
+       /*
