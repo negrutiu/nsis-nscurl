@@ -1,0 +1,99 @@
+diff '--unified=3' -r a/lib/version_win32.c b/lib/version_win32.c
+--- a/lib/version_win32.c
++++ b/lib/version_win32.c
+@@ -113,6 +113,95 @@
+     /* we are always running on PLATFORM_WINNT */
+     matched = FALSE;
+   }
++#elif !defined(_WIN32_WINNT) || !defined(_WIN32_WINNT_WIN2K) || \
++    (_WIN32_WINNT < _WIN32_WINNT_WIN2K)
++/*
++    [nscurl]
++    This #elif..#endif block has been removed in curl 8.13.0
++    We brought it back to fix compatibility with NT4 where:
++      - kernel32!VerSetConditionMask doesn't exist
++      - kernel32!VerifyVersionInfo exists but doesn't work as expected. It either returns FALSE or it crashes
++*/
++  OSVERSIONINFO osver;
++
++  memset(&osver, 0, sizeof(osver));
++  osver.dwOSVersionInfoSize = sizeof(osver);
++
++  /* Find out Windows version */
++  if(GetVersionEx(&osver)) {
++    /* Verify the Operating System version number */
++    switch(condition) {
++    case VERSION_LESS_THAN:
++      if(osver.dwMajorVersion < majorVersion ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion < minorVersion) ||
++        (buildVersion != 0 &&
++         (osver.dwMajorVersion == majorVersion &&
++          osver.dwMinorVersion == minorVersion &&
++          osver.dwBuildNumber < buildVersion)))
++        matched = TRUE;
++      break;
++
++    case VERSION_LESS_THAN_EQUAL:
++      if(osver.dwMajorVersion < majorVersion ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion < minorVersion) ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion == minorVersion &&
++         (buildVersion == 0 ||
++          osver.dwBuildNumber <= buildVersion)))
++        matched = TRUE;
++      break;
++
++    case VERSION_EQUAL:
++      if(osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion == minorVersion &&
++        (buildVersion == 0 ||
++         osver.dwBuildNumber == buildVersion))
++        matched = TRUE;
++      break;
++
++    case VERSION_GREATER_THAN_EQUAL:
++      if(osver.dwMajorVersion > majorVersion ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion > minorVersion) ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion == minorVersion &&
++         (buildVersion == 0 ||
++          osver.dwBuildNumber >= buildVersion)))
++        matched = TRUE;
++      break;
++
++    case VERSION_GREATER_THAN:
++      if(osver.dwMajorVersion > majorVersion ||
++        (osver.dwMajorVersion == majorVersion &&
++         osver.dwMinorVersion > minorVersion) ||
++        (buildVersion != 0 &&
++         (osver.dwMajorVersion == majorVersion &&
++          osver.dwMinorVersion == minorVersion &&
++          osver.dwBuildNumber > buildVersion)))
++        matched = TRUE;
++      break;
++    }
++
++    /* Verify the platform identifier (if necessary) */
++    if(matched) {
++      switch(platform) {
++      case PLATFORM_WINDOWS:
++        if(osver.dwPlatformId != VER_PLATFORM_WIN32_WINDOWS)
++          matched = FALSE;
++        break;
++
++      case PLATFORM_WINNT:
++        if(osver.dwPlatformId != VER_PLATFORM_WIN32_NT)
++          matched = FALSE;
++        break;
++
++      default: /* like platform == PLATFORM_DONT_CARE */
++        break;
++      }
++    }
++  }
+ #elif defined(UNDER_CE)
+   (void)majorVersion;
+   (void)minorVersion;
