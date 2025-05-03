@@ -402,7 +402,8 @@ When enabled, the native CA store is used __in addition__ to the other trusted c
 /CERT sha1|pem
 ```
 Specify additional trusted certificates to be used for SSL certificate validation __in addition__ to other certificate sources ([/CACERT](#cacert) and [/CASTORE](#castore)).  
-Multiple `/CERT` parameters are allowed.
+Multiple `/CERT` parameters are allowed.  
+Note that `/CERT` is a transfer-specific setting and not a global option.
 
 Parameter | Details
 :---------------- | :---------------------
@@ -481,20 +482,20 @@ NOTE: Tags are arbitrary strings with no character restrictions.
 Example:
 ```nsis
 NScurl::http GET ${URL1} ${File1} /BACKGROUND /TAG "most important" /END
-Pop $0  ; transfer ID, not used in this example
+Pop $0  ; background transfer ID
 NScurl::http GET ${URL2} ${File2} /BACKGROUND /TAG "most important" /END
 Pop $0
 NScurl::http GET ${URL3} ${File3} /BACKGROUND /END
 Pop $0
 
-; do useful stuff
+; TODO: do useful stuff
 
 NScurl::wait /TAG "most important" /END         ; wait for important files...
 NScurl::cancel /TAG "most important" /REMOVE    ; remove from queue (unnecessary, demo only)
 
-; do useful stuff
+; TODO: do useful stuff
 
-NScurl::wait /TAG "less important" /END         ; wait for the remaining files...
+NScurl::wait /END                               ; wait for the remaining transfers
 ```
 
 ### /BACKGROUND
@@ -894,16 +895,14 @@ None.
 
 ## Example
 ```nsis
-; Start multiple background transfers
-NScurl::http GET ${URL1} ${FILE1} /TAG "filegroup1" /BACKGROUND /END
+; Start a background transfer
+NScurl::http GET ${URL1} ${FILE1} /BACKGROUND /END
 Pop $0	; transfer ID
-NScurl::http GET ${URL2} ${FILE2} /TAG "filegroup1" /BACKGROUND /END
-Pop $1	; transfer ID
 
 ; >>> do some useful work
 
-; Wait for transfers...
-NScurl::wait /TAG "filegroup1" /CANCEL /END
+; Wait for the transfer to complete
+NScurl::wait /ID $0 /CANCEL /END
 ```
 
 ## Parameters
