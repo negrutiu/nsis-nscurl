@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 
 def get_resource_version(filename):
+    """ Read the `FileVersion` from a `.rc` file """
     with open(filename, 'rb') as fin:
         for line in fin.read().decode('utf-8').split("\r\n"):
             # print(line)
@@ -14,6 +15,7 @@ def get_resource_version(filename):
     return ""
 
 def get_gcc_version(gccPath):
+    """ Query `gcc` version """
     try:
         process = Popen([gccPath, "-v"], stdout=PIPE, stderr=PIPE)
         (cout, cerr) = process.communicate()
@@ -40,6 +42,7 @@ def get_gcc_version(gccPath):
         return ""
 
 def get_curl_engines_versions(curlPath):
+    """ Query `curl` versions. Returns a dictionary of curl engine versions """
     process = Popen([curlPath, "--version"], stdout=PIPE, stderr=PIPE)
     (cout, cerr) = process.communicate()
     exit_code = process.wait()
@@ -62,6 +65,7 @@ def get_curl_engines_versions(curlPath):
     return {}
 
 def get_curl_versions(curlPath, markdown=False):
+    """ Query `curl` version. Returns a one-liner version string """
     versions = ''
     for name, version in get_curl_engines_versions(curlPath).items():
         if markdown:
@@ -71,6 +75,7 @@ def get_curl_versions(curlPath, markdown=False):
     return versions.removesuffix(' ').removesuffix(',')
 
 def get_cacert_version():
+    """ Query `curl-ca-bundle.crt` release version """
     with open('src/nscurl/curl-ca-bundle.crt', 'rb') as fin:
         for line in fin.read().decode('utf-8').split("\n"):
             if line.startswith("## Certificate data from Mozilla as of: "):
