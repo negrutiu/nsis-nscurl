@@ -22,6 +22,7 @@ jobs:
         os: [windows-latest]
         arch: [amd64, x86]
         charset: [unicode]
+        winlibs_tag: [14.2.0posix-19.1.7-12.0.0-msvcrt-r3]  # https://github.com/brechtsanders/winlibs_mingw/tags
         include:
           - os: windows-latest
             arch: x86
@@ -45,23 +46,53 @@ jobs:
             print(     f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
             fout.write(f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
 
-      - name: Upgrade msys2/mingw32
+      - name: Remove default mingw
+        shell: cmd
+        run: |
+          rename "C:\mingw32" "C:\mingw32.bak" 2> nul
+          rename "C:\mingw64" "C:\mingw64.bak" 2> nul
+          exit /b 0
+
+      # https://winlibs.com/
+      # https://github.com/brechtsanders/winlibs_mingw/tags
+      # https://github.com/marketplace/actions/setup-winlibs
+      - name: Deploy mingw32
         if: matrix.arch == 'x86'
-        uses: msys2/setup-msys2@v2
+        uses: bwoodsend/setup-winlibs-action@v1
         with:
-          msystem: mingw32
-          release: false
-          update: true
-          install: mingw-w64-i686-toolchain
-          
-      - name: Upgrade msys2/mingw64
+          tag: ${{matrix.winlibs_tag}}
+          with_clang: false
+          destination: C:/
+          add_to_path: false
+          architecture: i686
+
+      - name: Deploy mingw64
         if: matrix.arch == 'amd64'
-        uses: msys2/setup-msys2@v2
+        uses: bwoodsend/setup-winlibs-action@v1
         with:
-            msystem: mingw64
-            release: false
-            update: true
-            install: mingw-w64-x86_64-toolchain
+          tag: ${{matrix.winlibs_tag}}
+          with_clang: false
+          destination: C:/
+          add_to_path: false
+          architecture: x86_64
+
+#      - name: Upgrade msys2/mingw32
+#        if: matrix.arch == 'x86'
+#        uses: msys2/setup-msys2@v2
+#        with:
+#          msystem: mingw32
+#          release: false
+#          update: true
+#          install: mingw-w64-i686-toolchain
+#          
+#      - name: Upgrade msys2/mingw64
+#        if: matrix.arch == 'amd64'
+#        uses: msys2/setup-msys2@v2
+#        with:
+#            msystem: mingw64
+#            release: false
+#            update: true
+#            install: mingw-w64-x86_64-toolchain
 
       - name: Checkout
         uses: actions/checkout@v4
