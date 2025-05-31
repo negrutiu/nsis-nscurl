@@ -1,6 +1,6 @@
-diff '--unified=3' -r a/lib/version_win32.c b/lib/version_win32.c
---- a/lib/version_win32.c
-+++ b/lib/version_win32.c
+diff '--unified=3' -r a/lib/curlx/version_win32.c b/lib/curlx/version_win32.c
+--- a/lib/curlx/version_win32.c
++++ b/lib/curlx/version_win32.c
 @@ -113,6 +113,95 @@
      /* we are always running on PLATFORM_WINNT */
      matched = FALSE;
