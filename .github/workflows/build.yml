@@ -45,23 +45,23 @@ jobs:
             print(     f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
             fout.write(f"version={date.year%100}.{date.month}.{date.day}.${{github.run_number}}")
 
-      - name: Upgrade msys2/mingw32
-        if: matrix.arch == 'x86'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: mingw32
-          release: false
-          update: true
-          install: mingw-w64-i686-toolchain
-          
-      - name: Upgrade msys2/mingw64
-        if: matrix.arch == 'amd64'
-        uses: msys2/setup-msys2@v2
-        with:
-            msystem: mingw64
-            release: false
-            update: true
-            install: mingw-w64-x86_64-toolchain
+#      - name: Upgrade msys2/mingw32
+#        if: matrix.arch == 'x86'
+#        uses: msys2/setup-msys2@v2
+#        with:
+#          msystem: mingw32
+#          release: false
+#          update: true
+#          install: mingw-w64-i686-toolchain
+#          
+#      - name: Upgrade msys2/mingw64
+#        if: matrix.arch == 'amd64'
+#        uses: msys2/setup-msys2@v2
+#        with:
+#            msystem: mingw64
+#            release: false
+#            update: true
+#            install: mingw-w64-x86_64-toolchain
 
       - name: Checkout
         uses: actions/checkout@v4
