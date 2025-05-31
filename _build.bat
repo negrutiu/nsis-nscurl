@@ -52,12 +52,17 @@ if "%compiler%" equ "msbuild" goto :msbuild
 :: -------------------------------------------------------------------------------
 
 :mingw
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\msys2\mingw32
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\msys64\mingw32
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\mingw32
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\msys2\mingw64
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\msys64\mingw64
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set MINGW=%SystemDrive%\mingw64
+if not exist "%msys2%\usr\bin\grep.exe" set msys2=%SystemDrive%\msys64
+if not exist "%msys2%\usr\bin\grep.exe" set msys2=%SystemDrive%\msys2
+echo --- msys2 = %msys2%
+if exist "%msys2%\usr\bin\grep.exe" set PATH=%msys2%\usr\bin;%PATH%
+
+if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys2\mingw32
+if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys64\mingw32
+if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\mingw32
+if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys2\mingw64
+if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys64\mingw64
+if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\mingw64
 echo --- mingw = %mingw%
 if not exist "%mingw%\bin\gcc.exe" echo ERROR: Missing "%mingw%\bin\gcc.exe" && exit /b 2
 set PATH=%mingw%\bin;%PATH%
