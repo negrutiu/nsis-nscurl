@@ -121,7 +121,7 @@ RCFLAGS += \
 	$(CUSTOM_RCFLAGS)
 
 
-.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install
+.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install dasm
 
 clean:
 	cmd /c if exist $(OUTDIR) rd /S /Q $(OUTDIR)
@@ -139,6 +139,9 @@ curl-ca-bundle:
 
 vcpkg-install:
 	cmd /c call ..\..\vcpkg\build.bat $(_arch) mingw static
+
+dasm:
+	objdump -S -d "$(OUTDIR)\$(BIN)" > "$(OUTDIR)\$(BIN).dasm"
 
 # Link
 $(_BIN): $(_OBJ)
