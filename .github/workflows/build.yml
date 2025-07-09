@@ -22,7 +22,6 @@ jobs:
         os: [windows-latest]
         arch: [amd64, x86]
         charset: [unicode]
-        winlibs_tag: [14.2.0posix-19.1.7-12.0.0-msvcrt-r3]  # https://github.com/brechtsanders/winlibs_mingw/tags
         include:
           - os: windows-latest
             arch: x86
@@ -60,7 +59,7 @@ jobs:
         if: matrix.arch == 'x86'
         uses: bwoodsend/setup-winlibs-action@v1
         with:
-          tag: ${{matrix.winlibs_tag}}
+          tag: ${{vars.TAG_WINLIBS_MSVCRT_LATEST}}
           with_clang: false
           destination: C:/
           add_to_path: false
@@ -70,7 +69,7 @@ jobs:
         if: matrix.arch == 'amd64'
         uses: bwoodsend/setup-winlibs-action@v1
         with:
-          tag: ${{matrix.winlibs_tag}}
+          tag: ${{vars.TAG_WINLIBS_MSVCRT_LATEST}}
           with_clang: false
           destination: C:/
           add_to_path: false
