@@ -53,19 +53,24 @@ if "%compiler%" equ "msbuild" goto :msbuild
 
 :mingw
 if not exist "%msys2%\usr\bin\grep.exe" set msys2=%SystemDrive%\msys64
-if not exist "%msys2%\usr\bin\grep.exe" set msys2=%SystemDrive%\msys2
+if not exist "%msys2%\usr\bin\grep.exe" set msys2=
 echo --- msys2 = %msys2%
-if exist "%msys2%\usr\bin\grep.exe" set PATH=%msys2%\usr\bin;%PATH%
+if not exist "%mingw32%\bin\gcc.exe" set mingw32=%SystemDrive%\mingw32
+if not exist "%mingw32%\bin\gcc.exe" set mingw32=%msys2%\mingw32
+if not exist "%mingw32%\bin\gcc.exe" set mingw32=
+echo --- mingw32 = %mingw32%
+if not exist "%mingw64%\bin\gcc.exe" set mingw64=%SystemDrive%\mingw64
+if not exist "%mingw64%\bin\gcc.exe" set mingw64=%msys2%\mingw64
+if not exist "%mingw64%\bin\gcc.exe" set mingw64=
+echo --- mingw64 = %mingw64%
+if not exist "%posixshell%\grep.exe" set posixshell=%msys2%\usr\bin
+if not exist "%posixshell%\grep.exe" set posixshell=%ProgramFiles%\Git\usr\bin
+if not exist "%posixshell%\grep.exe" set posixshell=
+echo --- posixshell = %posixshell%
 
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys2\mingw32
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys64\mingw32
-if "%platform%" equ "x86" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\mingw32
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys2\mingw64
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\msys64\mingw64
-if "%platform%" equ "x64" if not exist "%mingw%\bin\gcc.exe" set mingw=%SystemDrive%\mingw64
-echo --- mingw = %mingw%
-if not exist "%mingw%\bin\gcc.exe" echo ERROR: Missing "%mingw%\bin\gcc.exe" && exit /b 2
-set PATH=%mingw%\bin;%PATH%
+if "%platform%" equ "x86" set PATH=%mingw32%\bin;%posixshell%;%PATH%
+if "%platform%" equ "x64" set PATH=%mingw64%\bin;%posixshell%;%PATH%
+where /q gcc.exe || echo ERROR: Missing "mingw"&& exit /b 2
 
 echo.
 gcc --version
@@ -83,18 +88,23 @@ goto :end_build
 set solution=%CD%\NScurl.sln
 set verbosity=normal
 
-if not exist "%VcVarsAll%" for /f "tokens=1* delims=: " %%i in ('"%PROGRAMFILES(X86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version 17 -requires Microsoft.Component.MSBuild 2^> nul') do if /i "%%i"=="installationPath" set VcVarsAll=%%j\VC\Auxiliary\Build\VCVarsAll.bat&& set platformtoolset=v143
-if not exist "%VcVarsAll%" for /f "tokens=1* delims=: " %%i in ('"%PROGRAMFILES(X86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version 16 -requires Microsoft.Component.MSBuild 2^> nul') do if /i "%%i"=="installationPath" set VcVarsAll=%%j\VC\Auxiliary\Build\VCVarsAll.bat&& set platformtoolset=v142
-if not exist "%VcVarsAll%" echo ERROR: Can't find Visual Studio 2017-2022 && exit /b 2
+if not exist "%vswhere%" set vswhere=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
+if not exist "%vswhere%" set vswhere=%ProgramFiles%\Microsoft Visual Studio\Installer\vswhere.exe
+if not exist "%vswhere%" echo ERROR: Missing "vswhere.exe"&& pause && exit /b 1
 
-echo --- %VcVarsAll%
-echo --- platformtoolset = %platformtoolset%
+if not exist "%vcvarsall%" for /f "delims=*" %%i in ('"%vswhere%" -version 17 -requires Microsoft.Component.MSBuild -property installationPath 2^> nul') do set vcvarsall=%%i\VC\Auxiliary\Build\VCVarsAll.bat&& set toolset=v143
+if not exist "%vcvarsall%" for /f "delims=*" %%i in ('"%vswhere%" -version 16 -requires Microsoft.Component.MSBuild -property installationPath 2^> nul') do set vcvarsall=%%i\VC\Auxiliary\Build\VCVarsAll.bat&& set toolset=v142
+if not exist "%vcvarsall%" for /f "delims=*" %%i in ('"%vswhere%" -version 15 -requires Microsoft.Component.MSBuild -property installationPath 2^> nul') do set vcvarsall=%%i\VC\Auxiliary\Build\VCVarsAll.bat&& set toolset=v141
+if not exist "%vcvarsall%" echo ERROR: Missing "Visual Studio 2017-2022"&& pause && exit /b 2
+
+echo --- %vcvarsall%
+echo --- toolset = %toolset%
 echo --- solution = %solution%
 echo --- verbosity = %verbosity%
 
 echo.
 pushd "%CD%"
-call "%VcVarsAll%" %platform%
+call "%vcvarsall%" %platform%
 popd
 
 set platform_msbuild=%platform%
@@ -105,9 +115,9 @@ if "%charset%" equ "unicode" set ParamCharacterSet= /p:CharacterSet=Unicode
 if "%charset%" equ "ansi"    set ParamCharacterSet= /p:CharacterSet=MultiByte
 
 echo.
-echo --- msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%platformtoolset% /verbosity:%verbosity%%ParamCharacterSet%
+echo --- msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%toolset% /verbosity:%verbosity%%ParamCharacterSet%
 echo.
-msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%platformtoolset% /verbosity:%verbosity%%ParamCharacterSet% || exit /b !errorlevel!
+msbuild /m /t:build "%solution%" /p:Configuration=%configuration% /p:Platform=%platform_msbuild% /p:PlatformToolset=%toolset% /verbosity:%verbosity%%ParamCharacterSet% || exit /b !errorlevel!
 
 goto :end_build
 
