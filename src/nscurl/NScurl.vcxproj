@@ -85,7 +85,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
@@ -102,7 +102,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlibd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
@@ -122,7 +122,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
@@ -141,7 +141,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;zlib.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
