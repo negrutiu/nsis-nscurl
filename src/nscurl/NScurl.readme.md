@@ -127,8 +127,12 @@ Request a custom return value, for example [`/RETURN "@ERRORCODE@ - @ELAPSEDTIME
 Default value is the _transfer status_ ([`/RETURN "@error@"`](#transfer-keywords))  
 
 ### /HTTP1.1
-Disable `ALPN` negotiation for `HTTP/2`.  
-Some servers might achieve better speed over `HTTP/1.1`.
+### /HTTP3
+Prefer a specific HTTP protocol version.  
+The connection falls back to the next available version if the requested one is not supported by the webserver.  
+Some servers may achieve better speed over `HTTP/1.1`, whereas `HTTP/2` and `HTTP/3` are more efficient for multiple parallel transfers.  
+By default, HTTP/2 is preferred if supported by the webserver.  
+For more information visit libcurl [CURLOPT_HTTP_VERSION](https://curl.se/libcurl/c/CURLOPT_HTTP_VERSION.html) documentation.
 
 ### /PROXY
 ```

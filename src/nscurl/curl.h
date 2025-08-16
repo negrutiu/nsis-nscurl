@@ -41,6 +41,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN		bNoDebugData  : 1;
 	BOOLEAN		bMarkOfTheWeb : 1;
 	BOOLEAN     bHttp11       : 1;
+	BOOLEAN     bHttp3        : 1;
 	BOOLEAN     bEncoding     : 1;
 	BOOLEAN     bWeakSecurity : 1;		/// weak crypto, weak protocols (tls 1.0+), unsafe renegociation
 	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
@@ -70,6 +71,7 @@ typedef struct _CURL_REQUEST {
 		ULONG		iTimeStart;			/// Milliseconds (tick counts)
 		HANDLE		hInFile;			/// Upload file. iDataSize represents its size
 		curl_off_t	iDataPos;			/// Input data/file position
+		BOOLEAN     bGotData;			// TRUE if the debug callback encountered CURLINFO_DATA_IN or CURLINFO_DATA_OUT
 		VMEMO		InHeaders;
 		VMEMO		OutHeaders;
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)

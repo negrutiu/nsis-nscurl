@@ -478,6 +478,10 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 		}
 	} else if (lstrcmpi( pszParam, _T( "/HTTP1.1" ) ) == 0) {
 		pReq->bHttp11 = TRUE;
+		pReq->bHttp3 = FALSE;
+	} else if (lstrcmpi( pszParam, _T( "/HTTP3" ) ) == 0) {
+		pReq->bHttp3 = TRUE;
+		pReq->bHttp11 = FALSE;
 	} else if (lstrcmpi( pszParam, _T( "/USERAGENT" ) ) == 0) {
 		if (popstring( pszParam ) == NOERROR && *pszParam) {
 			TCHAR strBuffer[512];
@@ -787,9 +791,13 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 1] == '\n')
 		)
 	{
-		// The last received header is an empty line ("\r\n")
-		// Discard existing headers and start collecting a new set
-		VirtualMemoryReset( &pReq->Runtime.InHeaders );
+		// Headers that arrive after data are treated as trailers (and appended to the existing headers)
+	    // https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
+		if (!pReq->Runtime.bGotData) {
+			// The last received header is an empty line ("\r\n")
+			// Discard existing headers and start collecting a new set
+			VirtualMemoryReset(&pReq->Runtime.InHeaders);
+		}
 
 		// Extract HTTP status text from header
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
@@ -1040,6 +1048,11 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 		}
 	}
 
+	// Remember that we got some data. It helps to distinguish between headers and trailers
+	if (type == CURLINFO_DATA_IN || type == CURLINFO_DATA_OUT) {
+		pReq->Runtime.bGotData = TRUE;
+	}
+
 	return 0;
 }
 
@@ -1198,8 +1211,12 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			if (pReq->bEncoding && !pReq->bResume && lstrcmpi(pReq->pszPath, FILENAME_MEMORY) != 0)
 			    curl_easy_setopt( curl, CURLOPT_ACCEPT_ENCODING, "" );		// Send Accept-Encoding header with all supported encodings
 
-			if (pReq->bHttp11)
-				curl_easy_setopt(curl, CURLOPT_SSL_ENABLE_ALPN, 0L);        /// Disable ALPN. No negotiation for HTTP2 takes place
+			if (pReq->bHttp3) {
+				curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_3);		// falls back to lower versions
+				// curl_easy_setopt(curl, CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, CURL_HET_DEFAULT + 200L);
+			} else if (pReq->bHttp11) {
+				curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+			}
 
 			/// SSL
 			if (pReq->pszCacert != CACERT_NONE || pReq->bCastore || pReq->pCertList) {

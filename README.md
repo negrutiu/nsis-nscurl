@@ -13,7 +13,7 @@ Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenS
 
 ## Features
 
-- Supports modern protocols and ciphers including `HTTP/2`, `TLS1.3`, etc.
+- Supports modern protocols and ciphers including `HTTP/2`, `HTTP/3`, `TLS1.3`, etc.
 - Works well on Windows NT4, Windows 11 and everything in between
 - Multi-threaded design to transfer multiple files in parallel
 - Background transfers are available, while your installer performs other installation tasks
@@ -62,6 +62,8 @@ NScurl itself  | [BSD3](LICENSE.md)
 brotli         | [MIT](https://github.com/google/brotli/blob/master/LICENSE)
 curl           | [MIT/X inspired](https://curl.haxx.se/docs/copyright.html)
 nghttp2        | [MIT](https://github.com/nghttp2/nghttp2/blob/master/COPYING)
+nghttp3        | [MIT](https://github.com/ngtcp2/nghttp3/blob/main/COPYING)
+ngtcp2         | [MIT](https://github.com/ngtcp2/ngtcp2/blob/master/COPYING)
 OpenSSL        | [Apache v2](https://www.openssl.org/source/license.html)
 zlib           | [zlib](https://www.zlib.net/zlib_license.html)
 zstd           | [BSD3](https://github.com/facebook/zstd/blob/dev/LICENSE)

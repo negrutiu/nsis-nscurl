@@ -36,7 +36,7 @@ else
 	LIB = -lcurl -lzlib
 endif
 
-LIB      += -lssl -lcrypto -lbrotlidec -lbrotlicommon -lnghttp2 -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
+LIB      += -lbrotlidec -lbrotlicommon -lnghttp2 -lnghttp3 -lngtcp2 -lngtcp2_crypto_ossl -lssl -lcrypto -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc
 
 _OBJ     = $(patsubst %,$(OUTDIR)/%,$(OBJ))
 _BIN     = $(patsubst %,$(OUTDIR)/%,$(BIN))
