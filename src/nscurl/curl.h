@@ -71,6 +71,7 @@ typedef struct _CURL_REQUEST {
 		ULONG		iTimeStart;			/// Milliseconds (tick counts)
 		HANDLE		hInFile;			/// Upload file. iDataSize represents its size
 		curl_off_t	iDataPos;			/// Input data/file position
+		BOOLEAN     bGotData;			// TRUE if the debug callback encountered CURLINFO_DATA_IN or CURLINFO_DATA_OUT
 		VMEMO		InHeaders;
 		VMEMO		OutHeaders;
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)

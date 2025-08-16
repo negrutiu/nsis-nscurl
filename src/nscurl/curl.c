@@ -791,9 +791,13 @@ size_t CurlHeaderCallback( char *buffer, size_t size, size_t nitems, void *userd
 		pReq->Runtime.InHeaders.data[pReq->Runtime.InHeaders.size - 1] == '\n')
 		)
 	{
-		// The last received header is an empty line ("\r\n")
-		// Discard existing headers and start collecting a new set
-		VirtualMemoryReset( &pReq->Runtime.InHeaders );
+		// Headers that arrive after data are treated as trailers (and appended to the existing headers)
+	    // https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
+		if (!pReq->Runtime.bGotData) {
+			// The last received header is an empty line ("\r\n")
+			// Discard existing headers and start collecting a new set
+			VirtualMemoryReset(&pReq->Runtime.InHeaders);
+		}
 
 		// Extract HTTP status text from header
 		// e.g. "HTTP/1.1 200 OK" -> "OK"
@@ -1042,6 +1046,11 @@ int CurlDebugCallback( CURL *handle, curl_infotype type, char *data, size_t size
 				free( pszLine );
 			}
 		}
+	}
+
+	// Remember that we got some data. It helps to distinguish between headers and trailers
+	if (type == CURLINFO_DATA_IN || type == CURLINFO_DATA_OUT) {
+		pReq->Runtime.bGotData = TRUE;
 	}
 
 	return 0;
