@@ -7,7 +7,7 @@
     {
       "name": "curl",
       "default-features": false,
-      "features": ["http2", "openssl", "brotli", "zstd", "tool"]
+      "features": ["http2", "http3", "openssl", "brotli", "zstd", "tool"]
     }
   ],
   "vcpkg-configuration": {
