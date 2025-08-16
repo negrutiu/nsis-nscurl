@@ -468,6 +468,17 @@ Var /global testCertValue
 Var /global testSecurityName
 Var /global testSecurityValue
 
+!macro REPORT_TEST _errorTypeExpected _errorCodeExpected _errorTypeEncountered _errorCodeEncountered
+    IntOp $g_testCount $g_testCount + 1
+    ${If} `${_errorTypeEncountered}` == `${_errorTypeExpected}`
+    ${AndIf} `${_errorCodeEncountered}` = `${_errorCodeExpected}`
+        DetailPrint `[ OK ] ${_errorTypeEncountered}/${_errorCodeEncountered}`
+    ${Else}
+        IntOp $g_testFails $g_testFails + 1
+        DetailPrint `----- FAIL ----- ${_errorTypeEncountered}/${_errorCodeEncountered} => expected ${_errorTypeExpected}/${_errorCodeExpected}`
+    ${EndIf}
+!macroend
+
 !macro TRANSFER_TEST url file cacert castore cert security errortype errorcode
     StrCpy $R0 '${file}'
 
@@ -548,14 +559,7 @@ Var /global testSecurityValue
     NScurl::query /ID $0 "@ErrorCode@"
     Pop $2
 
-    IntOp $g_testCount $g_testCount + 1
-    ${If} $1 == ${errortype}
-    ${AndIf} $2 = ${errorcode}
-        DetailPrint "[ OK ] $1/$2"
-    ${Else}
-        IntOp $g_testFails $g_testFails + 1
-        DetailPrint "----- FAIL ----- $1/$2 => expected ${errortype}/${errorcode}"
-    ${EndIf}
+	!insertmacro REPORT_TEST ${errortype} ${errorcode} $1 $2
 !macroend
 
 Section "Expired certificate"
@@ -728,6 +732,34 @@ Section "Cookie jar"
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
+
+Section "HTTP/3"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	; https://bagder.github.io/HTTP3-test
+	!define /redef LINK 'https://nghttp2.org:4433'
+	!define /redef FILE '$EXEDIR\_test_nghttp2-org.html'
+
+	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
+	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /TAG "test" /END
+	Pop $0	; transfer ID
+
+	NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+
+	NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+
+    NScurl::query /ID $0 "@RecvHeaders@"
+    Pop $3
+
+	NScurl::cancel /TAG "test" /REMOVE
+
+	StrCpy $1 $3 6 ; extract leading "HTTP/x"
+	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+SectionEnd
+
 
 SectionGroupEnd
 
