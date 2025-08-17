@@ -305,24 +305,51 @@ ULONG CurlBuiltinCacert( _Out_ struct curl_blob *blob )
 }
 
 
-//++ CurlFindHeader
-void CurlFindHeader( _In_ LPCSTR pszHeaders, _In_ LPCSTR pszHeaderName, _Out_ LPTSTR pszHeaderValue, _In_ ULONG iMaxLen )
+/// \brief Searches for a key in a string and retrieves the value associated with it.
+/// \param string[in] The input string to search (e.g. \c "key1: value1\r\nkey2: value2")
+/// \param key[in] The key to search for (e.g. \c "key2"). The search is case-insensitive.
+/// \param valuebegin[out] Pointer that receives the start of the value substring, or \c NULL if the key is not found
+/// \param valueend[out] Pointer that receives the end of the value substring, or \c NULL if the key is not found
+/// \param delimiter[in] The character that separates the key from its value (e.g. ':')
+/// \param multiline[in] \c TRUE\ if the input string may contain multiple lines; \c FALSE\ if it is a single line.
+///        In a single line, the output value may contain \\r, \\n, \\r\\n, and spaces.
+/// \code{.c}
+/// // Example usage:
+/// const char *begin, *end;
+/// CurlKeyValue(" key1 : value1 \r\n key2 : value2 \r\n", "key1", &begin, &end, ':', TRUE); // returns "value1"
+/// CurlKeyValue(" key1 : value1 \r\n key2 : value2 \r\n", "key1", &begin, &end, ':', FALSE); // returns " value1 \r\n key2 : value2 \r\n"
+/// \endcode
+static void CurlKeyValue(const char* string, const char* key, const char** valuebegin, const char** valueend, const char delimiter /* = ':' */, const BOOL multiline)
 {
-	if (pszHeaderValue)
-		pszHeaderValue[0] = 0;
-	if (pszHeaders && *pszHeaders && pszHeaderName && *pszHeaderName) {
-		LPCSTR psz1, psz2;
-		int iHeaderLen = lstrlenA( pszHeaderName ), iLineLen;
-		for (psz1 = pszHeaders; psz1 && *psz1; ) {
-			for (psz2 = psz1; *psz2 != '\0' && *psz2 != '\r' && *psz2 != '\n'; psz2++);
-			iLineLen = (int)(psz2 - psz1);
-			if (iLineLen > iHeaderLen && psz1[iHeaderLen] == ':' && CompareStringA( CP_ACP, NORM_IGNORECASE, psz1, min( iLineLen, iHeaderLen ), pszHeaderName, -1 ) == CSTR_EQUAL) {
-				for (psz1 += iHeaderLen + 1; *psz1 == ' ' || *psz1 == '\t'; psz1++);
-				MyStrCopyN( eA2T, pszHeaderValue, iMaxLen, psz1, (int)(psz2 - psz1) );
+	if (valuebegin)
+		*valuebegin = NULL;
+	if (valueend)
+		*valueend = NULL;
+	if (!string || !string[0] || !key || !key[0] || !valuebegin || !valueend)
+		return;
+
+	int keylen = lstrlenA(key);
+	for (const char* begin = string; begin && begin[0]; ) {
+		while (isspace(*begin)) begin++;
+		const char* end;
+		for (end = begin; *end != '\0' && (!multiline || (*end != '\r' && *end != '\n')); end++);
+		_tprintf(_T("-- line: '%.*hs'\n"), (int)(end - begin), begin);
+		if (CompareStringA(CP_ACP, NORM_IGNORECASE, begin, keylen, key, -1) == CSTR_EQUAL) {
+			_tprintf(_T("   found key '%.*hs'\n"), keylen, begin);
+			for (begin += keylen; begin < end && isspace(*begin); begin++);
+			if (*begin == delimiter) {
+				_tprintf(_T("   found delimiter '%hc'\n"), *begin);
+				*valuebegin = begin + 1;
+				*valueend = end;
+				if (multiline) {
+					for (; *valuebegin < end && isspace(**valuebegin); (*valuebegin)++);	// trim \r, \n, \t, spaces
+					for (; *valueend > *valuebegin && isspace(*(*valueend - 1)); (*valueend)--);
+				}
+				_tprintf(_T("   found value '%.*hs' -- exit\n"), (int)(*valueend - *valuebegin), *valuebegin);
 				break;
 			}
-			for (psz1 = psz2; *psz1 == '\r' || *psz1 == '\n'; psz1++);
 		}
+		for (begin = end; *begin == '\r' || *begin == '\n'; begin++);
 	}
 }
 
@@ -1693,12 +1720,16 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 		} else if (lstrcmpi( pszKeyword, _T( "@TIMEREMAINING_MS@" ) ) == 0) {
 			_sntprintf( pszKeyword, iMaxLen, _T( "%I64u" ), pReq->Runtime.iTimeRemaining );
 		} else if (IsKeyword( _T("SENTHEADERS")) || IsKeyword(_T("SENTHEADERS_RAW"))) {
+			pszKeyword[0] = 0;
 			if (pReq->Runtime.OutHeaders.size) {
 				BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? FALSE : TRUE;
 				if (keyword.paramsBegin) {
 					LPSTR pszHeaderName = MyStrDupN(eT2A, keyword.paramsBegin, (int)(keyword.paramsEnd - keyword.paramsBegin));
 					if (pszHeaderName) {
-						CurlFindHeader(pReq->Runtime.OutHeaders.data, pszHeaderName, pszKeyword, iMaxLen);
+						const char* beginvalue, * endvalue;
+						CurlKeyValue(pReq->Runtime.OutHeaders.data, pszHeaderName, &beginvalue, &endvalue, ':', TRUE);
+						if (beginvalue && endvalue)
+							MyStrCopyN(eA2T, pszKeyword, iMaxLen, beginvalue, (int)(endvalue - beginvalue));
 						MyFree(pszHeaderName);
 					}
 				} else {
@@ -1713,16 +1744,18 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					MyStrReplace(pszKeyword, iMaxLen, _T("\n"), _T("\\n"), FALSE);
 					MyStrReplace(pszKeyword, iMaxLen, _T("\t"), _T("\\t"), FALSE);
 				}
-			} else {
-				pszKeyword[0] = 0;
 			}
 		} else if (IsKeyword( _T("RECVHEADERS")) || IsKeyword(_T("RECVHEADERS_RAW"))) {
+			pszKeyword[0] = 0;
 			if (pReq->Runtime.InHeaders.size) {
 				BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? FALSE : TRUE;
 				if (keyword.paramsBegin) {
 					LPSTR pszHeaderName = MyStrDupN(eT2A, keyword.paramsBegin, (int)(keyword.paramsEnd - keyword.paramsBegin));
 					if (pszHeaderName) {
-						CurlFindHeader(pReq->Runtime.InHeaders.data, pszHeaderName, pszKeyword, iMaxLen);
+						const char* beginvalue, * endvalue;
+						CurlKeyValue(pReq->Runtime.InHeaders.data, pszHeaderName, &beginvalue, &endvalue, ':', TRUE);
+						if (beginvalue && endvalue)
+							MyStrCopyN(eA2T, pszKeyword, iMaxLen, beginvalue, (int)(endvalue - beginvalue));
 						MyFree(pszHeaderName);
 					}
 				} else {
@@ -1737,8 +1770,6 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 					MyStrReplace(pszKeyword, iMaxLen, _T("\n"), _T("\\n"), FALSE);
 					MyStrReplace(pszKeyword, iMaxLen, _T("\t"), _T("\\t"), FALSE);
 				}
-			} else {
-				pszKeyword[0] = 0;
 			}
 		} else if (IsKeyword( _T("RECVDATA")) || IsKeyword(_T("RECVDATA_RAW"))) {
 			BOOLEAN bEscape = (CompareString(CP_ACP, NORM_IGNORECASE, keyword.keywordEnd - 4, 4, _T("_RAW"), -1) == CSTR_EQUAL) ? FALSE : TRUE;
