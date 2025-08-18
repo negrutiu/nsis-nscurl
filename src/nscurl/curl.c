@@ -1,10 +1,10 @@
-
 //? Marius Negrutiu (mailto:marius.negrutiu@protonmail.com) :: 2019/11/20
 //? Make HTTP/S requests using libcurl
 
 #include "main.h"
 #include "curl.h"
 #include "openssl/ssl.h"
+#include "openssl/x509v3.h"
 #include "crypto.h"
 
 
@@ -68,6 +68,11 @@ void CurlRequestDestroy(_Inout_ PCURL_REQUEST pReq)
 	VirtualMemoryDestroy(&pReq->Runtime.InHeaders);
 	VirtualMemoryDestroy(&pReq->Runtime.OutHeaders);
 	VirtualMemoryDestroy(&pReq->Runtime.OutData);
+	if (pReq->Runtime.CertInfo.certinfo) {
+		for (int i = 0; i < pReq->Runtime.CertInfo.num_of_certs; i++)
+			curl_slist_free_all(pReq->Runtime.CertInfo.certinfo[i]);
+		MyFree(pReq->Runtime.CertInfo.certinfo);
+	}
 	MyFree(pReq->Runtime.pszFinalURL);
 	MyFree(pReq->Runtime.pszServerIP);
 	MyFree(pReq->Error.pszWin32);
@@ -651,6 +656,189 @@ ULONG CurlParseRequestParam( _In_ ULONG iParamIndex, _In_ LPTSTR pszParam, _In_ 
 	return err;
 }
 
+ASN1_STRING* OpenSSLGetNameEntryByNID(const X509_NAME* name, const int nid)
+{
+	if (name) {
+		int lastpos = -1;
+		int j;
+		while ((j = X509_NAME_get_index_by_NID(name, nid, lastpos)) >= 0)
+			lastpos = j;	// find the last occurrence of NID
+		if (lastpos >= 0)
+			return X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, lastpos));
+	}
+	return NULL;
+}
+
+
+void OpenSSLCollectCertificate(const X509_STORE_CTX* x509_ctx, PCURL_REQUEST pReq)
+{
+	assert(x509_ctx);
+	assert(pReq);
+
+	const X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);
+	assert(cert);
+
+	BIO* mem = BIO_new(BIO_s_mem());
+	assert(mem);
+	if (!mem)
+		return;
+
+	struct curl_slist** newlist = (struct curl_slist**)MyAlloc(sizeof(struct curl_slist*) * (pReq->Runtime.CertInfo.num_of_certs + 1));
+	if (newlist) {
+		newlist[pReq->Runtime.CertInfo.num_of_certs] = NULL;
+		if (pReq->Runtime.CertInfo.certinfo) {
+			CopyMemory(newlist, pReq->Runtime.CertInfo.certinfo, pReq->Runtime.CertInfo.num_of_certs * sizeof(struct curl_slist*));
+			MyFree(pReq->Runtime.CertInfo.certinfo);
+		}
+		pReq->Runtime.CertInfo.certinfo = newlist;
+		pReq->Runtime.CertInfo.num_of_certs++;
+
+		char* str;
+		long len;
+		const char zero = 0;
+
+#define COLLECT_CERT_STRING(bio) \
+		BIO_write(bio, &zero, 1); \
+		len = BIO_get_mem_data(bio, &str); \
+		pReq->Runtime.CertInfo.certinfo[pReq->Runtime.CertInfo.num_of_certs - 1] = curl_slist_append(pReq->Runtime.CertInfo.certinfo[pReq->Runtime.CertInfo.num_of_certs - 1], str); \
+		TRACE(_T("  %hs\n"), str); \
+		BIO_reset(mem)
+
+		BIO_puts(mem, "version:");
+		BIO_printf(mem, "%d", X509_get_version(cert));
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "issuer:");
+		X509_NAME* issuer = X509_get_issuer_name(cert);
+		X509_NAME_print_ex(mem, issuer, 0, XN_FLAG_ONELINE);
+		COLLECT_CERT_STRING(mem);
+		const ASN1_STRING* issuercn = OpenSSLGetNameEntryByNID(issuer, NID_commonName);
+		if (issuercn) {
+			BIO_puts(mem, "issuer-cn:");
+			BIO_write(mem, issuercn->data, issuercn->length);
+			COLLECT_CERT_STRING(mem);
+		}
+
+		BIO_puts(mem, "subject:");
+		X509_NAME* subject = X509_get_subject_name(cert);
+		X509_NAME_print_ex(mem, subject, 0, XN_FLAG_ONELINE);
+		COLLECT_CERT_STRING(mem);
+		const ASN1_STRING* subjectcn = OpenSSLGetNameEntryByNID(subject, NID_commonName);
+		if (subjectcn) {
+			BIO_puts(mem, "subject-cn:");
+			BIO_write(mem, subjectcn->data, subjectcn->length);
+			COLLECT_CERT_STRING(mem);
+		}
+
+		// Subject Alternative Names (DNS/IP)
+		GENERAL_NAMES* san = (GENERAL_NAMES*)X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+		if (san) {
+			BIO_puts(mem, "subject-alt-names:");
+			for (int i = 0; i < sk_GENERAL_NAME_num(san); ++i) {
+				const GENERAL_NAME* gn = sk_GENERAL_NAME_value(san, i);
+				if (gn) {
+					if (gn->type == GEN_DNS && gn->d.dNSName) {
+						const ASN1_IA5STRING* dns = gn->d.dNSName;
+						BIO_puts(mem, i > 0 ? ", " : "");
+						BIO_write(mem, dns->data, dns->length); // IA5String, not NUL-terminated
+					}
+					else if (gn->type == GEN_IPADD && gn->d.iPAddress) {
+						const ASN1_OCTET_STRING* ip = gn->d.iPAddress;
+						BIO_puts(mem, i > 0 ? ", " : "");
+						if (ip->length == 4) {
+							BIO_printf(mem, "%u.%u.%u.%u",
+								(unsigned)ip->data[0], (unsigned)ip->data[1],
+								(unsigned)ip->data[2], (unsigned)ip->data[3]);
+						}
+						else if (ip->length == 16) {
+							for (int j = 0; j < 16; j += 2) {
+								if (j) BIO_puts(mem, ":");
+								BIO_printf(mem, "%02x%02x", ip->data[j], ip->data[j + 1]);
+							}
+						}
+						else {
+							// Fallback: raw hex
+							for (int j = 0; j < ip->length; ++j)
+								BIO_printf(mem, "%02x", ip->data[j]);
+						}
+					}
+				}
+			}
+			GENERAL_NAMES_free(san);
+			COLLECT_CERT_STRING(mem);
+		}
+
+		BIO_puts(mem, "serial:");
+		const ASN1_INTEGER* num = X509_get0_serialNumber(cert);
+		if (num->type == V_ASN1_NEG_INTEGER)
+			BIO_puts(mem, "-");
+		for (int j = 0; j < num->length; j++)
+			BIO_printf(mem, "%02x", num->data[j]);
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "thumbprint:");
+		BYTE sha1[20];
+		X509_digest(cert, EVP_sha1(), sha1, NULL);
+		for (size_t j = 0; j < sizeof(sha1); j++)
+			BIO_printf(mem, "%02x", sha1[j]);
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "thumbprint-sha256:");
+		BYTE sha256[32];
+		X509_digest(cert, EVP_sha256(), sha256, NULL);
+		for (size_t j = 0; j < sizeof(sha256); j++)
+			BIO_printf(mem, "%02x", sha256[j]);
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "valid-from:");
+		ASN1_TIME_print_ex(mem, X509_get0_notBefore(cert), ASN1_DTFLGS_ISO8601);
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "valid-to:");
+		ASN1_TIME_print_ex(mem, X509_get0_notAfter(cert), ASN1_DTFLGS_ISO8601);
+		COLLECT_CERT_STRING(mem);
+
+		const ASN1_BIT_STRING* sigstr = NULL;
+		const X509_ALGOR* sigalg = NULL;
+		X509_get0_signature(&sigstr, &sigalg, cert);
+		if (sigalg) {
+			BIO_puts(mem, "signature-algo:");
+			const ASN1_OBJECT* sigalgobj = NULL;
+			X509_ALGOR_get0(&sigalgobj, NULL, NULL, sigalg);
+			i2a_ASN1_OBJECT(mem, sigalgobj);
+			COLLECT_CERT_STRING(mem);
+		}
+
+		const X509_PUBKEY* xpubkey = X509_get_X509_PUBKEY(cert);
+		if (xpubkey) {
+			ASN1_OBJECT* pubkeyobj = NULL;
+			X509_PUBKEY_get0_param(&pubkeyobj, NULL, NULL, NULL, xpubkey);
+			if (pubkeyobj) {
+				BIO_puts(mem, "pubkey-algorithm:");
+				i2a_ASN1_OBJECT(mem, pubkeyobj);
+				COLLECT_CERT_STRING(mem);
+			}
+			// X509_PUBKEY_free(xpubkey);	// must not free
+		}
+
+		const EVP_PKEY* pkey = X509_get0_pubkey(cert);	// does not increment refcount
+		if (pkey) {
+			BIO_puts(mem, "pubkey-algorithm-size:");
+			const int keysize = EVP_PKEY_get_size(pkey);
+			BIO_printf(mem, "%d", keysize * 8);
+			COLLECT_CERT_STRING(mem);
+			// EVP_PKEY_free(pkey);		// must not free
+		}
+
+		BIO_puts(mem, "certificate:");
+		PEM_write_bio_X509(mem, cert);
+		COLLECT_CERT_STRING(mem);
+
+#undef COLLECT_CERT_STRING
+	}
+
+	BIO_free(mem);
+}
 
 //++ OpenSSLVerifyCallback
 int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
@@ -665,26 +853,30 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	SSL_CTX *sslctx = SSL_get_SSL_CTX( ssl );
 	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( sslctx );
 
+	X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);		// Current certificate in the chain
+	int certerr = X509_STORE_CTX_get_error(x509_ctx);			// Current OpenSSL certificate validation error
+	int certidx = X509_STORE_CTX_get_error_depth(x509_ctx);		// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with peer certificate (#0)
+
+	// Collect certificate info
+	TRACE(_T("Certificate[%d], error:%d\n"), certidx, certerr);
+	OpenSSLCollectCertificate(x509_ctx, pReq);
+
 	if (pReq->pCertList)
 	{
 	    // Our logic:
-	    // * We return TRUE for every certificate, to get a chance to inspect the next in chain
-	    // * We return the final value when we reach the last certificate (depth 0)
+		// * We return TRUE for every certificate, to allow OpenSSL to continue with the next certificate in the chain
+	    // * We return the final verdict when we reach the last certificate (depth 0)
 	    //   If we're dealing with a TRUSTED certificate we force a positive response
-	    //   Otherwise we return whatever verdict OpenSSL has already assigned to the chain
+		//   Otherwise we return whatever verdict OpenSSL has already made
 
-		X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);		// Current certificate in the chain
-		int err = X509_STORE_CTX_get_error(x509_ctx);				// Current OpenSSL certificate validation error
-		int depth = X509_STORE_CTX_get_error_depth(x509_ctx);		// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with peer certificate (#0)
+		// X509_NAME_oneline(X509_get_subject_name(cert), buffer, ARRAYSIZE(buffer));
+		// X509_NAME_oneline(X509_get_issuer_name(cert), buffer, ARRAYSIZE(buffer));
 
-		//x X509_NAME_oneline( X509_get_subject_name( cert ), szSubject, ARRAYSIZE( szSubject ) );
-		//x X509_NAME_oneline( X509_get_issuer_name( cert ), szIssuer, ARRAYSIZE( szIssuer ) );
-
-		// Extract certificate SHA1 fingerprint
-		UCHAR Thumbprint[20];		// sha1
-		char szThumbprint[41];
-		X509_digest(cert, EVP_sha1(), Thumbprint, NULL);
-		MyFormatBinaryHexA(Thumbprint, sizeof(Thumbprint), szThumbprint, sizeof(szThumbprint));
+		// Certificate SHA1 fingerprint
+		BYTE thumbprint[20];		// sha1
+		char szThumbprint[41];		// e.g. "a1b2c3d4e5f60708090a0b0c0d0e0f1011121314"
+		X509_digest(cert, EVP_sha1(), thumbprint, NULL);
+		MyFormatBinaryHexA(thumbprint, sizeof(thumbprint), szThumbprint, sizeof(szThumbprint));
 
 		// Verify against our trusted certificate list
 		struct curl_slist* p;
@@ -692,7 +884,6 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 		{
 			if (lstrcmpiA(p->data, szThumbprint) == 0)
 			{
-
 				pReq->Runtime.bTrustedCert = TRUE;
 				X509_STORE_CTX_set_error(x509_ctx, X509_V_OK);
 				break;
@@ -700,9 +891,9 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 		}
 
 		// Verdict
-		if (depth > 0)
+		if (certidx > 0)
 		{
-			TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", err);
+			TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), certidx, szThumbprint, preverify_ok ? "TRUE" : "FALS", certerr, p ? "TRUSTED" : "UNKNOWN", "TRUE", certerr);
 			ret = TRUE;
 		}
 		else
@@ -712,23 +903,22 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 				// We've found at least one TRUSTED certificate
 				// Clear all errors, return a positive verdict
 				X509_STORE_CTX_set_error(x509_ctx, X509_V_OK);
-				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", "TRUE", X509_V_OK);
+				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), certidx, szThumbprint, preverify_ok ? "TRUE" : "FALS", certerr, p ? "TRUSTED" : "UNKNOWN", "TRUE", X509_V_OK);
 				ret = TRUE;
 			} else {
 				// We haven't found any TRUSTED certificate
-				// Return whatever verdict already made by OpenSSL
-				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), depth, szThumbprint, preverify_ok ? "TRUE" : "FALS", err, p ? "TRUSTED" : "UNKNOWN", preverify_ok ? "TRUE" : "FALS", err);
+				// Return whatever verdict OpenSSL has already made
+				TRACE(_T("Certificate( #%d, \"%hs\", PreVerify{OK:%hs, Err:%d} ) = %hs, Response{OK:%hs, Err:%d}\n"), certidx, szThumbprint, preverify_ok ? "TRUE" : "FALS", certerr, p ? "TRUSTED" : "UNKNOWN", preverify_ok ? "TRUE" : "FALS", certerr);
 			}
 		}
 	}
 
 	// Remember the last x509 error
-	int ex509 = X509_STORE_CTX_get_error(x509_ctx);
-	if (ex509 != X509_V_OK && ex509 != pReq->Error.iX509)
+	if (certerr != X509_V_OK && certerr != pReq->Error.iX509)
 	{
-		pReq->Error.iX509 = ex509;
+		pReq->Error.iX509 = certerr;
 		MyFree(pReq->Error.pszX509);
-		pReq->Error.pszX509 = MyStrDup(eA2A, X509_verify_cert_error_string(ex509));
+		pReq->Error.pszX509 = MyStrDup(eA2A, X509_verify_cert_error_string(certerr));
 	}
 
 	return ret;
@@ -1287,6 +1477,10 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 				// Allow TLS 1.0, TLS 1.1
 				curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_0);
 			}
+
+			// CURLOPT_CERTINFO doesn't collect anything if the certificate is invalid (self-signed, expired, etc.)
+			// We collect certificate info ourselves in OpenSSLCollectCertificate
+			// curl_easy_setopt(curl, CURLOPT_CERTINFO, TRUE);
 
 			// SSL callback
 			curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, CurlSSLCallback);

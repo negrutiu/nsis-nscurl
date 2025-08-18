@@ -77,6 +77,7 @@ typedef struct _CURL_REQUEST {
 		VMEMO		OutData;			/// Download to RAM (hOutFile == NULL)
 		HANDLE		hOutFile;			/// Download to file
 		BOOLEAN		bTrustedCert : 1;	/// Used only when validating against /CERT certificate thumbprints
+		struct curl_certinfo CertInfo;	/// Certificate info (CURLINFO_CERTINFO)
 		HANDLE		hDebugFile;			/// Debug connection
 		LPCSTR		pszFinalURL;		/// The final URL, after following all redirections
 		LONG		iServerPort;
