@@ -25,7 +25,6 @@ void CurlRequestInit(_Inout_ PCURL_REQUEST pReq)
 {
 	if (!pReq) return;
 	ZeroMemory(pReq, sizeof(*pReq));
-	pReq->Runtime.iRootCertFlags = (ULONG)-1;	// Uninitialized
 	pReq->bCastore = TRUE;
 	{
 		TCHAR buffer[MAX_PATH];
