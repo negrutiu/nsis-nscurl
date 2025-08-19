@@ -704,6 +704,14 @@ void OpenSSLCollectCertificate(const X509_STORE_CTX* x509_ctx, PCURL_REQUEST pRe
 		TRACE(_T("  %hs\n"), str); \
 		BIO_reset(mem)
 
+		BIO_puts(mem, "error:");
+		BIO_printf(mem, "%d", X509_STORE_CTX_get_error(x509_ctx));
+		COLLECT_CERT_STRING(mem);
+
+		BIO_puts(mem, "error-message:");
+		BIO_printf(mem, "%hs", X509_verify_cert_error_string(X509_STORE_CTX_get_error(x509_ctx)));
+		COLLECT_CERT_STRING(mem);
+
 		BIO_puts(mem, "version:");
 		BIO_printf(mem, "%d", X509_get_version(cert));
 		COLLECT_CERT_STRING(mem);
@@ -854,7 +862,7 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( sslctx );
 
 	// Collect certificate info
-	TRACE(_T("Certificate[%d], error:%d\n"), certidx, certerr);
+	TRACE(_T("Certificate #%d\n"), X509_STORE_CTX_get_error_depth(x509_ctx));
 	OpenSSLCollectCertificate(x509_ctx, pReq);
 
 	if (pReq->pCertList)
