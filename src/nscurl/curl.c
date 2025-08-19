@@ -2037,6 +2037,33 @@ void CALLBACK CurlQueryKeywordCallback(_Inout_ LPTSTR pszKeyword, _In_ ULONG iMa
 			        MyWriteDataToFile((char*)pReq->Runtime.OutData.data + offset, size, pszOutFile);
 			}
 			MyFree(pszOutFile);
+		} else if (IsKeyword( _T("CERTNUM"))) {
+			_sntprintf(pszKeyword, iMaxLen, _T("%d"), pReq->Runtime.CertInfo.num_of_certs);
+		} else if (IsKeyword( _T("CERTINFO"))) {
+			pszKeyword[0] = 0;
+			if (keyword.paramsBegin) {	// certificate value name (e.g. "thumbprint") is mandatory
+				LPSTR params = MyStrDupN(eT2A, keyword.paramsBegin, (int)(keyword.paramsEnd - keyword.paramsBegin));
+				if (params) {
+					int certidx = pReq->Runtime.CertInfo.num_of_certs - 1;	// last certificate (aka end-entity certificate)
+					if (keyword.indexBegin) {
+						LPCTSTR psz;
+						certidx = (int)MyAtoi(keyword.indexBegin, &psz, TRUE);
+						if (psz < keyword.indexEnd)
+							return;
+					}
+					if (certidx >= 0 && certidx < pReq->Runtime.CertInfo.num_of_certs) {
+						for (struct curl_slist *str = pReq->Runtime.CertInfo.certinfo[certidx]; str; str = str->next) {
+							const char* begin, * end;
+							CurlKeyValue(str->data, params, &begin, &end, ':', FALSE);
+							if (begin && end) {
+								MyStrCopyN(eA2T, pszKeyword, iMaxLen, begin, (int)(end - begin));
+								break;
+							}
+						}
+					}
+					MyFree(params);
+				}
+			}
 		} else if (lstrcmpi( pszKeyword, _T( "@TAG@" ) ) == 0) {
 			MyStrCopy( eA2T, pszKeyword, iMaxLen, pReq->pszTag );
 		} else if (lstrcmpi( pszKeyword, _T( "@ERROR@" ) ) == 0) {
