@@ -853,10 +853,6 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	SSL_CTX *sslctx = SSL_get_SSL_CTX( ssl );
 	PCURL_REQUEST pReq = (PCURL_REQUEST)SSL_CTX_get_app_data( sslctx );
 
-	X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);		// Current certificate in the chain
-	int certerr = X509_STORE_CTX_get_error(x509_ctx);			// Current OpenSSL certificate validation error
-	int certidx = X509_STORE_CTX_get_error_depth(x509_ctx);		// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with peer certificate (#0)
-
 	// Collect certificate info
 	TRACE(_T("Certificate[%d], error:%d\n"), certidx, certerr);
 	OpenSSLCollectCertificate(x509_ctx, pReq);
@@ -868,6 +864,10 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	    // * We return the final verdict when we reach the last certificate (depth 0)
 	    //   If we're dealing with a TRUSTED certificate we force a positive response
 		//   Otherwise we return whatever verdict OpenSSL has already made
+
+		X509* cert = X509_STORE_CTX_get_current_cert(x509_ctx);		// Current certificate in the chain
+		int certerr = X509_STORE_CTX_get_error(x509_ctx);			// Current OpenSSL certificate validation error
+		int certidx = X509_STORE_CTX_get_error_depth(x509_ctx);		// Certificate index/depth in the chain. Starts with root certificate (e.g. #2), ends with peer certificate (#0)
 
 		// X509_NAME_oneline(X509_get_subject_name(cert), buffer, ARRAYSIZE(buffer));
 		// X509_NAME_oneline(X509_get_issuer_name(cert), buffer, ARRAYSIZE(buffer));
@@ -914,6 +914,7 @@ int OpenSSLVerifyCallback( int preverify_ok, X509_STORE_CTX *x509_ctx )
 	}
 
 	// Remember the last x509 error
+	const int certerr = X509_STORE_CTX_get_error(x509_ctx);	// read again, in case it was changed by the above logic
 	if (certerr != X509_V_OK && certerr != pReq->Error.iX509)
 	{
 		pReq->Error.iX509 = certerr;
