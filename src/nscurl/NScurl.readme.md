@@ -742,8 +742,8 @@ HTTP response headers.
 The remote content.  
 `@RECVDATA[:offset[,size]][>file]@` receives a printable string. Non-printable characters are replaced with `.`  
 `@RECVDATA_RAW[:offset[,size]][>file]@` receives the original data no characters replaced
-
 Optional parameters are available to customize the query.
+
 Parameter  | Details
 ---------- | ----------------------
 offset     | Data offset. <br> Negative values are subtracted from the remote content length.
@@ -767,6 +767,46 @@ Pop $0
 
 > [!caution]
 > The value returned by the `NScurl::query` function is subject to a size limit defined by the `${NSIS_MAX_STRLEN}` constant. Typically, the maximum length is 2KB, 4KB, or 8KB, depending on the specific NSIS build or fork you're using. If you need to access data beyond this limit, you can make multiple `NScurl::query` calls, each with a different _(offset, size)_ pair.
+
+### @CERTNUM@
+NScurl collects information about the SSL certificate chain during the transfer.  
+`@CERTNUM@` returns the number of certificates in the chain.  
+The chain starts with the root certificate and ends with the end-entity certificate.
+
+### @CERTINFO:fieldname@
+### @CERTINFO[index]:fieldname@
+Query SSL certificate information.  
+If `index` is specified, it returns the information for the certificate at that index in the chain (0 is the root certificate, 1 is the intermediate certificate, etc.).  
+If `index` is not specified, it returns the information for the end-entity certificate (the last certificate in the chain).  
+`fieldname` is the name of the field to query.
+
+Fields                | Details
+:-------------------- | :-----------------------------
+error                 | The openssl validation error code (e.g. 10 for `X509_V_ERR_CERT_HAS_EXPIRED`). Returns 0 for successful validation
+error-message         | The text message describing the error (e.g. "certificate has expired"). Returns "ok" for successful validation`
+version	              | The X509 version (e.g. "2")
+issuer	              | The certificate issuer (e.g. "CN=Example CA, O=Example Org, C=US")
+issuer-cn             | The certificate issuer common name (e.g. "Example CA")
+subject	              | The certificate subject (e.g. "CN=example.com, O=Example Org, C=US")
+subject-cn            | The certificate subject common name (e.g. "example.com")
+subject-alt-name      | The certificate subject alternative name (e.g. "example.com, www.example.com, wiki.example.com")
+serial                | The certificate serial number (e.g. "1234567890abcdef123456"). 
+thumbprint            | The certificate thumbprint SHA-1 (e.g. "1234567890abcdef1234567890abcdef12345678")
+thumbprint-sha256     | The certificate thumbprint SHA-256 (e.g. "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
+valid-from            | The certificate valid from date (e.g. "2000-02-20 00:00:00Z", in ISO-8601 format)
+valid-to              | The certificate valid to date (e.g. "2023-02-20 00:00:00Z", in ISO-8601 format)
+signature-algorithm   | The certificate signature algorithm (e.g. "sha256WithRSAEncryption")
+pubkey-algorithm      | The certificate public key algorithm (e.g. "rsaEncryption")
+pubkey-algorithm-size | The certificate public key algorithm size in bits (e.g. "4096")
+certificate           | The full certificate in PEM format (e.g. "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----")
+
+Examples:
+```nsis
+NScurl::query /id $0 "End-entity sha1 thumbprint: @CERTINFO:thumbprint@"
+Pop $1  ; the input string with keyword(s) replaced
+NScurl::query /id $0 "Root subject common name: @CERTINFO[0]:subject-cn@"
+Pop $1
+```
 
 ### @TAG@
 Transfer tag, empty by default.  
