@@ -810,7 +810,7 @@ void OpenSSLCollectCertificate(const X509_STORE_CTX* x509_ctx, PCURL_REQUEST pRe
 		const X509_ALGOR* sigalg = NULL;
 		X509_get0_signature(&sigstr, &sigalg, cert);
 		if (sigalg) {
-			BIO_puts(mem, "signature-algo:");
+			BIO_puts(mem, "signature-algorithm:");
 			const ASN1_OBJECT* sigalgobj = NULL;
 			X509_ALGOR_get0(&sigalgobj, NULL, NULL, sigalg);
 			i2a_ASN1_OBJECT(mem, sigalgobj);
