@@ -26,6 +26,8 @@ Var /global DLL
 !insertmacro GetParameters
 
 !define /ifndef NULL 0
+!define /ifndef TRUE 1
+!define /ifndef FALSE 0
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 
@@ -71,7 +73,7 @@ Var /global g_testFails
 !macro STACK_VERIFY_END
 	Pop $R9						        ; Validate our stack marker
 	StrCmp $R9 "MyStackTop" +2 +1
-		MessageBox MB_ICONSTOP "Stack is NOT OK"
+		MessageBox MB_ICONSTOP 'Stack is NOT OK$\r$\nStack top: "$R9"'
 !macroend
 
 #---------------------------------------------------------------#
@@ -318,7 +320,7 @@ Section "sysinternals.com/get (HTTP/1.1)"
 
 	!insertmacro STACK_VERIFY_START
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_http1.zip"
+	!define /redef FILE  "$EXEDIR\_SysinternalsSuite_http1.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	Push "/END"
@@ -853,6 +855,7 @@ Var /global testSecurityValue
 Section "Expired certificate"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	!define /redef LINK 'https://expired.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_expired'
@@ -867,11 +870,14 @@ Section "Expired certificate"
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Wrong host"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	!define /redef LINK 'https://wrong.host.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_wronghost'
@@ -886,11 +892,14 @@ Section "Wrong host"
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Untrusted root"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	!define /redef LINK 'https://untrusted-root.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_untrustroot'
@@ -908,11 +917,14 @@ Section "Untrusted root"
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Self-signed certificate"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	!define /redef LINK 'https://self-signed.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_selfsigned'
@@ -942,11 +954,13 @@ Section "Self-signed certificate"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
 
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Unsafe legacy renegociation"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
 	!define /redef FILE '$EXEDIR\_test_legacynego'
@@ -961,11 +975,14 @@ Section "Unsafe legacy renegociation"
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Weak protocols"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
     
@@ -1005,11 +1022,52 @@ Section "Weak protocols"
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Cookie jar"
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
+
+	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
+	!define /redef FILE '$EXEDIR\_test_cookiejar_body'
+	!define /redef JAR  '$EXEDIR\_test_cookiejar.txt'
+
+    Delete "${JAR}"
+
+    DetailPrint 'NScurl::http "${LINK}" /COOKIEJAR "${JAR}"'
+	Push /END
+	Push "test"
+	Push /TAG
+	Push "${JAR}"
+	Push /COOKIEJAR
+	Push "${FILE}"
+	Push "${LINK}"
+	Push get
+	CallInstDLL $DLL http
+    Pop $0
+
+    ${If} ${FileExists} "${JAR}"
+        StrCpy $1 ${TRUE}
+    ${Else}
+        StrCpy $1 ${FALSE}
+    ${EndIf}
+	!insertmacro REPORT_TEST "jar exists" ${TRUE} "jar exists" $1
+
+    Push /REMOVE
+    Push "test"
+    Push /TAG
+    CallInstDLL $DLL cancel     ; no return
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "HTTP/3"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	; https://bagder.github.io/HTTP3-test
 	!define /redef LINK 'https://nghttp2.org:4433'
@@ -1048,13 +1106,15 @@ Section "HTTP/3"
     CallInstDLL $DLL query
     Pop $3
 
+	StrCpy $1 $3 6 ; extract leading "HTTP/x"
+	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+
     Push /REMOVE
     Push "test"
     Push /TAG
     CallInstDLL $DLL cancel     ; no return
 
-	StrCpy $1 $3 6 ; extract leading "HTTP/x"
-	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
@@ -1066,8 +1126,8 @@ SectionGroup /e "Errors"
 Section "httpbin.org/get/status/40x"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1085,16 +1145,16 @@ Section "httpbin.org/get/status/40x"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "httpbin.org/post/status/40x"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
 	!define /redef FILE '$EXEDIR\_POST_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1112,16 +1172,16 @@ Section "httpbin.org/post/status/40x"
 	Push "POST"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "httpbin.org/put/status/40x"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
 	!define /redef FILE '$EXEDIR\_PUT_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1147,6 +1207,7 @@ Section "httpbin.org/put/status/40x"
 
 	Pop $0
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1158,8 +1219,8 @@ SectionGroup /e "Authentication"
 Section "httpbin.org/basic-auth"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/basic-auth/MyUser/MyPass'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_basic-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1175,8 +1236,8 @@ Section "httpbin.org/basic-auth"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1184,8 +1245,8 @@ SectionEnd
 Section "httpbin.org/hidden-basic-auth"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/hidden-basic-auth/MyUser/MyPass'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_hidden-basic-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1202,8 +1263,8 @@ Section "httpbin.org/hidden-basic-auth"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1211,8 +1272,8 @@ SectionEnd
 Section "httpbin.org/bearer"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/bearer'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_bearer.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1228,8 +1289,8 @@ Section "httpbin.org/bearer"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1237,8 +1298,8 @@ SectionEnd
 Section "httpbin.org/digest-auth/auth"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth/MyUser/MyPass/SHA-256'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1255,8 +1316,8 @@ Section "httpbin.org/digest-auth/auth"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1264,8 +1325,8 @@ SectionEnd
 Section "httpbin.org/digest-auth/auth-int"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1281,8 +1342,8 @@ Section "httpbin.org/digest-auth/auth-int"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1294,8 +1355,8 @@ SectionGroup /e "Proxy"
 Section "httpbin.org/get"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1310,8 +1371,8 @@ Section "httpbin.org/get"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1319,8 +1380,8 @@ SectionEnd
 Section "httpbin.org/digest-auth/auth-int"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1338,8 +1399,8 @@ Section "httpbin.org/digest-auth/auth-int"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1350,10 +1411,9 @@ SectionGroup /e "SSL Validation"
 
 Section "Expired certificate"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://expired.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1364,17 +1424,16 @@ Section "Expired certificate"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Revoked certificate"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://revoked.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1385,17 +1444,16 @@ Section "Revoked certificate"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Self-signed certificate"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://self-signed.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1406,17 +1464,16 @@ Section "Self-signed certificate"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Untrusted certificate"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://untrusted-root.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1427,17 +1484,16 @@ Section "Untrusted certificate"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Wrong host"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://wrong.host.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1448,17 +1504,16 @@ Section "Wrong host"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "HTTP public key pinning (HPKP)"
 	SectionIn ${INSTTYPE_MOST}
-		
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
 	!insertmacro STACK_VERIFY_START
+
 	!define /redef LINK 'https://pinning-test.badssl.com/'
 	!define /redef FILE 'Memory'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
@@ -1469,8 +1524,8 @@ Section "HTTP public key pinning (HPKP)"
 	Push "GET"
 	CallInstDLL $DLL http
 	Pop $0
-
 	DetailPrint "Status: $0"
+
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
@@ -1480,9 +1535,9 @@ SectionGroupEnd		; SSL Validation
 Section "Wait for all"
 	SectionIn ${INSTTYPE_NONE} ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	DetailPrint 'Waiting...'
-	!insertmacro STACK_VERIFY_START
 	Push "/END"
 	; Push "$mui.InstFilesPage.ProgressBar"
 	; Push "/PROGRESSWND"
@@ -1492,6 +1547,7 @@ Section "Wait for all"
 	Push "/TITLEWND"
 	Push "/CANCEL"
 	CallInstDLL $DLL wait
+
 	!insertmacro STACK_VERIFY_END
 
 	; Print summary
@@ -1501,12 +1557,12 @@ SectionEnd
 
 
 Function PrintAllRequests
+	!insertmacro STACK_VERIFY_START
 
 	; NScurl::enumerate
-	!insertmacro STACK_VERIFY_START
 	Push "/END"
 	CallInstDLL $DLL enumerate
-	
+
 _enum_loop:
 
 	StrCpy $0 ""
@@ -1562,8 +1618,8 @@ _enum_loop:
 
 	Goto _enum_loop
 _enum_end:
-	!insertmacro STACK_VERIFY_END
 
+	!insertmacro STACK_VERIFY_END
 FunctionEnd
 
 
@@ -1573,9 +1629,9 @@ SectionGroup /e Extra
 Section Test
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
 
 	; NScurl::echo
-	!insertmacro STACK_VERIFY_START
 	Push "/END"
 	Push 0x2
 	Push 1
@@ -1584,18 +1640,19 @@ Section Test
 	CallInstDLL $DLL echo
 	Pop $0
 	DetailPrint 'NScurl::echo(...) = "$0"'
-	!insertmacro STACK_VERIFY_END
 
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
 Section Hashes
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+	!insertmacro STACK_VERIFY_START
+
 	!define S1 "Hash this string"
 
 	; NScurl::md5 -file filename
-	!insertmacro STACK_VERIFY_START
 	Push $EXEPATH
 	Push "-file"
 	CallInstDLL $DLL md5

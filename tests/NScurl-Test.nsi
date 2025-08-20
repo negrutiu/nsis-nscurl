@@ -234,14 +234,14 @@ Section "sysinternals.com/get (Memory)"
 	DetailPrint 'NScurl::http "${LINK}" "Memory"'
 	NScurl::http get "${LINK}" "Memory" /CANCEL /INSIST /RETURN "@id@" /END
 	Pop $R0
-	DetailPrint "  ID: $R0"
+	DetailPrint "ID: $R0"
 
     ; For demonstration purposes, we'll retrieve the first two bytes of the remote content stored in memory
     ; If the data begins with the "PK" sequence (the standard zip file magic bytes), we'll save it to disk as a .zip file
-    	DetailPrint 'NScurl::query /id $R0 "@RecvData:0,2@"'
+    DetailPrint 'NScurl::query /id $R0 "@RecvData:0,2@"'
 	NScurl::query /id $R0 "@RecvData:0,2@" /END
-	Pop $0
-	DetailPrint '  RecvData[0,2]: "$0"'
+    Pop $0
+    DetailPrint '  RecvData[0,2]: "$0"'
 
     ${If} $0 == "PK"
         DetailPrint 'NScurl::query /id $R0 "@RecvData>${FILE}@"'
@@ -699,7 +699,6 @@ Section "Weak protocols"
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
-
 
 Section "Cookie jar"
 	SectionIn ${INSTTYPE_MOST}
