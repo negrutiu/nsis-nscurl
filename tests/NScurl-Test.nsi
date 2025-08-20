@@ -432,33 +432,6 @@ SectionEnd
 
 SectionGroup /e "Tests"
 
-; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
-!define BADSSL_SELFSIGNED_CRT \
-"-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJALfFORhDXiFeMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
-BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
-c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDEyMTkyMTAzMzNaFw0yNjEyMTkyMTAzMzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
-VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
-DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
-BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
-PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
-hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
-xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
-ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
-QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
-BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAITHC93SNagVrwUX41aUUJlIg6s+E8LXGZIP77HGSd48R1zS$\n\
-+xPQcs2OKJaFESRZTJFgZ+wyPW3VhLm/ObYKbQiqmXc7W91nne+mywOF8cxcOoNw$\n\
-BDkVACyN36A6Bm42zTVdf0CYQR2d4pnI1LzWsGSQVRh+oCnrapxbmmI105rgJ3q5$\n\
-3RRcFPuKDdycqXgCCem8Zmg+Pq4XWZlbcCk1jts1TbFjUmr9G7lBV7cUu3XurbK9$\n\
-6xiRwFqPA/1qwLgyEXwUlsJ63D1GwRNa9N8ynfLvtE3bhE+oGk3xPL2sQN8HMYVw$\n\
-NKDIcX/Eu+lJjdcg3xu8Ym/V8P/s/frahpF4Q1A=$\n\
------END CERTIFICATE-----"
-
-!define BADSSL_SELFSIGNED_THUMBPRINT '6e3df5d84de941e0b4c3d5f0788b7e0bfc0d42bf'
-
-
 Var /global testCacertName
 Var /global testCacertValue
 Var /global testCastoreName
@@ -594,18 +567,26 @@ Section "Wrong host"
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
 
+Var /global testBadsslUntrustedThumbprint
+Function RefreshBadsslUntrustedCertificate
+	NScurl::http GET "https://untrusted-root.badssl.com" memory /RETURN "@CERTINFO:thumbprint@" /TAG "test" /END
+    Pop $testBadsslUntrustedThumbprint
+	DetailPrint 'untrusted-root.badssl.com: $testBadsslUntrustedThumbprint'
+FunctionEnd
+
 Section "Untrusted root"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
+	Call RefreshBadsslUntrustedCertificate
+
 	!define /redef LINK 'https://untrusted-root.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_untrustroot'
 
-    !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                             '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testBadsslUntrustedThumbprint '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
@@ -613,9 +594,26 @@ Section "Untrusted root"
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
 
+Var /global testBadsslSelfsignCertificate	; pem
+Var /global testBadsslSelfsignThumbprint
+Function RefreshBadsslSelfsignedCertificate
+	NScurl::http GET "https://self-signed.badssl.com" memory /RETURN "@id@" /TAG "test" /END
+	Pop $0
+
+	NScurl::query /ID $0 "@CERTINFO:certificate@"
+    Pop $testBadsslSelfsignCertificate
+	;DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignCertificate'
+
+	NScurl::query /ID $0 "@CERTINFO:thumbprint@"
+    Pop $testBadsslSelfsignThumbprint
+	DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignThumbprint'
+FunctionEnd
+
 Section "Self-signed certificate"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshBadsslSelfsignedCertificate
 
 	!define /redef LINK 'https://self-signed.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_selfsigned'
@@ -626,7 +624,7 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignCertificate '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
@@ -637,24 +635,33 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  $testBadsslSelfsignThumbprint '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignThumbprint '' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
 
+Var /global testGovMyThumbprint
+Function RefreshGovMyCertificate
+	NScurl::http GET "https://publicinfobanjir.water.gov.my" memory /RETURN "@CERTINFO:thumbprint@" /SECURITY weak /TAG "test" /END
+    Pop $testGovMyThumbprint
+	DetailPrint 'publicinfobanjir.water.gov.my: $testGovMyThumbprint'
+FunctionEnd
+
 Section "Unsafe legacy renegociation"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
 	!define /redef FILE '$EXEDIR\_test_legacynego'
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd

@@ -700,33 +700,6 @@ SectionEnd
 
 SectionGroup /e "Tests"
 
-; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
-!define BADSSL_SELFSIGNED_CRT \
-"-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJAPhNZrCAQp0/MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
-BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
-c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDA4MjAxNjI0NDVaFw0yNjA4MjAxNjI0NDVaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
-VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
-DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
-BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
-PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
-hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
-xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
-ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
-QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
-BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAF9F2x4tuIATEa5jZY86nEaa3Py2Rd0tjNywlryS1TKXWIqu$\n\
-yim+0HpNU/R6cpkN1MZ1iN7dUKTtryLJIAXgaZC1TC6sRyuOMzV/rDHShT3WY0MW$\n\
-+/sebaJZ4kkLUzQ1k5/FW/AmZ3su739vLQbcEEfn7UUK5cdRgcqEHA4SePhq5zQX$\n\
-5/FSILsStpu+9hZ6OGxVdLVWKOM5GZ8LCXw3cJCNbJvW1APCz+3bP3bGBANeCUJp$\n\
-gt0b83u4YBs1t66ZV/rcDQiyQzjAY6th2UfRggZxeIRDO7qbRa+M0pVW3qugMytf$\n\
-bPw02aMbgH96rX61u0sd1M0slJHFEeqquqbtPcU=$\n\
------END CERTIFICATE-----"
-
-!define BADSSL_SELFSIGNED_THUMBPRINT '8577cec7988ad89d72400f5933988221984e3009'
-
-
 Var /global testCacertName
 Var /global testCacertValue
 Var /global testCastoreName
@@ -896,19 +869,35 @@ Section "Wrong host"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testBadsslUntrustedThumbprint
+Function RefreshBadsslUntrustedCertificate
+	Push "/END"
+    Push "test"
+    Push /TAG
+    Push "@CERTINFO:thumbprint@"
+    Push /RETURN
+	Push memory
+	Push "https://untrusted-root.badssl.com"
+	Push "GET"
+	CallInstDLL $DLL http
+    Pop $testBadsslUntrustedThumbprint
+	DetailPrint 'untrusted-root.badssl.com: $testBadsslUntrustedThumbprint'
+FunctionEnd
+
 Section "Untrusted root"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!insertmacro STACK_VERIFY_START
 
+	Call RefreshBadsslUntrustedCertificate
+
 	!define /redef LINK 'https://untrusted-root.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_untrustroot'
 
-    !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                             '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testBadsslUntrustedThumbprint '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
@@ -921,10 +910,41 @@ Section "Untrusted root"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testBadsslSelfsignCertificate	; pem
+Var /global testBadsslSelfsignThumbprint
+Function RefreshBadsslSelfsignedCertificate
+	Push "/END"
+    Push "test"
+    Push /TAG
+    Push "@ID@"
+    Push /RETURN
+	Push memory
+	Push "https://self-signed.badssl.com"
+	Push "GET"
+	CallInstDLL $DLL http
+	Pop $0
+
+    Push "@CERTINFO:certificate@"
+    Push $0
+    Push /ID
+    CallInstDLL $DLL query
+    Pop $testBadsslSelfsignCertificate
+	;DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignCertificate'
+
+    Push "@CERTINFO:thumbprint@"
+    Push $0
+    Push /ID
+    CallInstDLL $DLL query
+    Pop $testBadsslSelfsignThumbprint
+	DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignThumbprint'
+FunctionEnd
+
 Section "Self-signed certificate"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!insertmacro STACK_VERIFY_START
+
+	Call RefreshBadsslSelfsignedCertificate
 
 	!define /redef LINK 'https://self-signed.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_selfsigned'
@@ -935,7 +955,7 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignCertificate '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
@@ -946,8 +966,8 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  $testBadsslSelfsignThumbprint '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignThumbprint '' http 200
 
     Push /REMOVE
     Push "test"
@@ -957,19 +977,38 @@ Section "Self-signed certificate"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testGovMyThumbprint
+Function RefreshGovMyCertificate
+	Push "/END"
+    Push "test"
+    Push /TAG
+	Push weak
+	Push /SECURITY
+    Push "@CERTINFO:thumbprint@"
+    Push /RETURN
+	Push memory
+	Push "https://publicinfobanjir.water.gov.my"
+	Push "GET"
+	CallInstDLL $DLL http
+    Pop $testGovMyThumbprint
+	DetailPrint 'publicinfobanjir.water.gov.my: $testGovMyThumbprint'
+FunctionEnd
+
 Section "Unsafe legacy renegociation"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 	!insertmacro STACK_VERIFY_START
+
+	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
 	!define /redef FILE '$EXEDIR\_test_legacynego'
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
 
     Push /REMOVE
     Push "test"
