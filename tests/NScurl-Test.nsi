@@ -1,6 +1,10 @@
 
 # NScurl demo
 # Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl
+#
+# Usage:
+#   NScurl-Test-arch-unicode.exe [/nscurl <custom_nscurl_dll>]
+#
 
 !ifdef TARGET
 	Target ${TARGET}                    ; x86-unicode, x86-ansi, amd64-unicode
@@ -18,6 +22,8 @@
 
 !include "FileFunc.nsh"
 !insertmacro GetFileName
+!insertmacro GetOptions
+!insertmacro GetParameters
 
 !define /ifndef NULL 0
 !define /ifndef TRUE 1
@@ -80,6 +86,29 @@ Function .onInit
 	; Language selection
 	!define MUI_LANGDLL_ALLLANGUAGES
 	!insertmacro MUI_LANGDLL_DISPLAY
+
+    ; look for `/nscurl <path>` command line parameter
+    ; if specified, copy this file to $PLUGINSDIR to replace the built-in NScurl.dll
+    ; this is a development feature and should not be included in production installers
+	${GetParameters} $R0
+	${GetOptions} $R0 "/nscurl" $R1
+	${IfNot} ${Errors}
+        ; Try creating a hard link
+        System::Call 'kernel32::CreateHardLink(t "$PLUGINSDIR\NScurl.dll", t r11, p ${NULL}) i.r0 ? e'
+        Pop $1
+        ${If} $0 = ${FALSE}
+        ${OrIf} $0 == "error"
+            ; Try copying the file
+            ClearErrors
+            CopyFiles /SILENT /FILESONLY $R1 "$PLUGINSDIR\NScurl.dll"
+            ${If} ${Errors}
+                ; Everything failed
+                StrCmp $0 "error" +2 +1
+                    IntFmt $0 "0x%x" $1
+                MessageBox MB_ICONSTOP 'CreateHardLink("$R1" -> "$$PLUGINSDIR\NScurl.dll") = $0$\nCopy("$R1" -> "$$PLUGINSDIR") failed$\n$\nUsing the built-in NScurl.dll ...'
+            ${EndIf}
+        ${EndIf}
+	${EndIf}
 
 /*
 	; .onInit download demo
@@ -1006,7 +1035,10 @@ SectionEnd
 Function PrintAllRequests
 
 	; NScurl::enumerate
+    ClearErrors
 	NScurl::enumerate /END
+    IfErrors 0 +2
+        Return
 	
 _enum_loop:
 
