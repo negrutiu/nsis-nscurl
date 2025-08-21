@@ -20,6 +20,8 @@
 !insertmacro GetFileName
 
 !define /ifndef NULL 0
+!define /ifndef TRUE 1
+!define /ifndef FALSE 0
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 # NScurl.dll custom location
@@ -722,19 +724,11 @@ Section "Cookie jar"
     Pop $0
 
     ${If} ${FileExists} "${JAR}"
-        StrCpy $1 "OK"
+        StrCpy $1 ${TRUE}
     ${Else}
-        StrCpy $1 "MISSING"
+        StrCpy $1 ${FALSE}
     ${EndIf}
-
-    IntOp $g_testCount $g_testCount + 1
-    ${If} $0 == "OK"
-    ${AndIf} $1 == "OK"
-        DetailPrint "[ OK ] status:$0, jar:$1"
-    ${Else}
-        IntOp $g_testFails $g_testFails + 1
-        DetailPrint "----- FAIL ----- status:$0, jar:$1"
-    ${EndIf}
+	!insertmacro REPORT_TEST "jar exists" ${TRUE} "jar exists" $1
 
     NScurl::cancel /TAG "test" /REMOVE
 SectionEnd
@@ -748,7 +742,7 @@ Section "HTTP/3"
 	!define /redef FILE '$EXEDIR\_test_nghttp2-org.html'
 
 	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
-	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /TAG "test" /END
+	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /CANCEL /TAG "test" /END
 	Pop $0	; transfer ID
 
 	NScurl::query /ID $0 "@ErrorType@"
@@ -885,27 +879,27 @@ SectionGroupEnd		; Authentication
 
 SectionGroup /e "Proxy"
 
-Section "httpbin.org/get"
+Section "proxy -> httpbin.org/get"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END		; Germany
+	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END		; Germany
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
 
 
-Section "httpbin.org/digest-auth/auth-int"
+Section "proxy -> httpbin.org/digest-auth/auth-int"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
@@ -1051,7 +1045,7 @@ FunctionEnd
 SectionGroup /e Extra
 
 
-Section Test
+Section Echo
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
