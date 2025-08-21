@@ -806,8 +806,8 @@ Section "HTTP/3"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	; https://bagder.github.io/HTTP3-test
-	!define /redef LINK 'https://nghttp2.org:4433'
-	!define /redef FILE '$EXEDIR\_test_nghttp2-org.html'
+	!define /redef LINK 'https://cloudflare-quic.com'
+	!define /redef FILE '$EXEDIR\_test_http3.html'
 
 	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
 	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /CANCEL /TAG "test" /END
@@ -821,12 +821,13 @@ Section "HTTP/3"
 
     NScurl::query /ID $0 "@RecvHeaders@"
     Pop $3
-
-	NScurl::cancel /TAG "test" /REMOVE
+	DetailPrint 'Headers: $3'
 
     StrCmp $1 "http" +1 +2
         StrCpy $1 $3 6 ; extract leading "HTTP/x" from headers
 	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+
+	NScurl::cancel /TAG "test" /REMOVE
 
 	!insertmacro STACK_VERIFY_END
 SectionEnd

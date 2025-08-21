@@ -12,7 +12,7 @@ Dependency            | https://github.com/negrutiu/libcurl-devel
 
 ## Features
 
-- Supports modern protocols and ciphers including `HTTP/2`, `TLS1.3`, etc.
+- Supports modern protocols and ciphers including `HTTP/3`, `HTTP/2`, `TLS1.3`, etc.
 - Works well on Windows NT4, Windows 11 and everything in between
 - Multi-threaded design to transfer multiple files in parallel
 - Background transfers are available, while your installer performs other installation tasks
@@ -26,7 +26,7 @@ Dependency            | https://github.com/negrutiu/libcurl-devel
 - Supports custom HTTP headers and data
 - Supports proxy servers (both authenticated and open)
 - Supports files larger than 4GB
-- Can download remote content in-memory instead of a file
+- Can download remote content in-memory instead of to a file
 - Works well in **64-bit** installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
 - Many more...
 
