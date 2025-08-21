@@ -824,7 +824,8 @@ Section "HTTP/3"
 
 	NScurl::cancel /TAG "test" /REMOVE
 
-	StrCpy $1 $3 6 ; extract leading "HTTP/x"
+    StrCmp $1 "http" +1 +2
+        StrCpy $1 $3 6 ; extract leading "HTTP/x" from headers
 	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
 
 	!insertmacro STACK_VERIFY_END
