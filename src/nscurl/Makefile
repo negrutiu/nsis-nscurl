@@ -124,12 +124,12 @@ RCFLAGS += \
 .PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install dasm
 
 clean:
-	cmd /c if exist $(OUTDIR) rd /S /Q $(OUTDIR)
+	rm -rf "$(OUTDIR)"
 
 all: all-before nsis-sdk curl-ca-bundle vcpkg-install $(_BIN) all-after
 
 all-before:
-	cmd /c if not exist $(OUTDIR) mkdir $(OUTDIR)
+	mkdir -pv "$(OUTDIR)"
 
 nsis-sdk:
 	py -3 _get_nsis_sdk.py
