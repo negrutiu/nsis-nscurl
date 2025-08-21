@@ -73,6 +73,19 @@ ManifestDPIAware true
 Var /global g_testCount
 Var /global g_testFails
 
+; Debugging macro, should not be used in production installers
+!macro STACK_VERIFY_START
+    Push "MyStackTop" ; Mark the top of the stack
+!macroend
+
+; Debugging macro, should not be used in production installers
+!macro STACK_VERIFY_END
+    Exch $0
+    StrCmp $0 "MyStackTop" +2
+        MessageBox MB_ICONSTOP 'Stack validation failed$\nStack top: "$0"'
+    Pop $0
+!macroend
+
 #---------------------------------------------------------------#
 # .onInit                                                       #
 #---------------------------------------------------------------#
@@ -484,6 +497,8 @@ Var /global testSecurityValue
 !macroend
 
 !macro TRANSFER_TEST url file cacert castore cert security errortype errorcode
+    !insertmacro STACK_VERIFY_START
+
     StrCpy $R0 '${file}'
 
     ${If} `${cacert}` == ""
@@ -564,9 +579,12 @@ Var /global testSecurityValue
     Pop $2
 
 	!insertmacro REPORT_TEST ${errortype} ${errorcode} $1 $2
+
+	!insertmacro STACK_VERIFY_END
 !macroend
 
 Section "Expired certificate"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -580,9 +598,12 @@ Section "Expired certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+    !insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Wrong host"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -596,6 +617,8 @@ Section "Wrong host"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Var /global testBadsslUntrustedThumbprint
@@ -606,6 +629,7 @@ Function RefreshBadsslUntrustedCertificate
 FunctionEnd
 
 Section "Untrusted root"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -623,6 +647,8 @@ Section "Untrusted root"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Var /global testBadsslSelfsignCertificate	; pem
@@ -641,6 +667,7 @@ Function RefreshBadsslSelfsignedCertificate
 FunctionEnd
 
 Section "Self-signed certificate"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -670,6 +697,8 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignThumbprint '' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Var /global testGovMyThumbprint
@@ -680,6 +709,7 @@ Function RefreshGovMyCertificate
 FunctionEnd
 
 Section "Unsafe legacy renegociation"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -695,9 +725,12 @@ Section "Unsafe legacy renegociation"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Weak protocols"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -736,9 +769,12 @@ Section "Weak protocols"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Cookie jar"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -760,9 +796,12 @@ Section "Cookie jar"
 	!insertmacro REPORT_TEST "jar exists" ${TRUE} "jar exists" $1
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "HTTP/3"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -787,6 +826,8 @@ Section "HTTP/3"
 
 	StrCpy $1 $3 6 ; extract leading "HTTP/x"
 	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
