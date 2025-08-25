@@ -26,6 +26,7 @@ vcpkg_from_github(
         nscurl/openssl_include_crypto.patch # nscurl: deploy "include/openssl/crypto" and "include/openssl/internal"
         nscurl/openssl_winnt_threads.diff   # nscurl: fix OPENSSL_THREADS_WINNT and OPENSSL_THREADS_WINNT_LEGACY when _WIN32_WINNT >= 0x0400
         nscurl/openssl_wspiapi.diff         # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
+        nscurl/openssl_utf8.patch           # nscurl: replace CP_UTF8 with CP_ACP in NT4
 )
 
 vcpkg_list(SET CONFIGURE_OPTIONS
