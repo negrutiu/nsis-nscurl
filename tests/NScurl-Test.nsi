@@ -806,7 +806,7 @@ Section "HTTP/3"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	; https://bagder.github.io/HTTP3-test
-	!define /redef LINK 'https://cloudflare-quic.com'
+	!define /redef LINK 'https://h2o.examp1e.net'
 	!define /redef FILE '$EXEDIR\_test_http3.html'
 
 	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
