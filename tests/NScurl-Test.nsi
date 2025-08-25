@@ -504,47 +504,47 @@ Var /global testSecurityValue
     ${If} `${cacert}` == ""
         StrCpy $testCacertName ""
         StrCpy $testCacertValue ""
-        StrCpy $R0 '$R0_defcacert'
+        StrCpy $R0 '$R0,cacert=def'
     ${ElseIf} `${cacert}` == "none"
     ${OrIf} `${cacert}` == "builtin"
         StrCpy $testCacertName "/CACERT"
         StrCpy $testCacertValue `${cacert}`
-        StrCpy $R0 '$R0_${cacert}'
+        StrCpy $R0 '$R0,cacert=${cacert}'
     ${Else}
         StrCpy $testCacertName "/CACERT"
         StrCpy $testCacertValue `${cacert}`
-        StrCpy $R0 '$R0_file'
+        StrCpy $R0 '$R0,cacert=file'
     ${EndIf}
 
     ${If} `${castore}` == ""
         StrCpy $testCastoreName ""
         StrCpy $testCastoreValue ""
-        StrCpy $R0 '$R0_defcastore'
+        StrCpy $R0 '$R0,castore=def'
     ${Else}
         StrCpy $testCastoreName "/CASTORE"
         StrCpy $testCastoreValue `${castore}`
-        StrCpy $R0 '$R0_${castore}'
+        StrCpy $R0 '$R0,castore=${castore}'
     ${EndIf}
 
     ${If} `${cert}` == ""
         StrCpy $testCertName ""
         StrCpy $testCertValue ""
-        StrCpy $R0 '$R0_defcert'
+        StrCpy $R0 '$R0,cert=def'
     ${Else}
         StrCpy $testCertName "/CERT"
         StrCpy $testCertValue `${cert}`
         StrCpy $0 `${cert}` 8
-        StrCpy $R0 '$R0_$0'
+        StrCpy $R0 '$R0,cert=$0'
     ${EndIf}
 
     ${If} `${security}` == ""
         StrCpy $testSecurityName ""
         StrCpy $testSecurityValue ""
-        StrCpy $R0 '$R0_defsecurity'
+        StrCpy $R0 '$R0,security=def'
     ${Else}
         StrCpy $testSecurityName "/SECURITY"
         StrCpy $testSecurityValue `${security}`
-        StrCpy $R0 '$R0_${security}'
+        StrCpy $R0 '$R0,security=${security}'
     ${EndIf}
 
     ${GetFileName} $R0 $0
@@ -593,9 +593,9 @@ Section "Expired certificate"
 
     !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED} ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED} ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200                            ; no cacert + no castore = validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 
@@ -612,9 +612,9 @@ Section "Wrong host"
 
     !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION} ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION} ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200                               ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 
@@ -723,6 +723,26 @@ Section "Unsafe legacy renegociation"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'weak'   http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Windows root store"
+	!insertmacro STACK_VERIFY_START
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshGovMyCertificate
+
+	!define /redef LINK 'https://microsoft.com'
+	!define /redef FILE '$EXEDIR\_test_castore.html'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' http 200 ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' http 200 ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' http 200 ; no cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200 ; validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
 
