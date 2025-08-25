@@ -416,7 +416,7 @@ void __cdecl query( HWND parent, int string_size, TCHAR *variables, stack_t **st
 					qsel.pszTag = MyStrDup( eT2A, psz );
 				}
 			} else {
-				break;
+				break;	// query string
 			}
 		}
 
@@ -467,7 +467,10 @@ void __cdecl cancel( HWND parent, int string_size, TCHAR *variables, stack_t **s
 				}
 			} else if (e == NOERROR && lstrcmpi( psz, _T( "/REMOVE" ) ) == 0) {
 				bRemove = TRUE;
+			} else if (lstrcmpi(psz, _T("/END")) == 0) {
+				// ignore optional /END
 			} else {
+				pushstringEx(psz); // push it back on the stack
 				break;
 			}
 		}

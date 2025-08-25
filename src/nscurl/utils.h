@@ -196,11 +196,13 @@ LONG MyReplaceKeywordsW(
 
 typedef struct {
 	LPCTSTR keywordBegin, keywordEnd;
+	LPCTSTR indexBegin, indexEnd;
 	LPCTSTR paramsBegin, paramsEnd;
 	LPCTSTR pathBegin, pathEnd;
 } Keyword;
 
-/// \brief Split input pattern \c "@keyword[:params][>path]@" into its components.
+/// \brief Split input pattern \c "@keyword[index]:params>path@" into its components.
+/// \details Input examples: \c "@ID@", \c "@CERTINFO.thumbprint@", \c "@CERTINFO[2].thumbprint@", etc.
 /// \return \c TRUE if the function is successful.
 BOOL MySplitKeyword(LPCTSTR input, Keyword* data);
 

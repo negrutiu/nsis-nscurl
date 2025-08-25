@@ -1,6 +1,10 @@
 
 # NScurl demo
 # Marius Negrutiu - https://github.com/negrutiu/nsis-nscurl
+#
+# Usage:
+#   NScurl-Test-arch-unicode.exe [/nscurl <custom_nscurl_dll>]
+#
 
 !ifdef TARGET
 	Target ${TARGET}                    ; x86-unicode, x86-ansi, amd64-unicode
@@ -18,8 +22,12 @@
 
 !include "FileFunc.nsh"
 !insertmacro GetFileName
+!insertmacro GetOptions
+!insertmacro GetParameters
 
 !define /ifndef NULL 0
+!define /ifndef TRUE 1
+!define /ifndef FALSE 0
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 # NScurl.dll custom location
@@ -65,6 +73,19 @@ ManifestDPIAware true
 Var /global g_testCount
 Var /global g_testFails
 
+; Debugging macro, should not be used in production installers
+!macro STACK_VERIFY_START
+    Push "MyStackTop" ; Mark the top of the stack
+!macroend
+
+; Debugging macro, should not be used in production installers
+!macro STACK_VERIFY_END
+    Exch $0
+    StrCmp $0 "MyStackTop" +2
+        MessageBox MB_ICONSTOP 'Stack validation failed$\nStack top: "$0"'
+    Pop $0
+!macroend
+
 #---------------------------------------------------------------#
 # .onInit                                                       #
 #---------------------------------------------------------------#
@@ -78,6 +99,29 @@ Function .onInit
 	; Language selection
 	!define MUI_LANGDLL_ALLLANGUAGES
 	!insertmacro MUI_LANGDLL_DISPLAY
+
+    ; look for `/nscurl <path>` command line parameter
+    ; if specified, copy this file to $PLUGINSDIR to replace the built-in NScurl.dll
+    ; this is a development feature and should not be included in production installers
+	${GetParameters} $R0
+	${GetOptions} $R0 "/nscurl" $R1
+	${IfNot} ${Errors}
+        ; Try creating a hard link
+        System::Call 'kernel32::CreateHardLink(t "$PLUGINSDIR\NScurl.dll", t r11, p ${NULL}) i.r0 ? e'
+        Pop $1
+        ${If} $0 = ${FALSE}
+        ${OrIf} $0 == "error"
+            ; Try copying the file
+            ClearErrors
+            CopyFiles /SILENT /FILESONLY $R1 "$PLUGINSDIR\NScurl.dll"
+            ${If} ${Errors}
+                ; Everything failed
+                StrCmp $0 "error" +2 +1
+                    IntFmt $0 "0x%x" $1
+                MessageBox MB_ICONSTOP 'CreateHardLink("$R1" -> "$$PLUGINSDIR\NScurl.dll") = $0$\nCopy("$R1" -> "$$PLUGINSDIR") failed$\n$\nUsing the built-in NScurl.dll ...'
+            ${EndIf}
+        ${EndIf}
+	${EndIf}
 
 /*
 	; .onInit download demo
@@ -234,14 +278,14 @@ Section "sysinternals.com/get (Memory)"
 	DetailPrint 'NScurl::http "${LINK}" "Memory"'
 	NScurl::http get "${LINK}" "Memory" /CANCEL /INSIST /RETURN "@id@" /END
 	Pop $R0
-	DetailPrint "  ID: $R0"
+	DetailPrint "ID: $R0"
 
     ; For demonstration purposes, we'll retrieve the first two bytes of the remote content stored in memory
     ; If the data begins with the "PK" sequence (the standard zip file magic bytes), we'll save it to disk as a .zip file
-    	DetailPrint 'NScurl::query /id $R0 "@RecvData:0,2@"'
+    DetailPrint 'NScurl::query /id $R0 "@RecvData:0,2@"'
 	NScurl::query /id $R0 "@RecvData:0,2@" /END
-	Pop $0
-	DetailPrint '  RecvData[0,2]: "$0"'
+    Pop $0
+    DetailPrint '  RecvData[0,2]: "$0"'
 
     ${If} $0 == "PK"
         DetailPrint 'NScurl::query /id $R0 "@RecvData>${FILE}@"'
@@ -432,33 +476,6 @@ SectionEnd
 
 SectionGroup /e "Tests"
 
-; Valid to: ‎Sunday, ‎August ‎9, ‎2026 7:09:21 PM
-!define BADSSL_SELFSIGNED_CRT \
-"-----BEGIN CERTIFICATE-----$\n\
-MIIDeTCCAmGgAwIBAgIJALfFORhDXiFeMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV$\n\
-BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp$\n\
-c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y$\n\
-NDEyMTkyMTAzMzNaFw0yNjEyMTkyMTAzMzNaMGIxCzAJBgNVBAYTAlVTMRMwEQYD$\n\
-VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK$\n\
-DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB$\n\
-BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2$\n\
-PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW$\n\
-hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A$\n\
-xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve$\n\
-ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY$\n\
-QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T$\n\
-BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI$\n\
-hvcNAQELBQADggEBAITHC93SNagVrwUX41aUUJlIg6s+E8LXGZIP77HGSd48R1zS$\n\
-+xPQcs2OKJaFESRZTJFgZ+wyPW3VhLm/ObYKbQiqmXc7W91nne+mywOF8cxcOoNw$\n\
-BDkVACyN36A6Bm42zTVdf0CYQR2d4pnI1LzWsGSQVRh+oCnrapxbmmI105rgJ3q5$\n\
-3RRcFPuKDdycqXgCCem8Zmg+Pq4XWZlbcCk1jts1TbFjUmr9G7lBV7cUu3XurbK9$\n\
-6xiRwFqPA/1qwLgyEXwUlsJ63D1GwRNa9N8ynfLvtE3bhE+oGk3xPL2sQN8HMYVw$\n\
-NKDIcX/Eu+lJjdcg3xu8Ym/V8P/s/frahpF4Q1A=$\n\
------END CERTIFICATE-----"
-
-!define BADSSL_SELFSIGNED_THUMBPRINT '6e3df5d84de941e0b4c3d5f0788b7e0bfc0d42bf'
-
-
 Var /global testCacertName
 Var /global testCacertValue
 Var /global testCastoreName
@@ -480,52 +497,54 @@ Var /global testSecurityValue
 !macroend
 
 !macro TRANSFER_TEST url file cacert castore cert security errortype errorcode
+    !insertmacro STACK_VERIFY_START
+
     StrCpy $R0 '${file}'
 
     ${If} `${cacert}` == ""
         StrCpy $testCacertName ""
         StrCpy $testCacertValue ""
-        StrCpy $R0 '$R0_defcacert'
+        StrCpy $R0 '$R0,cacert=def'
     ${ElseIf} `${cacert}` == "none"
     ${OrIf} `${cacert}` == "builtin"
         StrCpy $testCacertName "/CACERT"
         StrCpy $testCacertValue `${cacert}`
-        StrCpy $R0 '$R0_${cacert}'
+        StrCpy $R0 '$R0,cacert=${cacert}'
     ${Else}
         StrCpy $testCacertName "/CACERT"
         StrCpy $testCacertValue `${cacert}`
-        StrCpy $R0 '$R0_file'
+        StrCpy $R0 '$R0,cacert=file'
     ${EndIf}
 
     ${If} `${castore}` == ""
         StrCpy $testCastoreName ""
         StrCpy $testCastoreValue ""
-        StrCpy $R0 '$R0_defcastore'
+        StrCpy $R0 '$R0,castore=def'
     ${Else}
         StrCpy $testCastoreName "/CASTORE"
         StrCpy $testCastoreValue `${castore}`
-        StrCpy $R0 '$R0_${castore}'
+        StrCpy $R0 '$R0,castore=${castore}'
     ${EndIf}
 
     ${If} `${cert}` == ""
         StrCpy $testCertName ""
         StrCpy $testCertValue ""
-        StrCpy $R0 '$R0_defcert'
+        StrCpy $R0 '$R0,cert=def'
     ${Else}
         StrCpy $testCertName "/CERT"
         StrCpy $testCertValue `${cert}`
         StrCpy $0 `${cert}` 8
-        StrCpy $R0 '$R0_$0'
+        StrCpy $R0 '$R0,cert=$0'
     ${EndIf}
 
     ${If} `${security}` == ""
         StrCpy $testSecurityName ""
         StrCpy $testSecurityValue ""
-        StrCpy $R0 '$R0_defsecurity'
+        StrCpy $R0 '$R0,security=def'
     ${Else}
         StrCpy $testSecurityName "/SECURITY"
         StrCpy $testSecurityValue `${security}`
-        StrCpy $R0 '$R0_${security}'
+        StrCpy $R0 '$R0,security=${security}'
     ${EndIf}
 
     ${GetFileName} $R0 $0
@@ -560,9 +579,12 @@ Var /global testSecurityValue
     Pop $2
 
 	!insertmacro REPORT_TEST ${errortype} ${errorcode} $1 $2
+
+	!insertmacro STACK_VERIFY_END
 !macroend
 
 Section "Expired certificate"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -571,14 +593,17 @@ Section "Expired certificate"
 
     !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED} ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' x509 ${X509_V_ERR_CERT_HAS_EXPIRED} ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200                            ; no cacert + no castore = validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+    !insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Wrong host"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -587,35 +612,66 @@ Section "Wrong host"
 
     !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' curl ${CURLE_PEER_FAILED_VERIFICATION}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' curl ${CURLE_PEER_FAILED_VERIFICATION} ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' curl ${CURLE_PEER_FAILED_VERIFICATION} ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200                               ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testBadsslUntrustedThumbprint
+Function RefreshBadsslUntrustedCertificate
+	NScurl::http GET "https://untrusted-root.badssl.com" memory /RETURN "@CERTINFO:thumbprint@" /TAG "test" /END
+    Pop $testBadsslUntrustedThumbprint
+	DetailPrint 'untrusted-root.badssl.com: $testBadsslUntrustedThumbprint'
+FunctionEnd
+
 Section "Untrusted root"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshBadsslUntrustedCertificate
 
 	!define /redef LINK 'https://untrusted-root.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_untrustroot'
 
-    !define /ifndef UNTRUSTED_CERT '7890C8934D5869B25D2F8D0D646F9A5D7385BA85'
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ${UNTRUSTED_CERT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' ''                             '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testBadsslUntrustedThumbprint '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' x509 ${X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200       ; SSL validation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testBadsslSelfsignCertificate	; pem
+Var /global testBadsslSelfsignThumbprint
+Function RefreshBadsslSelfsignedCertificate
+	NScurl::http GET "https://self-signed.badssl.com" memory /RETURN "@id@" /TAG "test" /END
+	Pop $0
+
+	NScurl::query /ID $0 "@CERTINFO:certificate@"
+    Pop $testBadsslSelfsignCertificate
+	;DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignCertificate'
+
+	NScurl::query /ID $0 "@CERTINFO:thumbprint@"
+    Pop $testBadsslSelfsignThumbprint
+	DetailPrint 'self-signed.badssl.com: $testBadsslSelfsignThumbprint'
+FunctionEnd
+
 Section "Self-signed certificate"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshBadsslSelfsignedCertificate
 
 	!define /redef LINK 'https://self-signed.badssl.com'
 	!define /redef FILE '$EXEDIR\_test_selfsigned'
@@ -626,7 +682,7 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none'    '' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '${BADSSL_SELFSIGNED_CRT}' '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignCertificate '' http 200
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'true'  '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'builtin' 'false' '' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
@@ -637,29 +693,64 @@ Section "Self-signed certificate"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '1111111111111111111111111111111111111111' '' x509 ${X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT}
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' ${BADSSL_SELFSIGNED_THUMBPRINT} '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  $testBadsslSelfsignThumbprint '' http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' $testBadsslSelfsignThumbprint '' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Var /global testGovMyThumbprint
+Function RefreshGovMyCertificate
+	NScurl::http GET "https://publicinfobanjir.water.gov.my" memory /RETURN "@CERTINFO:thumbprint@" /SECURITY weak /TAG "test" /END
+    Pop $testGovMyThumbprint
+	DetailPrint 'publicinfobanjir.water.gov.my: $testGovMyThumbprint'
+FunctionEnd
+
 Section "Unsafe legacy renegociation"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
 	!define /redef FILE '$EXEDIR\_test_legacynego'
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
 
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
-    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint ''       curl ${CURLE_SSL_CONNECT_ERROR} ; 'strong' by default
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'weak'   http 200
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' $testGovMyThumbprint 'strong' curl ${CURLE_SSL_CONNECT_ERROR} ; OpenSSL/3.3.1: error:0A000152:SSL routines::unsafe legacy renegotiation disabled
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "Windows root store"
+	!insertmacro STACK_VERIFY_START
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	Call RefreshGovMyCertificate
+
+	!define /redef LINK 'https://microsoft.com'
+	!define /redef FILE '$EXEDIR\_test_castore.html'
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' http 200 ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' http 200 ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'true'  '' '' http 200 ; no cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200 ; validation disabled
+
+    NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "Weak protocols"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -698,10 +789,12 @@ Section "Weak protocols"
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'strong' http 200
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
-
 Section "Cookie jar"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
@@ -716,33 +809,28 @@ Section "Cookie jar"
     Pop $0
 
     ${If} ${FileExists} "${JAR}"
-        StrCpy $1 "OK"
+        StrCpy $1 ${TRUE}
     ${Else}
-        StrCpy $1 "MISSING"
+        StrCpy $1 ${FALSE}
     ${EndIf}
-
-    IntOp $g_testCount $g_testCount + 1
-    ${If} $0 == "OK"
-    ${AndIf} $1 == "OK"
-        DetailPrint "[ OK ] status:$0, jar:$1"
-    ${Else}
-        IntOp $g_testFails $g_testFails + 1
-        DetailPrint "----- FAIL ----- status:$0, jar:$1"
-    ${EndIf}
+	!insertmacro REPORT_TEST "jar exists" ${TRUE} "jar exists" $1
 
     NScurl::cancel /TAG "test" /REMOVE
+
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 Section "HTTP/3"
+	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	; https://bagder.github.io/HTTP3-test
-	!define /redef LINK 'https://nghttp2.org:4433'
-	!define /redef FILE '$EXEDIR\_test_nghttp2-org.html'
+	!define /redef LINK 'https://h2o.examp1e.net'
+	!define /redef FILE '$EXEDIR\_test_http3.html'
 
 	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
-	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /TAG "test" /END
+	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /CANCEL /TAG "test" /END
 	Pop $0	; transfer ID
 
 	NScurl::query /ID $0 "@ErrorType@"
@@ -753,11 +841,15 @@ Section "HTTP/3"
 
     NScurl::query /ID $0 "@RecvHeaders@"
     Pop $3
+	DetailPrint 'Headers: $3'
+
+    StrCmp $1 "http" +1 +2
+        StrCpy $1 $3 6 ; extract leading "HTTP/x" from headers
+	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
 
 	NScurl::cancel /TAG "test" /REMOVE
 
-	StrCpy $1 $3 6 ; extract leading "HTTP/x"
-	!insertmacro REPORT_TEST "HTTP/3" 200 $1 $2
+	!insertmacro STACK_VERIFY_END
 SectionEnd
 
 
@@ -879,27 +971,27 @@ SectionGroupEnd		; Authentication
 
 SectionGroup /e "Proxy"
 
-Section "httpbin.org/get"
+Section "proxy -> httpbin.org/get"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END		; Germany
+	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END		; Germany
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
 
 
-Section "httpbin.org/digest-auth/auth-int"
+Section "proxy -> httpbin.org/digest-auth/auth-int"
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
 	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" "/DEBUG" "${FILE}.md" /END
+	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END
 	Pop $0
 	DetailPrint "Status: $0"
 SectionEnd
@@ -1006,7 +1098,10 @@ SectionEnd
 Function PrintAllRequests
 
 	; NScurl::enumerate
+    ClearErrors
 	NScurl::enumerate /END
+    IfErrors 0 +2
+        Return
 	
 _enum_loop:
 
@@ -1045,7 +1140,7 @@ FunctionEnd
 SectionGroup /e Extra
 
 
-Section Test
+Section Echo
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
