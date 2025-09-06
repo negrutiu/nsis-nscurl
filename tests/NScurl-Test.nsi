@@ -448,7 +448,7 @@ Section "Big file (100MB)"
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK 'https://speed.hetzner.de/100MB.bin'
+	!define /redef LINK 'https://hil-speed.hetzner.com/100MB.bin'
 	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
@@ -463,7 +463,7 @@ Section "Big file (10GB)"
 	;SectionIn ${INSTTYPE_CUSTOM}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
-	!define /redef LINK 'https://speed.hetzner.de/10GB.bin'
+	!define /redef LINK 'https://hil-speed.hetzner.com/10GB.bin'
 	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
