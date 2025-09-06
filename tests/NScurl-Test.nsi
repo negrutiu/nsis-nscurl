@@ -70,6 +70,7 @@ RequestExecutionLevel user		        ; Don't require UAC elevation
 ShowInstDetails show
 ManifestDPIAware true
 
+Var /global g_workdir
 Var /global g_testCount
 Var /global g_testFails
 
@@ -123,11 +124,21 @@ Function .onInit
         ${EndIf}
 	${EndIf}
 
+	; Working directory
+	; Use $EXEDIR if we've got write access, else fall back to $TEMP
+	StrCpy $g_workdir "$EXEDIR\NScurl-Test-Files"
+	ClearErrors
+	CreateDirectory $g_workdir
+	${If} ${Errors}
+		StrCpy $g_workdir "$TEMP\NScurl-Test-Files"
+		CreateDirectory $g_workdir
+	${EndIf}
+
 /*
 	; .onInit download demo
 	; NOTE: Transfers from .onInit can be either Silent or Popup (no Page!)
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_onInit.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuiteLive_onInit.zip"
 	NScurl::http GET "${LINK}" "${FILE}" /POPUP /CANCEL /END
 	Pop $0
 */
@@ -146,14 +157,7 @@ FunctionEnd
 Section "Cleanup test files"
 	SectionIn ${INSTTYPE_NONE} ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-	FindFirst $0 $1 "$EXEDIR\_*.*"
-loop:
-	StrCmp $1 "" done
-	Delete "$EXEDIR\$1"
-	FindNext $0 $1
-	Goto loop
-done:
-	FindClose $0
+	RMDir /r $g_workdir
 SectionEnd
 
 
@@ -178,7 +182,7 @@ Section "httpbin.org/get"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_GET_httpbin.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http get "${LINK}" "${FILE}" /HEADER "Header1: Value1$\r$\nHeader2: Value2" /HEADER "Header3: Value3" /REFERER "https://test.com" /END
@@ -194,8 +198,8 @@ Section "httpbun.com/cookies/set"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
-	!define /redef FILE '$EXEDIR\_GET_httpbun_cookies_set'
-    !define /redef JAR  '$EXEDIR\_GET_httpbun_cookiejar.txt'
+	!define /redef FILE '$g_workdir\_GET_httpbun_cookies_set'
+    !define /redef JAR  '$g_workdir\_GET_httpbun_cookiejar.txt'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
     NScurl::http get "${LINK}" "${FILE}" /COOKIEJAR "${JAR}" /END
@@ -217,7 +221,7 @@ Section "sysinternals.com/get (Page-Mode)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuiteLive.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /INSIST /Zone.Identifier /END
 	Pop $0
@@ -231,7 +235,7 @@ Section "sysinternals.com/get (Popup-Mode)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Popup.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuiteLive_Popup.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /POPUP /INSIST /Zone.Identifier /END
 	Pop $0
@@ -245,7 +249,7 @@ Section "sysinternals.com/get (Silent-Mode)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_Silent.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuiteLive_Silent.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /CANCEL /SILENT /INSIST /Zone.Identifier /END
 	Pop $0
@@ -259,7 +263,7 @@ Section "sysinternals.com/get (HTTP/1.1)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuite_http1.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuite_http1.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /HTTP1.1 /INSIST /CANCEL /Zone.Identifier /END
 	Pop $0
@@ -273,7 +277,7 @@ Section "sysinternals.com/get (Memory)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuite_memory.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuite_memory.zip"
 
 	DetailPrint 'NScurl::http "${LINK}" "Memory"'
 	NScurl::http get "${LINK}" "Memory" /CANCEL /INSIST /RETURN "@id@" /END
@@ -302,7 +306,7 @@ Section "sysinternals.com/get (SpeedCap: 300KB/s)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://download.sysinternals.com/files/SysinternalsSuite.zip"
-	!define /redef FILE  "$EXEDIR\_SysinternalsSuiteLive_SpeedCap.zip"
+	!define /redef FILE  "$g_workdir\_SysinternalsSuiteLive_SpeedCap.zip"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http get "${LINK}" "${FILE}" /RESUME /CANCEL /INSIST /SPEEDCAP 307200 /Zone.Identifier /END
 	Pop $0
@@ -316,7 +320,7 @@ Section "github.com/get (Encoding)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK  "https://raw.githubusercontent.com/negrutiu/nsis-nscurl/master/src/nscurl/curl.c"
-	!define /redef FILE  "$EXEDIR\_curl.c"
+	!define /redef FILE  "$g_workdir\_curl.c"
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	; note: /Accept-Encoding is incompatible with /RESUME or MEMORY transfers
@@ -337,7 +341,7 @@ Section "httpbin.org/post (multipart/form-data)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_POST_httpbin_multipart.json'
+	!define /redef FILE '$g_workdir\_POST_httpbin_multipart.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	!define S1 "<Your memory data here>"
@@ -374,7 +378,7 @@ Section "httpbin.org/post (application/x-www-form-urlencoded)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_POST_httpbin_postfields.json'
+	!define /redef FILE '$g_workdir\_POST_httpbin_postfields.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
@@ -399,7 +403,7 @@ Section "httpbin.org/post (application/json)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/post?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_POST_httpbin_json.json'
+	!define /redef FILE '$g_workdir\_POST_httpbin_json.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
@@ -423,7 +427,7 @@ Section "httpbin.org/put"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/put?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_PUT_httpbin.json'
+	!define /redef FILE '$g_workdir\_PUT_httpbin.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http \
@@ -449,7 +453,7 @@ Section "Big file (100MB)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://hil-speed.hetzner.com/100MB.bin'
-	!define /redef FILE '$EXEDIR\_GET_100MB.bin'
+	!define /redef FILE '$g_workdir\_GET_100MB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http GET "${LINK}" "${FILE}" /STRING TEXT "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, Average @AVGSPEED@, Speed @SPEED@" /INSIST /CANCEL /RESUME /TIMEOUT 1m /USERAGENT "curl/@CURLVERSION@" /TITLEWND $HWNDPARENT /END
@@ -464,7 +468,7 @@ Section "Big file (10GB)"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://hil-speed.hetzner.com/10GB.bin'
-	!define /redef FILE '$EXEDIR\_GET_10GB.bin'
+	!define /redef FILE '$g_workdir\_GET_10GB.bin'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http GET "${LINK}" "${FILE}" /STRING TEXT "[@PERCENT@%] @TIMEELAPSED@ / @TIMEREMAINING@, @XFERSIZE@ / @FILESIZE@, Average @AVGSPEED@, Speed @SPEED@" /INSIST /RESUME /CANCEL /TIMEOUT 1m /USERAGENT "curl/@CURLVERSION@" /TITLEWND $HWNDPARENT /END
@@ -589,7 +593,7 @@ Section "Expired certificate"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://expired.badssl.com'
-	!define /redef FILE '$EXEDIR\_test_expired'
+	!define /redef FILE '$g_workdir\_test_expired'
 
     !define /ifndef X509_V_ERR_CERT_HAS_EXPIRED 10
 
@@ -608,7 +612,7 @@ Section "Wrong host"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://wrong.host.badssl.com'
-	!define /redef FILE '$EXEDIR\_test_wronghost'
+	!define /redef FILE '$g_workdir\_test_wronghost'
 
     !define /ifndef CURLE_PEER_FAILED_VERIFICATION 60
 
@@ -636,7 +640,7 @@ Section "Untrusted root"
 	Call RefreshBadsslUntrustedCertificate
 
 	!define /redef LINK 'https://untrusted-root.badssl.com'
-	!define /redef FILE '$EXEDIR\_test_untrustroot'
+	!define /redef FILE '$g_workdir\_test_untrustroot'
 
     !define /ifndef X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN 19
 
@@ -674,7 +678,7 @@ Section "Self-signed certificate"
 	Call RefreshBadsslSelfsignedCertificate
 
 	!define /redef LINK 'https://self-signed.badssl.com'
-	!define /redef FILE '$EXEDIR\_test_selfsigned'
+	!define /redef FILE '$g_workdir\_test_selfsigned'
 
     !define /ifndef X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT 18
 
@@ -716,7 +720,7 @@ Section "Unsafe legacy renegociation"
 	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://publicinfobanjir.water.gov.my'
-	!define /redef FILE '$EXEDIR\_test_legacynego'
+	!define /redef FILE '$g_workdir\_test_legacynego'
 
     !define /redef CURLE_SSL_CONNECT_ERROR 35
 
@@ -737,7 +741,7 @@ Section "Windows root store"
 	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://microsoft.com'
-	!define /redef FILE '$EXEDIR\_test_castore.html'
+	!define /redef FILE '$g_workdir\_test_castore.html'
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' http 200 ; cacert + castore
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' http 200 ; cacert + no castore
@@ -757,7 +761,7 @@ Section "Weak protocols"
     !define /redef CURLE_SSL_CONNECT_ERROR 35
     
 	!define /redef LINK 'https://tls-v1-0.badssl.com:1010/'
-	!define /redef FILE '$EXEDIR\_test_weaktls10'
+	!define /redef FILE '$g_workdir\_test_weaktls10'
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR}    ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
@@ -765,7 +769,7 @@ Section "Weak protocols"
 
 
 	!define /redef LINK 'https://tls-v1-1.badssl.com:1011/'
-	!define /redef FILE '$EXEDIR\_test_weaktls11'
+	!define /redef FILE '$g_workdir\_test_weaktls11'
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       curl ${CURLE_SSL_CONNECT_ERROR}    ; 'strong' by default
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
@@ -773,7 +777,7 @@ Section "Weak protocols"
 
 
     !define /redef LINK 'https://tls-v1-2.badssl.com:1012/'
-	!define /redef FILE '$EXEDIR\_test_weaktls12'
+	!define /redef FILE '$g_workdir\_test_weaktls12'
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
@@ -782,7 +786,7 @@ Section "Weak protocols"
     ; ----------------------------------------------
 
     !define /redef LINK 'https://dh2048.badssl.com'
-	!define /redef FILE '$EXEDIR\_test_weakdh2k'
+	!define /redef FILE '$g_workdir\_test_weakdh2k'
 
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' ''       http 200
     !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' '' '' '' 'weak'   http 200
@@ -799,8 +803,8 @@ Section "Cookie jar"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbun.com/cookies/set?cookie1=value1&cookie2=value2'
-	!define /redef FILE '$EXEDIR\_test_cookiejar_body'
-	!define /redef JAR  '$EXEDIR\_test_cookiejar.txt'
+	!define /redef FILE '$g_workdir\_test_cookiejar_body'
+	!define /redef JAR  '$g_workdir\_test_cookiejar.txt'
 
     Delete "${JAR}"
 
@@ -827,7 +831,7 @@ Section "HTTP/3"
 
 	; https://bagder.github.io/HTTP3-test
 	!define /redef LINK 'https://h2o.examp1e.net'
-	!define /redef FILE '$EXEDIR\_test_http3.html'
+	!define /redef FILE '$g_workdir\_test_http3.html'
 
 	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}" /HTTP3'
 	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /HTTP3 /CANCEL /TAG "test" /END
@@ -863,7 +867,7 @@ Section "httpbin.org/get/status/40x"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_40x.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http GET "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
@@ -876,7 +880,7 @@ Section "httpbin.org/post/status/40x"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$EXEDIR\_POST_httpbin_40x.json'
+	!define /redef FILE '$g_workdir\_POST_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http POST "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
@@ -889,7 +893,7 @@ Section "httpbin.org/put/status/40x"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$EXEDIR\_PUT_httpbin_40x.json'
+	!define /redef FILE '$g_workdir\_PUT_httpbin_40x.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 
 	NScurl::http PUT "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /INSIST /TIMEOUT 30s /END
@@ -907,7 +911,7 @@ Section "httpbin.org/basic-auth"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/basic-auth/MyUser/MyPass'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_basic-auth.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_basic-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
 	Pop $0
@@ -920,7 +924,7 @@ Section "httpbin.org/hidden-basic-auth"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/hidden-basic-auth/MyUser/MyPass'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_hidden-basic-auth.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_hidden-basic-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=basic" "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
 	Pop $0
@@ -933,7 +937,7 @@ Section "httpbin.org/bearer"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/bearer'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_bearer.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_bearer.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=bearer" "MyOauth2Token" "/DEBUG" "${FILE}.md" /END
 	Pop $0
@@ -946,7 +950,7 @@ Section "httpbin.org/digest-auth/auth"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth/MyUser/MyPass/SHA-256'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_digest-auth.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "type=digest" "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
 	Pop $0
@@ -959,7 +963,7 @@ Section "httpbin.org/digest-auth/auth-int"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_digest-auth-int.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" "/DEBUG" "${FILE}.md" /END
 	Pop $0
@@ -976,7 +980,7 @@ Section "proxy -> httpbin.org/get"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/get?param1=value1&param2=value2'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_proxy.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END		; Germany
 	Pop $0
@@ -989,7 +993,7 @@ Section "proxy -> httpbin.org/digest-auth/auth-int"
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
 
 	!define /redef LINK 'https://httpbin.org/digest-auth/auth-int/MyUser/MyPass/SHA-256'
-	!define /redef FILE '$EXEDIR\_GET_httpbin_proxy_digest-auth-int.json'
+	!define /redef FILE '$g_workdir\_GET_httpbin_proxy_digest-auth-int.json'
 	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
 	NScurl::http GET "${LINK}" "${FILE}" /AUTH "MyUser" "MyPass" /PROXY "http://136.243.47.220:3128" /CANCEL /DEBUG "${FILE}.md" /END
 	Pop $0
