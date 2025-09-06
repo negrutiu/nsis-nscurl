@@ -19,11 +19,11 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-2025]
         arch: [amd64, x86]
         charset: [unicode]
         include:
-          - os: windows-latest
+          - os: windows-2025
             arch: x86
             charset: ansi
 
@@ -170,7 +170,7 @@ jobs:
   package:
     name: Final Package
     needs: build
-    runs-on: windows-latest
+    runs-on: windows-2025
     defaults:
       run:
         shell: cmd
