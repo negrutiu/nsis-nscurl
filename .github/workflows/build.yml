@@ -190,21 +190,8 @@ jobs:
           path: artifacts/*
 
       # Download an NSIS fork with amd64 support
-      - name: Install NSIS-negrutiu
-        shell: python
-        run: |
-          from urllib import request
-          import json, re, subprocess
-          with request.urlopen('https://api.github.com/repos/negrutiu/nsis/releases/latest') as http:
-              for asset in json.loads(http.read())['assets']:
-                  if (re.match(r'nsis-.*-x86.exe', asset['name'])):
-                      print('download ' + asset['browser_download_url'] + ' ...')
-                      with request.urlopen(asset['browser_download_url']) as http:
-                          with open(asset['name'], 'wb') as fout:
-                              fout.write(http.read())
-                      print('install ' + asset['name'] + ' ...')
-                      subprocess.Popen([asset['name'], '/S']).wait()
-                      exit()
+      - name: Upgrade NSIS
+        uses: negrutiu/nsis-install@v1
 
       - name: Build NSIS example (x86-unicode)
         run: makensis.exe /V4 /DPLUGIN_DIR=..\..\Plugins\x86-unicode /DTARGET=x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
