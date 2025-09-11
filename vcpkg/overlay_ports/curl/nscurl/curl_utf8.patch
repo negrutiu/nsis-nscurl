@@ -44,7 +44,7 @@ diff --git a/lib/curlx/multibyte.c b/lib/curlx/multibyte.c
 diff --git a/src/tool_cb_wrt.c b/src/tool_cb_wrt.c
 --- a/src/tool_cb_wrt.c
 +++ b/src/tool_cb_wrt.c
-@@ -126,2 +126,18 @@
+@@ -43,2 +43,19 @@
  
 +UINT tool_utf8_codepage()
 +{
@@ -62,19 +62,20 @@ diff --git a/src/tool_cb_wrt.c b/src/tool_cb_wrt.c
 +    return win_major >= 5 ? CP_UTF8 : CP_ACP;
 +}
 +
- /*
-@@ -263,3 +279,3 @@
++
+ /* create/open a local file for writing, return TRUE on success */
+@@ -165,3 +182,3 @@
  
--        if(MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)outs->utf8seq, -1,
-+        if(MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)outs->utf8seq, -1,
-                                prefix, CURL_ARRAYSIZE(prefix))) {
-@@ -310,3 +326,3 @@
-       /* calculate buffer size for wide characters */
--      wc_len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf, (int)rlen,
-+      wc_len = (DWORD)MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)rbuf, (int)rlen,
-                                           NULL, 0);
-@@ -319,3 +335,3 @@
+-      if(MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)outs->utf8seq, -1,
++      if(MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)outs->utf8seq, -1,
+                              prefix, CURL_ARRAYSIZE(prefix))) {
+@@ -207,3 +224,3 @@
+     /* calculate buffer size for wide characters */
+-    DWORD len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf,
++    DWORD len = (DWORD)MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)rbuf,
+                                            (int)rlen, NULL, 0);
+@@ -222,3 +239,3 @@
  
--      wc_len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf, (int)rlen,
-+      wc_len = (DWORD)MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)rbuf, (int)rlen,
-                                           wc_buf, (int)wc_len);
+-    len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf, (int)rlen,
++    len = (DWORD)MultiByteToWideChar(tool_utf8_codepage(), 0, (LPCSTR)rbuf, (int)rlen,
+                                      global->term.buf,
