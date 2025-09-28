@@ -88,7 +88,7 @@ CFLAGS += -D__USE_MINGW_ANSI_STDIO=0
 ifeq ($(_config), debug)
 	CFLAGS  += -DDEBUG -D_DEBUG -Og
 else
-	CFLAGS  += -DNEBUG -O3 -s
+	CFLAGS  += -DNDEBUG -O3 -s
 endif
 
 CFLAGS += \
