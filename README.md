@@ -30,7 +30,7 @@ It's implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [
 
 > [!TIP]
 > - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-plugin) is available to install/upgrade __NSIS plugins__ (including `NScurl`) on Windows runners
-> - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade __NSIS compiler__ on Windows runners
+> - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade __NSIS compiler__ on Windows, Linux or macOS runners
 
 ## Basic usage
 

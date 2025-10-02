@@ -27,7 +27,7 @@ Project webpage: https://github.com/negrutiu/nsis-nscurl
 
 ## Tips
 - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-plugin) is available to install/upgrade NSIS plugins (including `NScurl`) on Windows runners  
-- A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade NSIS compiler on Windows runners  
+- A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade NSIS compiler on Windows, Linux or macOS runners  
 
 
 ## Basic usage
