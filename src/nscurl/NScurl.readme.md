@@ -1,39 +1,40 @@
 # About
 
-`NScurl` is a [NSIS](https://github.com/negrutiu/nsis) (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.
+`NScurl` is a [NSIS](https://github.com/negrutiu/nsis) plugin (Nullsoft Scriptable Install System) with advanced HTTP/HTTPS capabilities.  
+It's implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
 
-Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
-
-Resource              | Link
---------------------- | ------------------------------------------------
-Project page          | https://github.com/negrutiu/nsis-nscurl  
-Dependency            | https://github.com/negrutiu/libcurl-devel
+Project webpage: https://github.com/negrutiu/nsis-nscurl  
 
 
 ## Features
 
 - Supports modern protocols and ciphers including `HTTP/3`, `HTTP/2`, `TLS1.3`, etc.
 - Works well on Windows NT4, Windows 11 and everything in between
-- Multi-threaded design to transfer multiple files in parallel
-- Background transfers are available, while your installer performs other installation tasks
-- Multiple attempts to connect and resume failed/dropped transfers
-- Plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc.)
-- Works at any `NSIS` install stage (in `.onInit` callback function, in un/install sections, custom pages, silent installers, etc.)
+- Asynchronous design allowing multiple file transfers to run in parallel
+- Background transfers are available, allowing your installer to perform other tasks concurrently
+- Configurable timeouts and resume strategy for failed transfers
+- Extensive transfer information is available for querying (size, speed, status, headers, etc.)
+- Works at any `NSIS` install stage (in the `.onInit` callback function, install/uninstall sections, custom pages, silent installers, etc.)
 - Supports custom certificate stores and certificate pinning
 - Supports `HTTP` and `TLS` authentication
-- Supports all relevant HTTP methods (`GET`, `POST`, `PUT`, `HEAD`, etc.)
+- Supports common HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, etc.)
 - Supports `DNS-over-HTTPS` secure name resolution
-- Supports custom HTTP headers and data
-- Supports proxy servers (both authenticated and open)
-- Supports files larger than 4GB
-- Can download remote content in-memory instead of to a file
-- Works well in **64-bit** installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
-- Many more...
+- Supports custom HTTP headers and request body data
+- Supports both authenticated and unauthenticated proxy servers
+- Supports downloads and uploads of files larger than 4GB
+- Can download remote content in-memory by passing `Memory` as the destination instead of a file path
+- Works well in `amd64` installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
+
+## Tips
+- A [GitHub Action](https://github.com/marketplace/actions/install-nsis-plugin) is available to install/upgrade NSIS plugins (including `NScurl`) on Windows runners  
+- A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade NSIS compiler on Windows runners  
+
 
 ## Basic usage
 
 Check out the [Getting Started](https://github.com/negrutiu/nsis-nscurl/wiki/Getting-Started) wiki page.  
 Check out the [NSIS test script](https://github.com/negrutiu/nsis-nscurl/blob/master/tests/NScurl-Test.nsi).  
+
 
 ```nsis
 ; Quick transfer
@@ -131,7 +132,7 @@ Default value is the _transfer status_ ([`/RETURN "@error@"`](#transfer-keywords
 Prefer a specific HTTP protocol version.  
 The connection falls back to the next available version if the requested one is not supported by the webserver.  
 Some servers may achieve better speed over `HTTP/1.1`, whereas `HTTP/2` and `HTTP/3` are more efficient for multiple parallel transfers.  
-By default, HTTP/2 is preferred if supported by the webserver.  
+By default, `HTTP/2` is preferred if supported by the webserver.  
 For more information visit libcurl [CURLOPT_HTTP_VERSION](https://curl.se/libcurl/c/CURLOPT_HTTP_VERSION.html) documentation.
 
 ### /PROXY
@@ -176,7 +177,7 @@ Specifying an empty string disables cookie engine.
 /CONNECTTIMEOUT time
 ```
 
-Connect timeout (default: 5m)
+Connect timeout (default: `5m`)
 
 `time` applies to each re/connection attempt.  
 By default, `NScurl` aborts the transfer if connecting times out. Use `/INSIST` parameter to request multiple attempts to re/connect.
@@ -227,7 +228,7 @@ Without `/INSIST`, the transfer is cancelled at the first connection failure.
 
 ### /RESUME
 Resume the transfer if (part of) the output file already exists locally.  
-By default, the output file is always overwritten and the transfer starts over.
+By default, the output file is always overwritten and the transfer starts from the beginning.
 
 > [!important]
 > When resuming, the local (partial) data is not validated to match the latest remote content. If the remote content has changed since the last partial download, the output file might be inconsistent. Avoid resuming arbitrary files
@@ -336,7 +337,7 @@ Parameter  | Details
 `name`     | Form part name
 `data`     | Form part data. See [`NScurl::http /DATA`](#data) for `data` syntax
 
-Multiple `/POST` parameters are allowallowed. All individual parts are sent as one multipart form.
+Multiple `/POST` parameters are allowed. All individual parts will be sent as one multipart form.
 
 Example:
 ```nsis
@@ -361,7 +362,7 @@ An alternate NTFS data stream named `Zone.Identifier` is attached to the output 
 ### /accept-encoding
 ### /ENCODING
 
-Send the `Accept-Encoding: deflate, gzip` request header to the webserver.  
+Send the `Accept-Encoding: deflate, gzip, br, zstd` request header to the webserver.  
 Servers that support encoding may decide to send compressed data.  
 Be aware that during the transfer, the _content length_ indicates the compressed length and not the actual data size.
 
@@ -459,12 +460,12 @@ Configure the security level for the current transfer.
 The default security is `strong`.
 
 Security level `strong`:
-- use the default `openssl` crypto algorithms and standards that are considered secure
+- uses the default `openssl` crypto algorithms and standards that are considered secure
 
 Security level `weak`:
-- call [SSL_CTX_set_options(..., SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION);](https://docs.openssl.org/3.1/man3/SSL_CTX_set_options/#notes) to enable unsafe legacy renegociation
-- call [SSL_CTX_set_security_level( 0 )](https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour) to enable weak cryptographic algorithms
-- call [curl_easy_setopt(..., CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);](https://curl.se/libcurl/c/CURLOPT_SSLVERSION.html) to enable `SSL3`, `TLS 1.0` and `TLS 1.1` protocols
+- calls [SSL_CTX_set_options(SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION)](https://docs.openssl.org/3.1/man3/SSL_CTX_set_options/#notes) to enable unsafe legacy renegociation
+- calls [SSL_CTX_set_security_level(0)](https://docs.openssl.org/1.1.1/man3/SSL_CTX_set_security_level/#default-callback-behaviour) to enable weak cryptographic algorithms
+- calls [curl_easy_setopt(CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1)](https://curl.se/libcurl/c/CURLOPT_SSLVERSION.html) to enable `SSL3`, `TLS 1.0` and `TLS 1.1` protocols
 
 
 ### /DEPEND
@@ -485,21 +486,20 @@ NOTE: Tags are arbitrary strings with no character restrictions.
 
 Example:
 ```nsis
-NScurl::http GET ${URL1} ${File1} /BACKGROUND /TAG "most important" /END
+NScurl::http GET ${URL1} ${File1} /BACKGROUND /TAG "important" /END
 Pop $0  ; background transfer ID
-NScurl::http GET ${URL2} ${File2} /BACKGROUND /TAG "most important" /END
+NScurl::http GET ${URL2} ${File2} /BACKGROUND /TAG "important" /END
 Pop $0
-NScurl::http GET ${URL3} ${File3} /BACKGROUND /END
+NScurl::http GET ${URL3} ${File3} /BACKGROUND /TAG "normal" /END
 Pop $0
 
-; TODO: do useful stuff
+; ... do useful stuff
 
-NScurl::wait /TAG "most important" /END         ; wait for important files...
-NScurl::cancel /TAG "most important" /REMOVE    ; remove from queue (unnecessary, demo only)
+NScurl::wait /TAG "important" /END  # wait for important files
 
-; TODO: do useful stuff
+; ... do useful stuff
 
-NScurl::wait /END                               ; wait for the remaining transfers
+NScurl::wait /END                   # wait for the remaining transfers
 ```
 
 ### /BACKGROUND

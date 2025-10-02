@@ -1,9 +1,7 @@
 # NScurl ([NSIS](https://github.com/negrutiu/nsis) plugin)
 
-`NScurl` is a [NSIS](https://github.com/negrutiu/nsis) (Nullsoft Scriptable Install System) plugin with advanced HTTP/HTTPS capabilities.  
-It's included in the unofficial [NSIS](https://github.com/negrutiu/nsis) fork.
-
-Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
+`NScurl` is a [NSIS](https://github.com/negrutiu/nsis) plugin (Nullsoft Scriptable Install System) with advanced HTTP/HTTPS capabilities.  
+It's implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenSSL](https://www.openssl.org) as SSL backend.
 
 
 [![License: BSD3](https://img.shields.io/badge/License-BSD3-blue.svg)](LICENSE.md)
@@ -13,23 +11,26 @@ Implemented in `C` on top of [libcurl](https://curl.haxx.se/libcurl) with [OpenS
 
 ## Features
 
-- Supports modern protocols and ciphers including `HTTP/2`, `HTTP/3`, `TLS1.3`, etc.
+- Supports modern protocols and ciphers including `HTTP/3`, `HTTP/2`, `TLS1.3`, etc.
 - Works well on Windows NT4, Windows 11 and everything in between
-- Multi-threaded design to transfer multiple files in parallel
-- Background transfers are available, while your installer performs other installation tasks
-- Multiple attempts to connect and resume failed/dropped transfers
-- Plenty of useful information is available for querying (transfer size, speed, HTTP status, HTTP headers, etc.)
-- Works at any `NSIS` install stage (in `.onInit` callback function, in un/install sections, custom pages, silent installers, etc.)
+- Asynchronous design allowing multiple file transfers to run in parallel
+- Background transfers are available, allowing your installer to perform other tasks concurrently
+- Configurable timeouts and resume strategy for failed transfers
+- Extensive transfer information is available for querying (size, speed, status, headers, etc.)
+- Works at any `NSIS` install stage (in the `.onInit` callback function, install/uninstall sections, custom pages, silent installers, etc.)
 - Supports custom certificate stores and certificate pinning
 - Supports `HTTP` and `TLS` authentication
-- Supports all relevant HTTP methods (`GET`, `POST`, `PUT`, `HEAD`, etc.)
+- Supports common HTTP methods (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, etc.)
 - Supports `DNS-over-HTTPS` secure name resolution
-- Supports custom HTTP headers and data
-- Supports proxy servers (both authenticated and open)
-- Supports files larger than 4GB
-- Can download remote content in-memory instead of a file
-- Works well in **64-bit** installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
-- Many more...
+- Supports custom HTTP headers and request body data
+- Supports both authenticated and unauthenticated proxy servers
+- Supports downloads and uploads of files larger than 4GB
+- Can download remote content in-memory by passing `Memory` as the destination instead of a file path
+- Works well in `amd64` installers created with this [NSIS](https://github.com/negrutiu/nsis) fork
+
+> [!TIP]
+> - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-plugin) is available to install/upgrade __NSIS plugins__ (including `NScurl`) on Windows runners
+> - A [GitHub Action](https://github.com/marketplace/actions/install-nsis-compiler) is available to install/upgrade __NSIS compiler__ on Windows runners
 
 ## Basic usage
 
