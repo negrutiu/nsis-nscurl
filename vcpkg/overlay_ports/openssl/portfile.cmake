@@ -11,13 +11,15 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO openssl/openssl
     REF "openssl-${VERSION}"
-    SHA512 a741933f67f0c8e58e41eea2a16f6172c9a7e164f8f33bea3440561907c36191bde06dee3d94097af33f27bc66cad27fa861c9b734fa25bcbc6c1b24928fadec
+    SHA512 3e1796708155454c118550ba0964b42c0c1055b651fec00cfb55038e8a8abbf5f85df02449e62b50b99d2a4a2f7b47862067f8a965e9c8a72f71dee0153672d9
     PATCHES
         cmake-config.patch
         command-line-length.patch
         script-prefix.patch
+        aes_cfb128_vaes_encdec_wrapper.diff # https://github.com/openssl/openssl/issues/28745
         windows/install-layout.patch
         windows/install-pdbs.patch
+        windows/install-programs.diff # https://github.com/openssl/openssl/issues/28744
         unix/android-cc.patch
         unix/move-openssldir.patch
         unix/no-empty-dirs.patch
@@ -26,7 +28,13 @@ vcpkg_from_github(
         nscurl/openssl_include_crypto.patch # nscurl: deploy "include/openssl/crypto" and "include/openssl/internal"
         nscurl/openssl_winnt_threads.diff   # nscurl: fix OPENSSL_THREADS_WINNT and OPENSSL_THREADS_WINNT_LEGACY when _WIN32_WINNT >= 0x0400
         nscurl/openssl_wspiapi.diff         # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
-        nscurl/openssl_utf8.patch           # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_common-h.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_defaults-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_getenv-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_LPdir_win-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_o_fopen-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_randfile-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_utf8_ui_openssl-c.patch  	# nscurl: replace CP_UTF8 with CP_ACP in NT4
 )
 
 vcpkg_list(SET CONFIGURE_OPTIONS

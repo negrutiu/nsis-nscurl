@@ -1,0 +1,24 @@
+diff --git a/include/internal/common.h b/include/internal/common.h
+--- a/include/internal/common.h
++++ b/include/internal/common.h
+@@ -235,2 +235,20 @@
+ 
++# if defined(_WIN32)
++static ossl_inline UINT ossl_utf8_codepage()
++{
++#if _MSC_VER
++#pragma warning(push)
++#pragma warning(disable : 4996)
++#endif
++    BYTE win_major = LOBYTE(LOWORD(GetVersion()));
++    /* BYTE win_minor = HIBYTE(LOWORD(GetVersion())); */
++#if _MSC_VER
++#pragma warning(pop)
++#endif
++
++    /* NT4 doesn't support UTF-8 code page */
++    return win_major >= 5 ? CP_UTF8 : CP_ACP;
++}
++# endif
++
+ #endif

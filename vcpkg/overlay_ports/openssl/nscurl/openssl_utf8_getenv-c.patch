@@ -1,0 +1,14 @@
+diff --git a/crypto/getenv.c b/crypto/getenv.c
+--- a/crypto/getenv.c
++++ b/crypto/getenv.c
+@@ -63,3 +63,3 @@
+                 /* determine value string size in utf-8 */
+-                vallen = WideCharToMultiByte(CP_UTF8, 0, valw, -1, NULL, 0,
++                vallen = WideCharToMultiByte(ossl_utf8_codepage(), 0, valw, -1, NULL, 0,
+                                              NULL, NULL);
+@@ -73,3 +73,3 @@
+             /* convert value string from wide to utf-8 */
+-            if (WideCharToMultiByte(CP_UTF8, 0, valw, -1, val, vallen,
++            if (WideCharToMultiByte(ossl_utf8_codepage(), 0, valw, -1, val, vallen,
+                                     NULL, NULL) == 0) {
+

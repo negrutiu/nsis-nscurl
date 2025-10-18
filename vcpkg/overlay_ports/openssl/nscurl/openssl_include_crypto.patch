@@ -1,7 +1,7 @@
 diff --git a/Configurations/unix-Makefile.tmpl b/Configurations/unix-Makefile.tmpl
 --- a/Configurations/unix-Makefile.tmpl
 +++ b/Configurations/unix-Makefile.tmpl
-@@ -754,2 +754,18 @@
+@@ -754,2 +754,17 @@
  	done
 +	@$(PERL) $(SRCDIR)/util/mkdir-p.pl "$(DESTDIR)$(INSTALLTOP)/include/openssl/crypto"
 +	@set -e; for i in $(SRCDIR)/include/crypto/*.h \
@@ -12,8 +12,7 @@ diff --git a/Configurations/unix-Makefile.tmpl b/Configurations/unix-Makefile.tm
 +		chmod 644 "$(DESTDIR)$(INSTALLTOP)/include/openssl/crypto/$$fn"; \
 +	done
 +	@$(PERL) $(SRCDIR)/util/mkdir-p.pl "$(DESTDIR)$(INSTALLTOP)/include/openssl/internal"
-+	@set -e; for i in $(SRCDIR)/include/internal/*.h \
-+			  $(BLDDIR)/include/internal/*.h; do \
++	@set -e; for i in $(SRCDIR)/include/internal/*.h; do \
 +		fn=`basename $$i`; \
 +		$(ECHO) "install $$i -> $(DESTDIR)$(INSTALLTOP)/include/openssl/internal/$$fn"; \
 +		cp $$i "$(DESTDIR)$(INSTALLTOP)/include/openssl/internal/$$fn"; \
