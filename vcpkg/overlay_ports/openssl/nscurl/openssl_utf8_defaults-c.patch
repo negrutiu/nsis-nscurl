@@ -1,0 +1,9 @@
+diff --git a/crypto/defaults.c b/crypto/defaults.c
+--- a/crypto/defaults.c
++++ b/crypto/defaults.c
+@@ -102,3 +102,3 @@
+ 
+-    if (!WideCharToMultiByte(CP_UTF8, 0, tempstr, -1, dst, dstsizebytes,
++    if (!WideCharToMultiByte(ossl_utf8_codepage(), 0, tempstr, -1, dst, dstsizebytes,
+                              NULL, NULL))
+

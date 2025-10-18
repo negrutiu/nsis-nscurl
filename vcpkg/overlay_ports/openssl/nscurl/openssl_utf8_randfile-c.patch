@@ -1,0 +1,13 @@
+diff --git a/crypto/rand/randfile.c b/crypto/rand/randfile.c
+--- a/crypto/rand/randfile.c
++++ b/crypto/rand/randfile.c
+@@ -291,6 +291,6 @@
+         if (GetEnvironmentVariableW(var, val, envlen) < envlen
+-                && (sz = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0,
++                && (sz = WideCharToMultiByte(ossl_utf8_codepage(), 0, val, -1, NULL, 0,
+                                              NULL, NULL)) != 0) {
+             s = _alloca(sz);
+-            if (WideCharToMultiByte(CP_UTF8, 0, val, -1, s, sz,
++            if (WideCharToMultiByte(ossl_utf8_codepage(), 0, val, -1, s, sz,
+                                     NULL, NULL) == 0)
+
