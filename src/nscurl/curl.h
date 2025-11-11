@@ -44,6 +44,7 @@ typedef struct _CURL_REQUEST {
 	BOOLEAN     bHttp3        : 1;
 	BOOLEAN     bEncoding     : 1;
 	BOOLEAN     bWeakSecurity : 1;		/// weak crypto, weak protocols (tls 1.0+), unsafe renegociation
+	BOOLEAN     bVerifyPeer   : 1;
 	BOOLEAN     bCastore      : 1;      /// Use native CA store (CURLSSLOPT_NATIVE_CA)
 	LPCSTR		pszCacert;				/// can be CACERT_BUILTIN(NULL), CACERT_NONE, or a file path
 	struct curl_slist *pCertList;		/// List of sha1 certificate thumprints. can be NULL
