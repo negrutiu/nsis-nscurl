@@ -1,8 +1,10 @@
 diff -git a/src/tool_operate.c b/src/tool_operate.c
 --- a/src/tool_operate.c
 +++ b/src/tool_operate.c
-@@ -610,2 +610,8 @@
-         rc = fseek(outs->stream, (long)outs->init, SEEK_SET);
+@@ -586,6 +586,12 @@
+         /* ftruncate is not available, so just reposition the file
+            to the location we would have truncated it. */
+         rc = curlx_fseek(outs->stream, outs->init, SEEK_SET);
 +#if defined(_WIN32)
 +        /* nscurl: mark the end-of-file */
 +        if(!SetEndOfFile((HANDLE)_get_osfhandle(outs->stream))) {
@@ -10,3 +12,5 @@ diff -git a/src/tool_operate.c b/src/tool_operate.c
 +        }
 +#endif
  #endif
+         if(rc) {
+           errorf("Failed seeking to end of file");
