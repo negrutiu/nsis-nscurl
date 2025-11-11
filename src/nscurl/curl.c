@@ -984,7 +984,7 @@ CURLcode CurlSSLCallback( CURL *curl, void *ssl_ctx, void * userdata)
 	// Additional SSL callback to:
 	// - validate `/CERT sha1` certificates
 	// - collect last X509 error
-	if (SSL_CTX_get_verify_mode(sslctx) == SSL_VERIFY_PEER) {
+	if (req->bVerifyPeer) {
 		SSL_CTX_set_app_data(sslctx, userdata);
 		SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, OpenSSLVerifyCallback);
 	}
@@ -1444,7 +1444,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 			}
 
 			/// SSL
-			if (pReq->pszCacert != CACERT_NONE || pReq->bCastore || pReq->pCertList) {
+			pReq->bVerifyPeer = (pReq->pszCacert != CACERT_NONE || pReq->bCastore || pReq->pCertList);
+			if (pReq->bVerifyPeer) {
 
 				// SSL validation enabled
 				curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, TRUE );		/// Verify SSL certificate
