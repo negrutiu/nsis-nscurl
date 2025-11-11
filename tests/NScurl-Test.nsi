@@ -705,6 +705,9 @@ Section "Self-signed certificate"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+/*
+NOTE: This website has updated its TLS
+
 Var /global testGovMyThumbprint
 Function RefreshGovMyCertificate
 	NScurl::http GET "https://publicinfobanjir.water.gov.my" memory /RETURN "@CERTINFO:thumbprint@" /SECURITY weak /TAG "test" /END
@@ -732,13 +735,12 @@ Section "Unsafe legacy renegociation"
 
 	!insertmacro STACK_VERIFY_END
 SectionEnd
+*/
 
 Section "Windows root store"
 	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
 	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	Call RefreshGovMyCertificate
 
 	!define /redef LINK 'https://microsoft.com'
 	!define /redef FILE '$g_workdir\_test_castore.html'
