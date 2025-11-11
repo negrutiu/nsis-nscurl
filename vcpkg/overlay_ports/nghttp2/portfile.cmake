@@ -2,10 +2,8 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO nghttp2/nghttp2
     REF "v${VERSION}"
-    SHA512 a3d19566666a5a2dc8713235910d04f5bb4702fc16961e2046a862d909420b1146f1cf5635c81e5d8fd53fea589b741052eb78a947a14b30df1cae4335770971
+    SHA512 95af9926dfd2454dff52ea4ba2b6708548a9add0f48e14d3d843982609168d79dabf2958076e5761fac6d00c5b1f4d0fe5d9d1694c1e07c92a4ce3cdf0023ef6
     HEAD_REF master
-    PATCHES
-        nscurl/nghttp2_gettickcount64.diff      # nscurl: implemented nghttp2_time_now_sec() for NT4. avoid importing libwinpthread-1.dll
 )
 
 string(COMPARE EQUAL "${VCPKG_CRT_LINKAGE}" "static" ENABLE_STATIC_CRT)
