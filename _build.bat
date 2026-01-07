@@ -152,10 +152,9 @@ call :copy %vcpkginstdir%\share\zstd\copyright     %pkgdir%\LICENSE.zstd.md
 call :copy %bindir%\NScurl.dll %pkgdir%\Plugins\%platform_nsis%-%charset%\
 
 call :copy tests\NScurl-Test.nsi       %pkgdir%\Examples\NScurl\
-call :copy tests\NScurl-Test-build.bat %pkgdir%\Examples\NScurl\
+call :copy tests\NScurl-Test.bat       %pkgdir%\Examples\NScurl\
 
 call :copy src\nscurl\NScurl.readme.md %pkgdir%\Docs\NScurl\
-call :copy tests\NScurl-Test-build.bat %pkgdir%\Examples\NScurl\
 :end_package
 
 :curl_package
