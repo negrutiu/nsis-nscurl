@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build
     outputs:
-      # accessible from other jobs as ${{needs.experiments.outputs.version}}
+      # accessible from other jobs as ${{needs.build.outputs.version}}
       version: ${{steps.version.outputs.version}}
       versions_json: ${{steps.versions_json.outputs.versions_json}}
 
