@@ -1,7 +1,7 @@
 diff '--unified=3' -r a/lib/curlx/version_win32.c b/lib/curlx/version_win32.c
 --- a/lib/curlx/version_win32.c
 +++ b/lib/curlx/version_win32.c
-@@ -113,6 +113,95 @@
+@@ -104,6 +104,95 @@
      /* we are always running on PLATFORM_WINNT */
      matched = FALSE;
    }
@@ -94,6 +94,6 @@ diff '--unified=3' -r a/lib/curlx/version_win32.c b/lib/curlx/version_win32.c
 +      }
 +    }
 +  }
- #elif defined(UNDER_CE)
-   (void)majorVersion;
-   (void)minorVersion;
+ #else
+   ULONGLONG cm = 0;
+   struct OUR_OSVERSIONINFOEXW osver;
