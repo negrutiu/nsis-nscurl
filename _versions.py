@@ -14,10 +14,10 @@ def get_resource_version(filename):
                 return match[1]
     return ""
 
-def get_gcc_version(gccPath):
-    """ Query `gcc` version """
+def get_gcc_version(gcc='gcc'):
     try:
-        process = Popen([gccPath, "-v"], stdout=PIPE, stderr=PIPE)
+        """ Query `gcc` version """
+        process = Popen([gcc, "-v"], stdout=PIPE, stderr=PIPE)
         (cout, cerr) = process.communicate()
         exit_code = process.wait()
 
@@ -25,24 +25,22 @@ def get_gcc_version(gccPath):
         # "gcc version 14.1.0 (Rev3, Built by MSYS2 project)"
         # "gcc version 13.1.0 (MinGW-W64 x86_64-msvcrt-posix-seh, built by anonymous)"
         # "gcc version 14.2.0 (MinGW-W64 i686-ucrt-posix-dwarf, built by Brecht Sanders, r3)"
+        # "gcc version 15.2.0 (i686-posix-dwarf-rev0, Built by MinGW-Builds project)"
+        # "gcc version 15.2.0 (GCC)"
 
-        # if cout != None:
-        #     for line in cout.decode('utf-8').split("\r\n"):
-        #         print(f"{line}")
         if cerr != None:
-            for line in cerr.decode('utf-8').split("\r\n"):
-                match = re.match(r'^gcc version (.+)\s\(', line)
-                if match != None:
+            for line in cerr.decode('utf-8').splitlines():
+                # print(f"cerr | {line}", flush=True)
+                if match := re.match(r'^gcc version (.+)\s\(', line):
                     version = match[1]
-                    for revision in [r'\(Rev(\d+),', r', r(\d+)\)']:
-                        match = re.search(revision, line, re.IGNORECASE)
-                        if match != None:
-                            version += '-' + match[1]
+                    for revision in [r'\(Rev(\d+),', r'-rev(\d+),', r', r(\d+)\)']:
+                        if match := re.search(revision, line, re.IGNORECASE):
+                            version += ('-' + match[1]) if int(match[1]) != 0 else ''
                             break
                     return version
-        return ""
     except:
-        return ""
+        pass
+    return ""
 
 def get_curl_engines_versions(curlPath):
     """ Query `curl` versions. Returns a dictionary of curl engine versions """

@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build
     outputs:
-      # accessible from other jobs as ${{needs.experiments.outputs.version}}
+      # accessible from other jobs as ${{needs.build.outputs.version}}
       version: ${{steps.version.outputs.version}}
       versions_json: ${{steps.versions_json.outputs.versions_json}}
 
@@ -194,13 +194,13 @@ jobs:
         uses: negrutiu/nsis-install@v2
 
       - name: Build NSIS example (x86-unicode)
-        run: makensis.exe -V3 -DPLUGIN_DIR=..\..\Plugins\x86-unicode -DTARGET=x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe -V3 -DPLUGINDIR=..\..\Plugins\x86-unicode -DTARGET=x86-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (x86-ansi)
-        run: makensis.exe -V3 -DPLUGIN_DIR=..\..\Plugins\x86-ansi -DTARGET=x86-ansi artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe -V3 -DPLUGINDIR=..\..\Plugins\x86-ansi -DTARGET=x86-ansi artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Build NSIS example (amd64-unicode)
-        run: makensis.exe -V3 -DPLUGIN_DIR=..\..\Plugins\amd64-unicode -DTARGET=amd64-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
+        run: makensis.exe -V3 -DPLUGINDIR=..\..\Plugins\amd64-unicode -DTARGET=amd64-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4

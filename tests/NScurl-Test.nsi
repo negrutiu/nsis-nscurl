@@ -31,11 +31,22 @@
 !define TEST_FILE "$SYSDIR\lz32.dll"	; ...random file that exists in every Windows build
 
 # NScurl.dll custom location
-!ifdef PLUGIN_DIR
-!if ! /FileExists "${PLUGIN_DIR}\NScurl.dll"
-	!error "Missing ${PLUGIN_DIR}\NScurl.dll"
-!endif
-!AddPluginDir "${PLUGIN_DIR}"
+!ifdef PLUGINDIR
+	!ifdef NSIS_WIN32_MAKENSIS
+		!define _/_ "\"
+	!else
+		!define _/_ "/"		# posix (/fileexists is sensitive to path separators)
+	!endif
+	!if /fileexists "${PLUGINDIR}${_/_}NScurl.dll"
+		!AddPluginDir /${TARGET} "${PLUGINDIR}"
+		# look for NScurl.pdb
+		!if /fileexists "${PLUGINDIR}${_/_}NScurl.pdb"
+			!define PLUGINPDB "${PLUGINDIR}${_/_}NScurl.pdb"
+		!endif
+	!else
+		!error "Missing ${PLUGINDIR}${_/_}NScurl.dll"
+	!endif
+	!undef _/_
 !endif
 
 # GUI settings
@@ -94,6 +105,9 @@ Function .onInit
 
 	; Initializations
 	InitPluginsDir
+!ifdef PLUGINPDB
+	File /oname=$PLUGINSDIR\NScurl.pdb ${PLUGINPDB}
+!endif
     StrCpy $g_testCount 0
     StrCpy $g_testFails 0
 

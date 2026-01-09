@@ -1,0 +1,1 @@
+@call "%~dp0_build_mingw.bat" debug
