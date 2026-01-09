@@ -3,7 +3,7 @@ REM :: Marius Negrutiu :: 2019/08/25
 setlocal EnableDelayedExpansion
 
 set config=%~1
-if "%config%" equ "" set config=Release
+if "%config%" equ "" set config=Debug
 
 rem | look upwards for makensis.exe
 for /f "usebackq delims=*" %%f in (`powershell -c "Get-Item '%~dp0' | ForEach-Object{ $d = $_.FullName; while($d){ $f = Join-Path $d 'makensis.exe'; if(Test-Path $f){ $f } $d = Split-Path $d }}"`) do if "!nsisdir!" equ "" set nsisdir=%%~dpf

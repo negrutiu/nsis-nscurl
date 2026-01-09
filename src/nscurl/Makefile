@@ -121,12 +121,12 @@ RCFLAGS += \
 	$(CUSTOM_RCFLAGS)
 
 
-.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install dasm
+.PHONY: clean all-before all all-after nsis-sdk curl-ca-bundle vcpkg-install dasm pdb
 
 clean:
 	rm -rf "$(OUTDIR)"
 
-all: all-before nsis-sdk curl-ca-bundle vcpkg-install $(_BIN) all-after
+all: all-before nsis-sdk curl-ca-bundle vcpkg-install $(_BIN) pdb all-after
 
 all-before:
 	mkdir -pv "$(OUTDIR)"
@@ -142,6 +142,15 @@ vcpkg-install:
 
 dasm:
 	objdump -S -d "$(OUTDIR)\$(BIN)" > "$(OUTDIR)\$(BIN).dasm"
+
+pdb:
+# https://github.com/rainers/cv2pdb must be in PATH
+ifeq ($(OS), Windows_NT)
+ifeq ($(_config), debug)
+	@echo
+	cv2pdb "$(_BIN)"
+endif
+endif
 
 # Link
 $(_BIN): $(_OBJ)

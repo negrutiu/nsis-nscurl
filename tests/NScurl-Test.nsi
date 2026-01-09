@@ -39,6 +39,10 @@
 	!endif
 	!if /fileexists "${PLUGINDIR}${_/_}NScurl.dll"
 		!AddPluginDir /${TARGET} "${PLUGINDIR}"
+		# look for NScurl.pdb
+		!if /fileexists "${PLUGINDIR}${_/_}NScurl.pdb"
+			!define PLUGINPDB "${PLUGINDIR}${_/_}NScurl.pdb"
+		!endif
 	!else
 		!error "Missing ${PLUGINDIR}${_/_}NScurl.dll"
 	!endif
@@ -101,6 +105,9 @@ Function .onInit
 
 	; Initializations
 	InitPluginsDir
+!ifdef PLUGINPDB
+	File /oname=$PLUGINSDIR\NScurl.pdb ${PLUGINPDB}
+!endif
     StrCpy $g_testCount 0
     StrCpy $g_testFails 0
 
