@@ -19,7 +19,8 @@ vcpkg_from_github(
         nscurl/curl_xprequirement.diff      # nscurl: remove target >= XP restriction
         nscurl/curl_GetFileSizeEx_schannel_verify.patch # nscurl: kernel32!GetFileSizeEx is unavailable in NT4
         nscurl/curl_lib_version_win32.patch # nscurl: fix kernel32!(Rtl)VerifyVersionInfo in NT4 (since curl/8.13.0)
-        nscurl/curl_utf8.patch              # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/curl_utf8_lib_curlx_multibyte.patch      # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/curl_utf8_src_tool_cb_wrt.patch          # nscurl: replace CP_UTF8 with CP_ACP in NT4
 )
 
 # nscurl: copy additional files

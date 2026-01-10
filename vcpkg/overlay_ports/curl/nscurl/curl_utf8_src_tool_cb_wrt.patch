@@ -1,0 +1,33 @@
+diff --git a/src/tool_cb_wrt.c b/src/tool_cb_wrt.c
+--- a/src/tool_cb_wrt.c
++++ b/src/tool_cb_wrt.c
+@@ -160,7 +160,8 @@
+     if(complete) {
+       WCHAR prefix[3] = { 0 }; /* UTF-16 (1-2 WCHARs) + NUL */
+ 
+-      if(MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)outs->utf8seq, -1,
++      /* [nscurl] CP_UTF8 not available in NT4 */
++      if(MultiByteToWideChar(nscurl_utf8_codepage(), 0, (LPCSTR)outs->utf8seq, -1,
+                              prefix, CURL_ARRAYSIZE(prefix))) {
+         DEBUGASSERT(prefix[2] == L'\0');
+         if(!WriteConsoleW((HANDLE)fhnd, prefix, prefix[1] ? 2 : 1,
+@@ -202,7 +203,8 @@
+ 
+   if(rlen) {
+     /* calculate buffer size for wide characters */
+-    DWORD len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf,
++    /* [nscurl] CP_UTF8 not available in NT4 */
++    DWORD len = (DWORD)MultiByteToWideChar(nscurl_utf8_codepage(), 0, (LPCSTR)rbuf,
+                                            (int)rlen, NULL, 0);
+     if(!len)
+       return CURL_WRITEFUNC_ERROR;
+@@ -217,7 +219,8 @@
+       global->term.buf = buf;
+     }
+ 
+-    len = (DWORD)MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)rbuf, (int)rlen,
++    /* [nscurl] CP_UTF8 not available in NT4 */
++    len = (DWORD)MultiByteToWideChar(nscurl_utf8_codepage(), 0, (LPCSTR)rbuf, (int)rlen,
+                                      global->term.buf,
+                                      (int)len);
+     if(!len)
