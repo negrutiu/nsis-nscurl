@@ -620,6 +620,26 @@ Section "Expired certificate"
     !insertmacro STACK_VERIFY_END
 SectionEnd
 
+Section "Revoked certificate"
+	!insertmacro STACK_VERIFY_START
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://revoked.badssl.com/'
+	!define /redef FILE '$g_workdir\_test_revoked'
+
+    !define /ifndef X509_V_ERR_CERT_REVOKED 23
+
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     ''      '' '' x509 ${X509_V_ERR_CERT_REVOKED} ; cacert + castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' ''     'false' '' '' x509 ${X509_V_ERR_CERT_REVOKED} ; cacert + no castore
+    !insertmacro TRANSFER_TEST '${LINK}' '${FILE}' 'none' 'false' '' '' http 200                        ; no cacert + no castore = validation disabled
+	DetailPrint 'TODO: know issue. fix it'
+
+    NScurl::cancel /TAG "test" /REMOVE
+
+    !insertmacro STACK_VERIFY_END
+SectionEnd
+
 Section "Wrong host"
 	!insertmacro STACK_VERIFY_START
 	SectionIn ${INSTTYPE_MOST}
@@ -872,52 +892,77 @@ Section "HTTP/3"
 	!insertmacro STACK_VERIFY_END
 SectionEnd
 
+Section "HTTP/40x"
+	!insertmacro STACK_VERIFY_START
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	; -- GET
+	!define /redef LINK 'https://httpbin.org/status/401'
+	!define /redef FILE '$g_workdir\_test_status_402_get.json'
+	DetailPrint 'NScurl::http GET "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /INSIST /CANCEL /TAG "test" /END
+	Pop $0	; transfer ID
+
+	NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+	NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+	!insertmacro REPORT_TEST "http" 401 $1 $2
+
+	; -- POST
+	!define /redef LINK 'https://httpbin.org/status/402'
+	!define /redef FILE '$g_workdir\_test_status_402_post.json'
+	DetailPrint 'NScurl::http POST "${LINK}" "${FILE}"'
+	NScurl::http POST "${LINK}" "${FILE}" /RETURN "@id@" /INSIST /CANCEL /TAG "test" /END
+	Pop $0	; transfer ID
+
+	NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+	NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+	!insertmacro REPORT_TEST "http" 402 $1 $2
+
+	; -- PUT
+	!define /redef LINK 'https://httpbin.org/status/403'
+	!define /redef FILE '$g_workdir\_test_status_403_put.json'
+	DetailPrint 'NScurl::http PUT "${LINK}" "${FILE}"'
+	NScurl::http PUT "${LINK}" "${FILE}" /RETURN "@id@" /INSIST /CANCEL /TAG "test" /END
+	Pop $0	; transfer ID
+
+	NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+	NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+	!insertmacro REPORT_TEST "http" 403 $1 $2
+
+	NScurl::cancel /TAG "test" /REMOVE
+	!insertmacro STACK_VERIFY_END
+SectionEnd
+
+Section "HTTP public key pinning (HPKP)"
+	!insertmacro STACK_VERIFY_START
+	SectionIn ${INSTTYPE_MOST}
+	DetailPrint '=====[ ${__SECTION__} ]==============================='
+
+	!define /redef LINK 'https://pinning-test.badssl.com/'
+	!define /redef FILE '$g_workdir\_test_hpkp.json'
+	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
+	NScurl::http GET "${LINK}" "${FILE}" /RETURN "@id@" /INSIST /CANCEL /TAG "test" /END
+	Pop $0	; transfer ID
+
+	NScurl::query /ID $0 "@ErrorType@"
+    Pop $1
+	NScurl::query /ID $0 "@ErrorCode@"
+    Pop $2
+	!insertmacro REPORT_TEST "curl" 90 $1 $2
+	DetailPrint 'TODO: know issue. fix it'
+
+	NScurl::cancel /TAG "test" /REMOVE
+	!insertmacro STACK_VERIFY_END
+SectionEnd
 
 SectionGroupEnd
-
-
-SectionGroup /e "Errors"
-
-Section "httpbin.org/get/status/40x"
-	SectionIn ${INSTTYPE_MOST}
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$g_workdir\_GET_httpbin_40x.json'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-
-	NScurl::http GET "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "httpbin.org/post/status/40x"
-	SectionIn ${INSTTYPE_MOST}
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$g_workdir\_POST_httpbin_40x.json'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-
-	NScurl::http POST "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /INSIST /TIMEOUT 30s /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "httpbin.org/put/status/40x"
-	SectionIn ${INSTTYPE_MOST}
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://httpbin.org/status/400,401,402,403,404,405'
-	!define /redef FILE '$g_workdir\_PUT_httpbin_40x.json'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-
-	NScurl::http PUT "${LINK}" "${FILE}" /DEBUG "${FILE}.md" /HEADER "Content-Type: application/json" /DATA '{ "number_of_the_beast" : 666 }' /INSIST /TIMEOUT 30s /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-SectionGroupEnd			; Errors
 
 
 SectionGroup /e "Authentication"
@@ -1017,89 +1062,6 @@ Section "proxy -> httpbin.org/digest-auth/auth-int"
 SectionEnd
 
 SectionGroupEnd		; Proxy
-
-
-SectionGroup /e "SSL Validation"
-
-Section "Expired certificate"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://expired.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "Revoked certificate"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://revoked.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "Self-signed certificate"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://self-signed.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "Untrusted certificate"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://untrusted-root.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "Wrong host"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://wrong.host.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-Section "HTTP public key pinning (HPKP)"
-	SectionIn ${INSTTYPE_MOST}
-		
-	DetailPrint '=====[ ${__SECTION__} ]==============================='
-
-	!define /redef LINK 'https://pinning-test.badssl.com/'
-	!define /redef FILE 'Memory'
-	DetailPrint 'NScurl::http "${LINK}" "${FILE}"'
-	NScurl::http GET "${LINK}" "${FILE}" /END
-	Pop $0
-	DetailPrint "Status: $0"
-SectionEnd
-
-SectionGroupEnd		; SSL Validation
 
 
 Section "Wait for all"
