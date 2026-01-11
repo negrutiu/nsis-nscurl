@@ -4,11 +4,11 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO curl/curl
     REF ${curl_version}
-    SHA512 ec2fa6c47d52feed943421b00e98370971bcc73b82842a85426ea9e42d36eaab51258a8d00197fdaaf5ec39e19385280fe387765f27e3b3dc1086c46236dc0bf
+    SHA512 1dca42354d29b9326a3e9be34c74433c3a7364318d69519e2f5b9a164e81db739d3ef1eed79e3313296fe72af73281e0fc61e57a21e9dede1ef240c8fa6af4fe
     HEAD_REF master
     PATCHES
         dependencies.patch
-        pkgconfig-curl-config.patch
+        nscurl/curl_setup_once.patch        # nscurl: include "nscurl_setup_once.h" which handles "_s" functions that don't exist in NT4/W2K/XP
         nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_ftruncate_config-win32.patch
         nscurl/curl_ftruncate_win32-cache.patch
@@ -19,8 +19,12 @@ vcpkg_from_github(
         nscurl/curl_xprequirement.diff      # nscurl: remove target >= XP restriction
         nscurl/curl_GetFileSizeEx_schannel_verify.patch # nscurl: kernel32!GetFileSizeEx is unavailable in NT4
         nscurl/curl_lib_version_win32.patch # nscurl: fix kernel32!(Rtl)VerifyVersionInfo in NT4 (since curl/8.13.0)
-        nscurl/curl_utf8.patch              # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/curl_utf8_lib_curlx_multibyte.patch      # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/curl_utf8_src_tool_cb_wrt.patch          # nscurl: replace CP_UTF8 with CP_ACP in NT4
 )
+
+# nscurl: copy additional files
+file(COPY "${CURRENT_PORT_DIR}/nscurl/nscurl_setup_once.h" DESTINATION "${SOURCE_PATH}/lib/")
 
 # nscurl: remove "-DEV" version suffix
 # nscurl: replace "[unreleased]" with the release date
@@ -31,6 +35,10 @@ if(VCPKG_HOST_IS_WINDOWS)
         LOGNAME "build-${TARGET_TRIPLET}-version-fixup"
     )
 endif()
+
+# The on-the-fly tarballs do not carry the details of release tarballs.
+vcpkg_replace_string("${SOURCE_PATH}/include/curl/curlver.h" [[-DEV"]] [["]])
+vcpkg_replace_string("${SOURCE_PATH}/include/curl/curlver.h" [[LIBCURL_TIMESTAMP "[unreleased]"]] [[LIBCURL_TIMESTAMP "[vcpkg]"]])
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES

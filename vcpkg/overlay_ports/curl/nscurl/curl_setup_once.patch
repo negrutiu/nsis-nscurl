@@ -1,0 +1,11 @@
+diff --git a/lib/curl_setup_once.h b/lib/curl_setup_once.h
+--- a/lib/curl_setup_once.h
++++ b/lib/curl_setup_once.h
+@@ -345,2 +345,7 @@
+ 
++/*
++ * NScurl customizations
++ */
++#include "nscurl_setup_once.h"
++
+ #endif /* HEADER_CURL_SETUP_ONCE_H */
