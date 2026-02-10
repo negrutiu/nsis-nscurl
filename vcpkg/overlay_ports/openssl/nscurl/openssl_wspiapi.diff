@@ -1,11 +1,12 @@
 diff --git a/include/internal/e_winsock.h b/include/internal/e_winsock.h
 --- a/include/internal/e_winsock.h
 +++ b/include/internal/e_winsock.h
-@@ -38,3 +38,7 @@
- #   include <winsock2.h>
+@@ -38,3 +38,8 @@
+ #include <winsock2.h>
 +#if _WIN32_WINNT >= 0x0501
- #   include <ws2tcpip.h>
+ #include <ws2tcpip.h>
 +#else
-+#    include <wspiapi.h>
++#   include <wspiapi.h>
 +#endif
-       /*
++
+ /*

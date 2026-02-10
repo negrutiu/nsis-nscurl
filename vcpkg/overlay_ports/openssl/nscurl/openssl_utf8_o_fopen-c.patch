@@ -1,26 +1,20 @@
 diff --git a/crypto/o_fopen.c b/crypto/o_fopen.c
 --- a/crypto/o_fopen.c
 +++ b/crypto/o_fopen.c
-@@ -60,18 +60,18 @@
-      * ERROR_NO_UNICODE_TRANSLATION, in which case we fall
-      * back to fopen...
+@@ -62,6 +62,6 @@
       */
 -    if ((sz = MultiByteToWideChar(CP_UTF8, (flags = MB_ERR_INVALID_CHARS),
 +    if ((sz = MultiByteToWideChar(ossl_utf8_codepage(), (flags = MB_ERR_INVALID_CHARS),
-                                   filename, len_0, NULL, 0)) > 0 ||
-         (GetLastError() == ERROR_INVALID_FLAGS &&
--         (sz = MultiByteToWideChar(CP_UTF8, (flags = 0),
-+         (sz = MultiByteToWideChar(ossl_utf8_codepage(), (flags = 0),
-                                    filename, len_0, NULL, 0)) > 0)
-         ) {
+              filename, len_0, NULL, 0))
+             > 0
+-        || (GetLastError() == ERROR_INVALID_FLAGS && (sz = MultiByteToWideChar(CP_UTF8, (flags = 0), filename, len_0, NULL, 0)) > 0)) {
++        || (GetLastError() == ERROR_INVALID_FLAGS && (sz = MultiByteToWideChar(ossl_utf8_codepage(), (flags = 0), filename, len_0, NULL, 0)) > 0)) {
          WCHAR wmode[8];
-         WCHAR *wfilename = _alloca(sz * sizeof(WCHAR));
+@@ -69,5 +69,5 @@
  
 -        if (MultiByteToWideChar(CP_UTF8, flags,
 +        if (MultiByteToWideChar(ossl_utf8_codepage(), flags,
-                                 filename, len_0, wfilename, sz) &&
--            MultiByteToWideChar(CP_UTF8, 0, mode, (int)(strlen(mode) + 1),
-+            MultiByteToWideChar(ossl_utf8_codepage(), 0, mode, (int)(strlen(mode) + 1),
-                                 wmode, OSSL_NELEM(wmode)) &&
-             (file = _wfopen(wfilename, wmode)) == NULL &&
-             (errno == ENOENT || errno == EBADF)
+                 filename, len_0, wfilename, sz)
+-            && MultiByteToWideChar(CP_UTF8, 0, mode, (int)(strlen(mode) + 1),
++            && MultiByteToWideChar(ossl_utf8_codepage(), 0, mode, (int)(strlen(mode) + 1),
+                 wmode, OSSL_NELEM(wmode))

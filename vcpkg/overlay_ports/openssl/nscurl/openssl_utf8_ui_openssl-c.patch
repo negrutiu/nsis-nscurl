@@ -1,8 +1,8 @@
 diff --git a/crypto/ui/ui_openssl.c b/crypto/ui/ui_openssl.c
 --- a/crypto/ui/ui_openssl.c
 +++ b/crypto/ui/ui_openssl.c
-@@ -313,3 +313,3 @@
+@@ -311,3 +311,3 @@
                  wresult[numread] = '\0';
 -                if (WideCharToMultiByte(CP_UTF8, 0, wresult, -1,
 +                if (WideCharToMultiByte(ossl_utf8_codepage(), 0, wresult, -1,
-                                         result, sizeof(result), NULL, 0) > 0)
+                         result, sizeof(result), NULL, 0)

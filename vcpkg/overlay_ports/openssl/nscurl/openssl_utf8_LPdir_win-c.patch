@@ -1,29 +1,17 @@
 diff --git a/crypto/LPdir_win.c b/crypto/LPdir_win.c
 --- a/crypto/LPdir_win.c
 +++ b/crypto/LPdir_win.c
-@@ -38,6 +38,7 @@
- 
- #include <windows.h>
+@@ -40,2 +40,3 @@
  #include <tchar.h>
 +#include "internal/common.h"
  #include "internal/numbers.h"
- #ifndef LPDIR_H
- # include "LPdir.h"
-@@ -60,7 +61,7 @@
- #endif
- 
+@@ -62,3 +63,3 @@
  #ifdef CP_UTF8
--# define CP_DEFAULT CP_UTF8
-+# define CP_DEFAULT ossl_utf8_codepage()
+-#define CP_DEFAULT CP_UTF8
++#define CP_DEFAULT ossl_utf8_codepage()
  #else
- # define CP_DEFAULT CP_ACP
- #endif
-@@ -104,7 +105,7 @@
- 
-             do {
- # ifdef CP_UTF8
+@@ -106,3 +107,3 @@
+ #ifdef CP_UTF8
 -                if ((sz = MultiByteToWideChar((cp = CP_UTF8), 0,
 +                if ((sz = MultiByteToWideChar((cp = ossl_utf8_codepage()), 0,
-                                               directory, (int)len_0,
-                                               NULL, 0)) > 0 ||
-                     GetLastError() != ERROR_NO_UNICODE_TRANSLATION)
+                          directory, (int)len_0,
