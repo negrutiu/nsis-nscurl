@@ -8,6 +8,7 @@ vcpkg_from_github(
     HEAD_REF master
     PATCHES
         dependencies.patch
+        winsock.diff
         nscurl/curl_setup_once.patch        # nscurl: include "nscurl_setup_once.h" which handles "_s" functions that don't exist in NT4/W2K/XP
         nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_ftruncate_config-win32.patch
