@@ -1710,6 +1710,8 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 						break;		// Cancelled
 					if (pReq->Error.iHttp > 0 && (pReq->Error.iHttp < 200 || pReq->Error.iHttp >= 300))
 						break;		// HTTP error
+					if (pReq->Error.iCurl == CURLE_UNSUPPORTED_PROTOCOL || pReq->Error.iCurl == CURLE_FAILED_INIT || pReq->Error.iCurl == CURLE_URL_MALFORMAT)
+						break;		// unrecoverable errors
 					if (pReq->Error.iCurl == CURLE_SSL_CONNECT_ERROR || pReq->Error.iCurl == CURLE_PEER_FAILED_VERIFICATION || pReq->Error.iX509 != X509_V_OK)
 						break;		// SSL error
 
