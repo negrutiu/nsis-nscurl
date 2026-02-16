@@ -956,7 +956,7 @@ Section "HTTP public key pinning (HPKP)"
 	NScurl::query /ID $0 "@ErrorCode@"
     Pop $2
 	!insertmacro REPORT_TEST "curl" 90 $1 $2
-	DetailPrint 'TODO: know issue. fix it'
+	DetailPrint 'TODO: known issue. fix it'
 
 	NScurl::cancel /TAG "test" /REMOVE
 	!insertmacro STACK_VERIFY_END

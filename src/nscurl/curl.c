@@ -1705,13 +1705,13 @@ void CurlTransfer( _In_ PCURL_REQUEST pReq )
 					TRACE2(_T("Recv Headers -------------------------------------\n%hs\n-------------------------------------\n"), pReq->Runtime.InHeaders.size ? pReq->Runtime.InHeaders.data : "");
 
 					if (bSuccess)
-						break;		/// Transfer successful
+						break;		// Transfer successful
 					if (pReq->Error.iCurl == CURLE_ABORTED_BY_CALLBACK || pReq->Error.iWin32 == ERROR_CANCELLED)
-						break;		/// Canceled
+						break;		// Cancelled
 					if (pReq->Error.iHttp > 0 && (pReq->Error.iHttp < 200 || pReq->Error.iHttp >= 300))
-						break;		/// HTTP error
+						break;		// HTTP error
 					if (pReq->Error.iCurl == CURLE_SSL_CONNECT_ERROR || pReq->Error.iCurl == CURLE_PEER_FAILED_VERIFICATION || pReq->Error.iX509 != X509_V_OK)
-						break;		/// SSL error
+						break;		// SSL error
 
 					// Cancel?
 					if (CurlRequestGetAbortFlag( pReq ) != FALSE) {
