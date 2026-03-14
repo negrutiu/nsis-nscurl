@@ -4,11 +4,10 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO curl/curl
     REF ${curl_version}
-    SHA512 1dca42354d29b9326a3e9be34c74433c3a7364318d69519e2f5b9a164e81db739d3ef1eed79e3313296fe72af73281e0fc61e57a21e9dede1ef240c8fa6af4fe
+    SHA512 1ce097d400da48e038f64e637ed338ab5873b2a961b1837b615ef890e530fd711fe44d47527eecbc3652e67e09bed2bb81bb2045b8e0f5b5137236e74b458f96
     HEAD_REF master
     PATCHES
         dependencies.patch
-        winsock.diff
         nscurl/curl_setup_once.patch        # nscurl: include "nscurl_setup_once.h" which handles "_s" functions that don't exist in NT4/W2K/XP
         nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_ftruncate_config-win32.patch
