@@ -223,6 +223,30 @@ static errno_t __cdecl nscurl_wcsncpy_s(wchar_t* dest, size_t destMaxLen, const 
 
 #endif  // __MINGW32__
 
+#if (_WIN32_WINNT < 0x0600)
+
+/// \brief Reimplementation of \c InitializeCriticalSectionEx.
+/// \details \c kernel32!InitializeCriticalSectionEx is available starting with Windows Vista.
+static BOOL WINAPI InitializeCriticalSectionEx(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount, DWORD Flags)
+{
+    InitializeCriticalSection(lpCriticalSection);
+    // todo: call SetCriticalSectionSpinCount dynamically
+    UNREFERENCED_PARAMETER(dwSpinCount);
+    UNREFERENCED_PARAMETER(Flags);
+    return TRUE;
+}
+
+/// \brief Reimplementation of \c if_nametoindex.
+/// \details \c iphlpapi!if_nametoindex is available starting with Windows Vista.
+static ULONG WINAPI if_nametoindex(_In_ PCSTR InterfaceName)
+{
+    // todo: call iphlpapi!if_nametoindex dynamically
+    UNREFERENCED_PARAMETER(InterfaceName);
+    return 0;
+}
+
+#endif
+
 #ifdef __cplusplus
 }   // extern "C"
 #endif
