@@ -18,6 +18,7 @@ vcpkg_from_github(
         nscurl/curl_wspiapi.diff            # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
         nscurl/curl_cmakelists.patch        # nscurl: _WIN32_WINNT >= Vista restriction
         nscurl/curl_GetFileSizeEx_schannel_verify.patch # nscurl: kernel32!GetFileSizeEx is unavailable in NT4
+        nscurl/curl_lib_easy_lock.patch     # nscurl: prevent using SRWLOCK in NT4 builds
         nscurl/curl_lib_rand.patch          # nscurl: prevent linking to bcrypt in NT4 builds
         nscurl/curl_lib_system_win32.patch  # nscurl: call nscurl_init() and nscurl_cleanup()
         nscurl/curl_lib_version_win32.patch # nscurl: fix kernel32!(Rtl)VerifyVersionInfo in NT4 (since curl/8.13.0)
