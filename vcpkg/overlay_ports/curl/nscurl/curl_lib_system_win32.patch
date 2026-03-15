@@ -1,0 +1,20 @@
+diff --git a/lib/system_win32.c b/lib/system_win32.c
+--- a/lib/system_win32.c
++++ b/lib/system_win32.c
+@@ -78,6 +78,7 @@
+   }
+ #endif
+ 
++  nscurl_init(flags);   /* nscurl_setup.h */
+   curlx_verify_windows_init();
+   curlx_now_init();
+   return CURLE_OK;
+@@ -89,6 +90,8 @@
+ #ifdef USE_WINDOWS_SSPI
+   Curl_sspi_global_cleanup();
+ #endif
++
++  nscurl_cleanup(init_flags);   /* nscurl_setup.h */
+ 
+   if(init_flags & CURL_GLOBAL_WIN32) {
+ #ifdef USE_WINSOCK

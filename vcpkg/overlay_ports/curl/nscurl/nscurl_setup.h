@@ -7,6 +7,16 @@
 extern "C" {
 #endif
 
+/// \brief Called by \c Curl_win32_init to perform global initializations.
+static void nscurl_init(long flags)
+{
+}
+
+/// \brief Called by \c Curl_win32_cleanup to perform global cleanup.
+static void nscurl_cleanup(long init_flags)
+{
+}
+
 /// \brief Return a code page compatible with the host platform.
 static UINT nscurl_utf8_codepage()
 {
@@ -169,10 +179,9 @@ static errno_t __cdecl nscurl_wcsncpy_s(wchar_t* dest, size_t destMaxLen, const 
     return 0;
 }
 
-
-// 
+//
 // Overwrite CRT routines
-// 
+//
 
 #ifdef wcstombs_s
 #  undef wcstombs_s
