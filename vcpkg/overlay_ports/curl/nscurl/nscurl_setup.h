@@ -230,7 +230,7 @@ static errno_t __cdecl nscurl_wcsncpy_s(wchar_t* dest, size_t destMaxLen, const 
 static BOOL WINAPI InitializeCriticalSectionEx(LPCRITICAL_SECTION lpCriticalSection, DWORD dwSpinCount, DWORD Flags)
 {
     InitializeCriticalSection(lpCriticalSection);
-    // todo: call SetCriticalSectionSpinCount dynamically
+    // todo: call InitializeCriticalSectionEx dynamically
     UNREFERENCED_PARAMETER(dwSpinCount);
     UNREFERENCED_PARAMETER(Flags);
     return TRUE;
