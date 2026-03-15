@@ -9,12 +9,6 @@ vcpkg_from_github(
     PATCHES
         dependencies.patch
         nscurl/curl_setup.patch            # nscurl: include "nscurl_setup.h"
-        nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
-        nscurl/curl_ftruncate_config-win32.patch
-        nscurl/curl_ftruncate_win32-cache.patch
-        nscurl/curl_ftruncate_tool_operate.patch
-        nscurl/curl_ftruncate_tool_setup.patch
-        nscurl/curl_ftruncate_tool_cb_hdr.patch
         nscurl/curl_toolhelp.diff           # nscurl: no Tool Help calls (i.e. CreateToolhelp32Snapshot). inexistent in NT4, unneeded by nscurl
         nscurl/curl_wspiapi.diff            # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
         nscurl/curl_cmakelists.patch        # nscurl: _WIN32_WINNT >= Vista restriction
