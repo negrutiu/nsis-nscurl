@@ -23,11 +23,6 @@ vcpkg_from_github(
         nscurl/curl_lib_rand.patch          # nscurl: prevent linking to bcrypt in NT4 builds
         nscurl/curl_lib_system_win32.patch  # nscurl: call nscurl_init() and nscurl_cleanup()
         nscurl/curl_lib_version_win32.patch # nscurl: fix kernel32!(Rtl)VerifyVersionInfo in NT4 (since curl/8.13.0)
-        nscurl/curl_utf8_lib_curlx_fopen.patch          # nscurl: replace CP_UTF8 with CP_ACP in NT4
-        nscurl/curl_utf8_lib_curlx_multibyte.patch      # nscurl: replace CP_UTF8 with CP_ACP in NT4
-        nscurl/curl_utf8_lib_idn.patch                  # nscurl: replace CP_UTF8 with CP_ACP in NT4
-        nscurl/curl_utf8_lib_vtls_schannel.patch        # nscurl: replace CP_UTF8 with CP_ACP in NT4
-        nscurl/curl_utf8_src_tool_cb_wrt.patch          # nscurl: replace CP_UTF8 with CP_ACP in NT4
 )
 
 # nscurl: copy additional files

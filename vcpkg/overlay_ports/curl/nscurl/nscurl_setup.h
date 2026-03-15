@@ -10,20 +10,79 @@ extern "C" {
 /// \brief Called by \c Curl_win32_init to perform global initializations.
 static void nscurl_init(long flags)
 {
+    UNREFERENCED_PARAMETER(flags);
 }
 
 /// \brief Called by \c Curl_win32_cleanup to perform global cleanup.
 static void nscurl_cleanup(long init_flags)
 {
+    UNREFERENCED_PARAMETER(init_flags);
 }
 
-/// \brief Return a code page compatible with the host platform.
-static UINT nscurl_utf8_codepage()
+#if (_WIN32_WINNT < 0x0500)
+
+/// \brief Reimplementation of \c MultiByteToWideChar that handles \c CP_UTF8 in NT4.
+static int WINAPI nscurl_MultiByteToWideChar(
+    UINT codepage, const DWORD flags,
+    LPCCH narrowstr, const int narrowlen,
+    LPWCH widestr, const int widelen)
 {
-    // NT4 doesn't support UTF-8 code page
-    BYTE win_major = LOBYTE(LOWORD(GetVersion()));
-    return win_major >= 5 ? CP_UTF8 : CP_ACP;
+    typedef int(WINAPI * TypeMultiByteToWideChar)(UINT, DWORD, LPCCH, int, LPWCH, int);
+    static TypeMultiByteToWideChar fnMultiByteToWideChar = (TypeMultiByteToWideChar)-1;
+
+    if (fnMultiByteToWideChar == (TypeMultiByteToWideChar)-1) {
+        fnMultiByteToWideChar = (TypeMultiByteToWideChar)GetProcAddress(GetModuleHandle(_T("kernel32")), "MultiByteToWideChar");
+    }
+
+    if (fnMultiByteToWideChar) {
+        // NT4 doesn't support UTF-8 code page
+        if (codepage == CP_UTF8) {
+            BYTE major = LOBYTE(LOWORD(GetVersion()));
+            if (major < 5) {
+                codepage = CP_ACP;
+            }
+        }
+        return fnMultiByteToWideChar(codepage, flags, narrowstr, narrowlen, widestr, widelen);
+    } else {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+        return 0;
+    }
 }
+
+/// \brief Reimplementation of \c WideCharToMultiByte that handles \c CP_UTF8 in NT4.
+static int WINAPI nscurl_WideCharToMultiByte(
+    UINT codepage, DWORD flags,
+    LPCWCH widestr, const int widelen,
+    LPSTR narrowstr, const int narrowlen,
+    LPCCH defaultchar, LPBOOL defaultused)
+{
+    typedef int(WINAPI * TypeWideCharToMultiByte)(UINT, DWORD, LPCWCH, int, LPSTR, int, LPCCH, LPBOOL);
+    static TypeWideCharToMultiByte fnWideCharToMultiByte = (TypeWideCharToMultiByte)-1;
+
+    if (fnWideCharToMultiByte == (TypeWideCharToMultiByte)-1) {
+        fnWideCharToMultiByte = (TypeWideCharToMultiByte)GetProcAddress(GetModuleHandle(_T("kernel32")), "WideCharToMultiByte");
+    }
+
+    if (fnWideCharToMultiByte) {
+        // NT4 doesn't support UTF-8 code page
+        if (codepage == CP_UTF8) {
+            BYTE major = LOBYTE(LOWORD(GetVersion()));
+            if (major < 5) {
+                codepage = CP_ACP;
+            }
+        }
+        return fnWideCharToMultiByte(codepage, flags, widestr, widelen, narrowstr, narrowlen, defaultchar, defaultused);
+    } else {
+        SetLastError(ERROR_PROC_NOT_FOUND);
+        return 0;
+    }
+}
+
+#define MultiByteToWideChar       nscurl_MultiByteToWideChar
+#define WideCharToMultiByte       nscurl_WideCharToMultiByte
+
+#endif  // (_WIN32_WINNT < 0x0500)
+
 
 #if __MINGW32__
 
@@ -31,7 +90,7 @@ static UINT nscurl_utf8_codepage()
 /// \details \c msvcrt!wcstombs_s is available starting with Windows Vista.
 static errno_t __cdecl nscurl_wcstombs_s(size_t* outLen, char* mbstr, size_t mbstrMaxLen, wchar_t const* wcstr, size_t wcstrLen)
 {
-    int count = WideCharToMultiByte(nscurl_utf8_codepage(), 0, wcstr, (int)(ptrdiff_t)wcstrLen, mbstr, (int)(ptrdiff_t)mbstrMaxLen, NULL, NULL);
+    int count = WideCharToMultiByte(CP_UTF8, 0, wcstr, (int)(ptrdiff_t)wcstrLen, mbstr, (int)(ptrdiff_t)mbstrMaxLen, NULL, NULL);
     if (count >= 0) {
         if (outLen)
             *outLen = (size_t)(ptrdiff_t)count;
