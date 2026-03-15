@@ -8,7 +8,7 @@ vcpkg_from_github(
     HEAD_REF master
     PATCHES
         dependencies.patch
-        nscurl/curl_setup_once.patch        # nscurl: include "nscurl_setup_once.h" which handles "_s" functions that don't exist in NT4/W2K/XP
+        nscurl/curl_setup.patch            # nscurl: include "nscurl_setup.h"
         nscurl/curl_ftruncate_CMakeLists.patch          # nscurl: mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4
         nscurl/curl_ftruncate_config-win32.patch
         nscurl/curl_ftruncate_win32-cache.patch
@@ -24,7 +24,7 @@ vcpkg_from_github(
 )
 
 # nscurl: copy additional files
-file(COPY "${CURRENT_PORT_DIR}/nscurl/nscurl_setup_once.h" DESTINATION "${SOURCE_PATH}/lib/")
+file(COPY "${CURRENT_PORT_DIR}/nscurl/nscurl_setup.h" DESTINATION "${SOURCE_PATH}/lib/")
 
 # nscurl: remove "-DEV" version suffix
 # nscurl: replace "[unreleased]" with the release date

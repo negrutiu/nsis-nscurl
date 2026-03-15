@@ -1,0 +1,17 @@
+diff --git a/lib/curl_setup_once.h b/lib/curl_setup.h
+--- a/lib/curl_setup.h
++++ b/lib/curl_setup.h
+@@ -1284,6 +1287,13 @@
+ /* Buffer size for error messages retrieved via
+    curlx_strerror() and Curl_sspi_strerror() */
+ #define STRERROR_LEN 256
++
++
++/*
++ * NScurl customizations
++ */
++#include "nscurl_setup.h"
++
+ 
+ #ifndef CURL_DID_MEMORY_FUNC_TYPEDEFS /* only if not already done */
+ /*
