@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1474,7 +1474,8 @@
+ 
+   if(HAVE_WIN32_WINNT AND HAVE_WIN32_WINNT LESS 0x0600)
+     # Windows Vista is required for freeaddrinfo, getaddrinfo, if_nametoindex
+-    message(FATAL_ERROR "Building for Windows Vista or newer is required.")
++	# nscurl: *addrinfo in available on older platforms. if_nametoindex wrapper is provided on -vista builds
++  # message(FATAL_ERROR "Building for Windows Vista or newer is required.")
+   endif()
+ endif()
+ 

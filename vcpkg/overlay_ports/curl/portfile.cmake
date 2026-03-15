@@ -16,7 +16,7 @@ vcpkg_from_github(
         nscurl/curl_ftruncate_tool_cb_hdr.patch
         nscurl/curl_toolhelp.diff           # nscurl: no Tool Help calls (i.e. CreateToolhelp32Snapshot). inexistent in NT4, unneeded by nscurl
         nscurl/curl_wspiapi.diff            # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500
-        nscurl/curl_xprequirement.diff      # nscurl: remove target >= XP restriction
+        nscurl/curl_cmakelists.patch        # nscurl: _WIN32_WINNT >= Vista restriction
         nscurl/curl_GetFileSizeEx_schannel_verify.patch # nscurl: kernel32!GetFileSizeEx is unavailable in NT4
         nscurl/curl_lib_version_win32.patch # nscurl: fix kernel32!(Rtl)VerifyVersionInfo in NT4 (since curl/8.13.0)
         nscurl/curl_utf8_lib_curlx_multibyte.patch      # nscurl: replace CP_UTF8 with CP_ACP in NT4
