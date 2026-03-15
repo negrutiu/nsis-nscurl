@@ -13,6 +13,7 @@ vcpkg_from_github(
         nscurl/curl_ftruncate_config-win32.patch
         nscurl/curl_ftruncate_win32-cache.patch
         nscurl/curl_ftruncate_tool_operate.patch
+        nscurl/curl_ftruncate_tool_setup.patch
         nscurl/curl_ftruncate_tool_cb_hdr.patch
         nscurl/curl_toolhelp.diff           # nscurl: no Tool Help calls (i.e. CreateToolhelp32Snapshot). inexistent in NT4, unneeded by nscurl
         nscurl/curl_wspiapi.diff            # nscurl: fix linking to Ws2_32!getaddrinfo and Ws2_32!freeaddrinfo when _WIN32_WINNT <= 0x0500

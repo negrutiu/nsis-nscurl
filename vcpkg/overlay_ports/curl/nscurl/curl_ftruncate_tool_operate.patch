@@ -1,16 +1,16 @@
 diff -git a/src/tool_operate.c b/src/tool_operate.c
 --- a/src/tool_operate.c
 +++ b/src/tool_operate.c
-@@ -586,6 +586,12 @@
-         /* ftruncate is not available, so just reposition the file
-            to the location we would have truncated it. */
-         rc = curlx_fseek(outs->stream, outs->init, SEEK_SET);
+@@ -561,6 +562,12 @@
+         /* now seek to the end of the file, the position where we
+            truncated the file in a large file-safe way */
+         rc = fseek(outs->stream, 0, SEEK_END);
 +#if defined(_WIN32)
-+        /* nscurl: mark the end-of-file */
-+        if(!SetEndOfFile((HANDLE)_get_osfhandle(outs->stream))) {
++        /* nscurl: truncate the file after fseek(end) */
++        if (rc == 0 && !SetEndOfFile((HANDLE)_get_osfhandle((int)outs->stream))) {
 +          rc = -1;
 +        }
 +#endif
- #endif
-         if(rc) {
-           errorf("Failed seeking to end of file");
+ #else
+         /* ftruncate is not available, so reposition the file to the location
+            we would have truncated it. */

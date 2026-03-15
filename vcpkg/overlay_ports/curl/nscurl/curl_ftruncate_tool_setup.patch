@@ -1,0 +1,20 @@
+diff --git a/src/tool_setup.h b/src/tool_setup.h
+--- a/src/tool_setup.h
++++ b/src/tool_setup.h
+@@ -85,6 +85,8 @@
+ /* set in init_terminal() */
+ extern bool tool_term_has_bold;
+ 
++/* [nscurl] The mingw-x64 implementation of ftruncate() calls FindFirstVolume/FindNextVolume/GetFileSizeEx, unavailable in NT4 */
++#if _WIN32_WINNT >= _WIN32_WINNT_WIN2K
+ #ifndef HAVE_FTRUNCATE
+ 
+ int tool_ftruncate64(int fd, curl_off_t where);
+@@ -96,6 +98,7 @@
+ #define USE_TOOL_FTRUNCATE 1
+ 
+ #endif /* !HAVE_FTRUNCATE */
++#endif /* _WIN32_WINNT_WIN2K */
+ #endif /* _WIN32 */
+ 
+ #ifdef CURL_CA_EMBED

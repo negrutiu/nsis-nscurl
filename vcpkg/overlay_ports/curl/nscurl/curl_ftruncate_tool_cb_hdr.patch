@@ -1,12 +1,16 @@
 diff -git a/src/tool_cb_hdr.c b/src/tool_cb_hdr.c
 --- a/src/tool_cb_hdr.c
 +++ b/src/tool_cb_hdr.c
-@@ -146,2 +146,8 @@
-           }
+@@ -273,6 +274,12 @@
+       if(fseek(etag_save->stream, 0, SEEK_SET)) {
+         return CURL_WRITEFUNC_ERROR;
+       }
 +#if defined(_WIN32)
-+          /* nscurl: mark the end-of-file */
-+          if(!SetEndOfFile((HANDLE)_get_osfhandle(etag_save->stream))) {
-+            return CURL_WRITEFUNC_ERROR;
-+          }
++      /* nscurl: truncate the file after fseek(begin) */
++      if(!SetEndOfFile((HANDLE)_get_osfhandle((int)etag_save->stream))) {
++        return CURL_WRITEFUNC_ERROR;
++      }
 +#endif
  #endif
+ 
+       fwrite(etag_h, 1, etag_length, etag_save->stream);
