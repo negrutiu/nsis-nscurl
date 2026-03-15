@@ -1,6 +1,19 @@
 diff --git a/lib/curl_setup_once.h b/lib/curl_setup.h
 --- a/lib/curl_setup.h
 +++ b/lib/curl_setup.h
+@@ -160,9 +160,12 @@
+ #endif /* HAVE_CONFIG_H */
+ 
+ #ifdef _WIN32
++/*
++ * nscurl: we build for NT4
+ #  if defined(_WIN32_WINNT) && (_WIN32_WINNT < 0x0600)
+ #    error The minimum build target is Windows Vista (0x0600)
+ #  endif
++*/
+ 
+ #  if !defined(CURL_WINDOWS_UWP) && (defined(_MSC_VER) || defined(__MINGW32__))
+ #    ifndef HAVE_IF_NAMETOINDEX
 @@ -1284,6 +1287,13 @@
  /* Buffer size for error messages retrieved via
     curlx_strerror() and Curl_sspi_strerror() */
