@@ -1,0 +1,40 @@
+diff --git a/lib/idn.c b/lib/idn.c
+--- a/lib/idn.c
++++ b/lib/idn.c
+@@ -148,12 +148,14 @@
+ static char *idn_curlx_convert_wchar_to_UTF8(const wchar_t *str_w, int chars)
+ {
+   char *str_utf8 = NULL;
+-  int bytes = WideCharToMultiByte(CP_UTF8, 0, str_w, chars, NULL, 0,
++  /* [nscurl] CP_UTF8 not available in NT4 */
++  int bytes = WideCharToMultiByte(nscurl_utf8_codepage(), 0, str_w, chars, NULL, 0,
+                                   NULL, NULL);
+   if(bytes > 0) {
+     str_utf8 = curlx_malloc(bytes);
+     if(str_utf8) {
+-      if(WideCharToMultiByte(CP_UTF8, 0, str_w, chars, str_utf8, bytes,
++      /* [nscurl] CP_UTF8 not available in NT4 */
++      if(WideCharToMultiByte(nscurl_utf8_codepage(), 0, str_w, chars, str_utf8, bytes,
+                              NULL, NULL) == 0) {
+         curlx_free(str_utf8);
+         return NULL;
+@@ -171,7 +173,8 @@
+   /* Returned in_w_len includes the null-terminator, which then gets
+      preserved across the calls that follow, ending up terminating
+      the buffer returned to the caller. */
+-  in_w_len = MultiByteToWideChar(CP_UTF8, 0, in, -1, in_w, IDN_MAX_LENGTH);
++  /* [nscurl] CP_UTF8 not available in NT4 */
++  in_w_len = MultiByteToWideChar(nscurl_utf8_codepage(), 0, in, -1, in_w, IDN_MAX_LENGTH);
+   if(in_w_len) {
+     wchar_t punycode[IDN_MAX_LENGTH];
+     int chars = IdnToAscii(0, in_w, in_w_len, punycode, IDN_MAX_LENGTH);
+@@ -197,7 +200,8 @@
+   /* Returned in_w_len includes the null-terminator, which then gets
+      preserved across the calls that follow, ending up terminating
+      the buffer returned to the caller. */
+-  in_w_len = MultiByteToWideChar(CP_UTF8, 0, in, -1, in_w, IDN_MAX_LENGTH);
++  /* [nscurl] CP_UTF8 not available in NT4 */
++  in_w_len = MultiByteToWideChar(nscurl_utf8_codepage(), 0, in, -1, in_w, IDN_MAX_LENGTH);
+   if(in_w_len) {
+     WCHAR idn[IDN_MAX_LENGTH]; /* stores a UTF-16 string */
+     int chars = IdnToUnicode(0, in_w, in_w_len, idn, IDN_MAX_LENGTH);

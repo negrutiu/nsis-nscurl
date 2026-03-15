@@ -1,0 +1,13 @@
+diff --git as/lib/vtls/schannel.c b/lib/vtls/schannel.c
+--- a/lib/vtls/schannel.c
++++ b/lib/vtls/schannel.c
+@@ -471,7 +471,8 @@
+       if(pszPassword) {
+         int str_w_len = 0;
+         if(pwd_len > 0)
+-          str_w_len = MultiByteToWideChar(CP_UTF8,
++          /* [nscurl] CP_UTF8 not available in NT4 */
++          str_w_len = MultiByteToWideChar(nscurl_utf8_codepage(),
+                                           MB_ERR_INVALID_CHARS,
+                                           data->set.ssl.key_passwd,
+                                           (int)pwd_len,
