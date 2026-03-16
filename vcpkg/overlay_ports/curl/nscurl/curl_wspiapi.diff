@@ -13,12 +13,15 @@ diff --git a/include/curl/curl.h b/include/curl/curl.h
 diff --git a/lib/setup-win32.h b/lib/setup-win32.h
 --- a/lib/setup-win32.h
 +++ b/lib/setup-win32.h
-@@ -91,3 +91,7 @@
+@@ -60,7 +60,11 @@
+ #elif defined(_WIN32)
+ #  define USE_WINSOCK 2
  #  include <winsock2.h>
--#  include <ws2tcpip.h>
-+#  if _WIN32_WINNT >= 0x0501
-+#    include <ws2tcpip.h>
-+#  else
-+#    include <wspiapi.h>
-+#  endif
- #  include <windows.h>
++# if _WIN32_WINNT >= 0x0501
+ #  include <ws2tcpip.h>
++# else
++#  include <wspiapi.h>      /* nscurl: support for getaddrinfo on Windows 2000 and older versions */
++# endif
+ #endif
+ 
+ /*

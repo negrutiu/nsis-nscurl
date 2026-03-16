@@ -1,0 +1,23 @@
+diff --git a/lib/rand.c b/lib/rand.c
+--- a/lib/rand.c
++++ b/lib/rand.c
+@@ -35,7 +35,8 @@
+ 
+ #ifdef _WIN32
+ 
+-#ifndef CURL_WINDOWS_UWP
++/* [nscurl] prevent using bcrypt in NT4 builds */
++#if defined(_WIN32_WINNT) && _WIN32_WINNT >= _WIN32_WINNT_VISTA && !defined(CURL_WINDOWS_UWP)
+ #  include <bcrypt.h>
+ #  ifdef _MSC_VER
+ #    pragma comment(lib, "bcrypt.lib")
+@@ -49,7 +50,8 @@
+ {
+   memset(entropy, 0, length);
+ 
+-#ifndef CURL_WINDOWS_UWP
++/* [nscurl] prevent using bcrypt in NT4 builds */
++#if defined(_WIN32_WINNT) && _WIN32_WINNT >= _WIN32_WINNT_VISTA && !defined(CURL_WINDOWS_UWP)
+   if(BCryptGenRandom(NULL, entropy, (ULONG)length,
+                      BCRYPT_USE_SYSTEM_PREFERRED_RNG) != STATUS_SUCCESS)
+     return CURLE_FAILED_INIT;

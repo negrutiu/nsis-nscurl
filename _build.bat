@@ -133,7 +133,7 @@ exit /b
 :package
 echo.
 
-set bindir=Release-%compiler%-%platform_nsis%-%charset%
+set bindir=%configuration%-%compiler%-%platform_nsis%-%charset%
 set pkgdir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%
 set curldir=packages\%configuration%-%compiler%-%platform_nsis%-%charset%-curl
 set vcpkginstdir=vcpkg\repository\installed\%triplet%

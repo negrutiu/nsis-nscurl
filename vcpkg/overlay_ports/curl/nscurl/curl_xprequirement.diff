@@ -1,8 +1,0 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -1399,3 +1399,3 @@
-       # Windows XP is required for freeaddrinfo, getaddrinfo
--      message(FATAL_ERROR "Building for Windows XP or newer is required.")
-+    # message(FATAL_ERROR "Building for Windows XP or newer is required.")  # nscurl: This statement is incorrect. We can use *addrinfo on platforms older than XP
-     endif()
