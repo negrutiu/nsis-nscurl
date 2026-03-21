@@ -78,9 +78,10 @@ def get_curl_versions(curlPath, markdown=False):
 def get_cacert_version():
     """ Query `curl-ca-bundle.crt` release version """
     with open('src/nscurl/curl-ca-bundle.crt', 'rb') as fin:
-        for line in fin.read().decode('utf-8').split("\n"):
-            if line.startswith("## Certificate data from Mozilla as of: "):
-                datestr = line.removeprefix('## Certificate data from Mozilla as of: ')
+        for line in fin.read().decode('utf-8').splitlines():
+            matches = re.search(r'^## Certificate data from Mozilla [^:]+:\s*(.*)$', line)
+            if matches != None:
+                datestr = matches[1]
                 # example: "Mon Mar 11 15:25:27 2024 GMT"
                 date = datetime.strptime(datestr, '%c GMT')
                 return "{:%Y-%m-%d}".format(date)
