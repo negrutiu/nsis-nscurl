@@ -1,23 +1,34 @@
 diff --git a/lib/rand.c b/lib/rand.c
 --- a/lib/rand.c
 +++ b/lib/rand.c
-@@ -35,7 +35,8 @@
+@@ -34,6 +34,7 @@
+ #include "escape.h"
  
  #ifdef _WIN32
++#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= _WIN32_WINNT_VISTA)   /* [nscurl] prevent using bcrypt in NT4 builds */
+ #include <bcrypt.h>
+ #ifndef STATUS_SUCCESS
+ #define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
+@@ -49,6 +50,7 @@
  
--#ifndef CURL_WINDOWS_UWP
-+/* [nscurl] prevent using bcrypt in NT4 builds */
-+#if defined(_WIN32_WINNT) && _WIN32_WINNT >= _WIN32_WINNT_VISTA && !defined(CURL_WINDOWS_UWP)
- #  include <bcrypt.h>
- #  ifdef _MSC_VER
- #    pragma comment(lib, "bcrypt.lib")
-@@ -49,7 +50,8 @@
- {
-   memset(entropy, 0, length);
+   return CURLE_OK;
+ }
++#endif  /* nscurl */
+ #endif
  
--#ifndef CURL_WINDOWS_UWP
-+/* [nscurl] prevent using bcrypt in NT4 builds */
-+#if defined(_WIN32_WINNT) && _WIN32_WINNT >= _WIN32_WINNT_VISTA && !defined(CURL_WINDOWS_UWP)
-   if(BCryptGenRandom(NULL, entropy, (ULONG)length,
-                      BCRYPT_USE_SYSTEM_PREFERRED_RNG) != STATUS_SUCCESS)
-     return CURLE_FAILED_INIT;
+ #ifndef USE_SSL
+@@ -62,12 +64,14 @@
+ 
+   /* Trying cryptographically secure functions first */
+ #ifdef _WIN32
++#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= _WIN32_WINNT_VISTA)   /* [nscurl] prevent using bcrypt in NT4 builds */
+   (void)data;
+   {
+     CURLcode result = Curl_win32_random(entropy, length);
+     if(result != CURLE_NOT_BUILT_IN)
+       return result;
+   }
++#endif  /* nscurl */
+ #endif
+ 
+ #ifdef HAVE_ARC4RANDOM
