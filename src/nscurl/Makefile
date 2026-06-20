@@ -31,9 +31,9 @@ BIN      = $(PROJECT).dll
 OBJ      = pluginapi.o main.o utils.o crypto.o curl.o queue.o gui.o resource.res
 INC      =
 ifeq ($(_config), debug)
-	LIB = -lcurl-d -lzlibd
+	LIB = -lcurl-d -lzsd
 else
-	LIB = -lcurl -lzlib
+	LIB = -lcurl -lzs
 endif
 
 LIB      += -lbrotlidec -lbrotlicommon -lnghttp2 -lnghttp3 -lngtcp2 -lngtcp2_crypto_ossl -lssl -lcrypto -lzstd -ladvapi32 -lkernel32 -luser32 -lversion -lws2_32 -lcrypt32 -lmsvcrt -lgcc

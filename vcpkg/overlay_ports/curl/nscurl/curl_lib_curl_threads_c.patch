@@ -1,0 +1,134 @@
+diff --git a/lib/curl_threads.c b/lib/curl_threads.c
+--- a/lib/curl_threads.c
++++ b/lib/curl_threads.c
+@@ -186,7 +186,8 @@
+   return rc ? CURLE_UNRECOVERABLE_POLL : CURLE_OK;
+ }
+ 
+-#elif defined(_WIN32)
++/* [nscurl] original curl implementation based on CONDITION_VARIABLE */
++#elif defined(_WIN32) && (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+ 
+ void Curl_cond_signal(CONDITION_VARIABLE *c)
+ {
+@@ -207,6 +208,120 @@
+            CURLE_OPERATION_TIMEDOUT : CURLE_UNRECOVERABLE_POLL;
+   }
+   return CURLE_OK;
++}
++
++/* [nscurl] custom implementation without CONDITION_VARIABLE (available starting in Vista) */
++#elif defined(_WIN32) && (_WIN32_WINNT < _WIN32_WINNT_VISTA)
++
++void Curl_cond_init(curl_cond_t *c)
++{
++  c->pending_signals = 0;
++  InitializeCriticalSection(&c->signals_mutex);
++  c->event = CreateEvent(NULL, TRUE, FALSE, NULL);    /* manual */
++}
++
++void Curl_cond_signal(curl_cond_t *c)
++{
++  /* Signal one waiting thread */
++  EnterCriticalSection(&c->signals_mutex);
++  c->pending_signals++;
++  LeaveCriticalSection(&c->signals_mutex);
++
++  SetEvent(c->event);
++}
++
++void Curl_cond_wait(curl_cond_t *c, CRITICAL_SECTION *m)
++{
++  /* Wait on condition variable (blocking, infinite timeout) */
++  while (TRUE) {
++    EnterCriticalSection(&c->signals_mutex);
++
++    if (c->pending_signals > 0) {
++      c->pending_signals--;
++      ResetEvent(c->event);
++      LeaveCriticalSection(&c->signals_mutex);
++      return;
++    }
++
++    ResetEvent(c->event);
++    LeaveCriticalSection(&c->signals_mutex);
++
++    /* Release main lock and wait */
++    LeaveCriticalSection(m);
++    WaitForSingleObject(c->event, INFINITE);
++    EnterCriticalSection(m);
++  }
++}
++
++CURLcode Curl_cond_timedwait(curl_cond_t *c, CRITICAL_SECTION *m, uint32_t timeout_ms)
++{
++  /* Wait on condition variable with timeout */
++  FILETIME start_time;
++  LARGE_INTEGER start_time_val;
++  LARGE_INTEGER end_time_val;
++
++  /* Calculate end time for timeout tracking */
++  GetSystemTimeAsFileTime(&start_time);
++  start_time_val.LowPart = start_time.dwLowDateTime;
++  start_time_val.HighPart = start_time.dwHighDateTime;
++    
++  end_time_val.LowPart = start_time_val.LowPart + (timeout_ms * 10000ULL);
++  end_time_val.HighPart = start_time_val.HighPart + (timeout_ms * 10000ULL) / 0x100000000ULL;
++
++  while (TRUE) {
++    FILETIME current_time;
++    LARGE_INTEGER current_time_val;
++    uint32_t elapsed_ms;
++    uint32_t remaining_ms;
++
++    EnterCriticalSection(&c->signals_mutex);
++
++    if (c->pending_signals > 0) {
++      c->pending_signals--;
++      ResetEvent(c->event);
++      LeaveCriticalSection(&c->signals_mutex);
++      return CURLE_OK;
++    }
++
++    /* Calculate remaining time */
++    GetSystemTimeAsFileTime(&current_time);
++    current_time_val.LowPart = current_time.dwLowDateTime;
++    current_time_val.HighPart = current_time.dwHighDateTime;
++        
++    /* Calculate elapsed time in milliseconds */
++    elapsed_ms = (uint32_t)(((current_time_val.HighPart - start_time_val.HighPart) * 10000000ULL + (current_time_val.LowPart - start_time_val.LowPart)) / 10000);
++    remaining_ms = timeout_ms - elapsed_ms;
++    if (remaining_ms <= 0) {
++      LeaveCriticalSection(&c->signals_mutex);
++      return CURLE_OPERATION_TIMEDOUT;
++    }
++        
++    /* Prepare to wait with timeout */
++    ResetEvent(c->event);
++    LeaveCriticalSection(&c->signals_mutex);
++        
++    /* Release main lock and wait */
++    LeaveCriticalSection(m);
++    DWORD wait_result = WaitForSingleObject(c->event, (DWORD)remaining_ms);
++    EnterCriticalSection(m);
++    if (wait_result == WAIT_OBJECT_0) {
++      continue;     /* Event signaled. Loop to consume signal */
++    } else if (wait_result == WAIT_TIMEOUT) {
++      return CURLE_OPERATION_TIMEDOUT;
++    } else {
++      return CURLE_UNRECOVERABLE_POLL;
++    }
++  }
++}
++
++void Curl_cond_destroy(curl_cond_t *c)
++{
++  if (c) {
++    if (c->event) {
++      CloseHandle(c->event);
++    }
++    DeleteCriticalSection(&c->signals_mutex);
++  }
+ }
+ #else
+ #error neither HAVE_THREADS_POSIX nor _WIN32 defined

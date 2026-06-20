@@ -1,0 +1,37 @@
+diff --diff a/lib/curl_threads.h b/lib/curl_threads.h
+--- a/lib/curl_threads.h
++++ b/lib/curl_threads.h
+@@ -39,7 +39,7 @@
+ #  define curl_cond_t            pthread_cond_t
+ #  define Curl_cond_init(c)      pthread_cond_init(c, NULL)
+ #  define Curl_cond_destroy(c)   pthread_cond_destroy(c)
+-#elif defined(_WIN32)
++#elif defined(_WIN32) && (_WIN32_WINNT >= _WIN32_WINNT_VISTA)   /* [nscurl] original curl implementation based on CONDITION_VARIABLE */
+ #  define CURL_THREAD_RETURN_T   DWORD
+ #  define CURL_STDCALL           WINAPI
+ #  define curl_mutex_t           CRITICAL_SECTION
+@@ -52,6 +52,24 @@
+ #  define curl_cond_t            CONDITION_VARIABLE
+ #  define Curl_cond_init(c)      InitializeConditionVariable(c)
+ #  define Curl_cond_destroy(c)   (void)(c)
++#elif defined(_WIN32) && (_WIN32_WINNT < _WIN32_WINNT_VISTA)   /* [nscurl] custom implementation without CONDITION_VARIABLE (available starting in Vista) */
++#  define CURL_THREAD_RETURN_T   DWORD
++#  define CURL_STDCALL           WINAPI
++#  define curl_mutex_t           CRITICAL_SECTION
++#  define curl_thread_t          HANDLE
++#  define curl_thread_t_null     (HANDLE)0
++#  define Curl_mutex_init(m)     InitializeCriticalSectionEx(m, 0, 1)
++#  define Curl_mutex_acquire(m)  EnterCriticalSection(m)
++#  define Curl_mutex_release(m)  LeaveCriticalSection(m)
++#  define Curl_mutex_destroy(m)  DeleteCriticalSection(m)
++struct curl_cond_struct {
++    HANDLE event;
++    int pending_signals;
++    CRITICAL_SECTION signals_mutex;
++};
++typedef struct curl_cond_struct curl_cond_t; /* nscurl: CONDITION_VARIABLE replacement */
++void Curl_cond_init(curl_cond_t *c);    /* nscurl: custom implementation */
++void Curl_cond_destroy(curl_cond_t *c); /* nscurl: custom implementation */
+ #else
+ #error neither HAVE_THREADS_POSIX nor _WIN32 defined
+ #endif
