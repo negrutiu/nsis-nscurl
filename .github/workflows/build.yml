@@ -180,9 +180,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: |
-            package-*
-            curl-x86
+          pattern: package-*
           merge-multiple: true
 
       - name: Upload final package
@@ -204,6 +202,13 @@ jobs:
       - name: Build NSIS example (amd64-unicode)
         run: makensis.exe -V3 -DPLUGINDIR=..\..\Plugins\amd64-unicode -DTARGET=amd64-unicode artifacts\Examples\NScurl\NScurl-Test.nsi
 
+      - name: Download curl
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/Examples/NScurl
+          pattern: curl-x86
+          merge-multiple: true
+
       - name: Upload NSIS examples
         uses: actions/upload-artifact@v4
         with:
@@ -212,8 +217,8 @@ jobs:
             artifacts/Examples/NScurl/NScurl-Test-*.exe
             artifacts/Examples/NScurl/NScurl-Test.nsi
             artifacts/Examples/NScurl/NScurl-Test.bat
-            artifacts/curl.exe
-            artifacts/curl-ca-bundle.crt
+            artifacts/Examples/NScurl/curl.exe
+            artifacts/Examples/NScurl/curl-ca-bundle.crt
 
   release:
     name: Release Draft
