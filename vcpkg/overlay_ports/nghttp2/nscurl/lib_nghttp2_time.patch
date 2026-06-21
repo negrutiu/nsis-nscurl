@@ -1,0 +1,19 @@
+diff --git a/lib/nghttp2_time.c b/lib/nghttp2_time.c
+--- a/lib/nghttp2_time.c
++++ b/lib/nghttp2_time.c
+@@ -44,6 +44,7 @@
+ 
+ #if defined(HAVE_GETTICKCOUNT64) && !defined(__CYGWIN__)
+ uint64_t nghttp2_time_now_sec(void) { return GetTickCount64() / 1000; }
++#if 0 // nscurl
+ #elif defined(HAVE_CLOCK_GETTIME) && HAVE_DECL_CLOCK_MONOTONIC
+ uint64_t nghttp2_time_now_sec(void) {
+   struct timespec tp;
+@@ -55,6 +56,7 @@
+ 
+   return (uint64_t)tp.tv_sec;
+ }
++#endif // nscurl
+ #else  /* (!defined(HAVE_GETTICKCOUNT64) || !defined(__CYGWIN__)) &&           \
+           (!defined(HAVE_CLOCK_GETTIME) || !HAVE_DECL_CLOCK_MONOTONIC) */
+ uint64_t nghttp2_time_now_sec(void) { return time_now_sec(); }

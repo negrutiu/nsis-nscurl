@@ -4,6 +4,8 @@ vcpkg_from_github(
     REF "v${VERSION}"
     SHA512 1029fb86935a88fc518cc2d976dff5253277f97e01f32b1f73c5df96dcf7fe0280a83a9e9d676c3d96caa542300dc7cfa61f2a40b1b11d2c2b527e870a974b53
     HEAD_REF master
+    PATCHES
+      nscurl/lib_nghttp2_time.patch             # nscurl: suppress clock_gettime. it'll link the host executable to libwinpthread-1.dll
 )
 
 string(COMPARE EQUAL "${VCPKG_CRT_LINKAGE}" "static" ENABLE_STATIC_CRT)
