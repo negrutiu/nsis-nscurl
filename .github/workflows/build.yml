@@ -180,7 +180,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: package-*
+          pattern: |
+            package-*
+            curl-x86
           merge-multiple: true
 
       - name: Upload final package
@@ -210,6 +212,8 @@ jobs:
             artifacts/Examples/NScurl/NScurl-Test-*.exe
             artifacts/Examples/NScurl/NScurl-Test.nsi
             artifacts/Examples/NScurl/NScurl-Test.bat
+            artifacts/curl.exe
+            artifacts/curl-ca-bundle.crt
 
   release:
     name: Release Draft
