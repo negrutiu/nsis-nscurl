@@ -59,7 +59,7 @@ jobs:
         if: matrix.arch == 'x86'
         uses: bwoodsend/setup-winlibs-action@v1
         with:
-          tag: ${{vars.TAG_WINLIBS_MSVCRT_LATEST}}
+          tag: 16.1.0posix-14.0.0-msvcrt-r3
           with_clang: false
           destination: C:/
           add_to_path: false
@@ -69,7 +69,7 @@ jobs:
         if: matrix.arch == 'amd64'
         uses: bwoodsend/setup-winlibs-action@v1
         with:
-          tag: ${{vars.TAG_WINLIBS_MSVCRT_LATEST}}
+          tag: 16.1.0posix-14.0.0-msvcrt-r3
           with_clang: false
           destination: C:/
           add_to_path: false
