@@ -1,0 +1,69 @@
+diff --git a/apps/lib/win32_init.c b/apps/lib/win32_init.c
+--- a/apps/lib/win32_init.c
++++ b/apps/lib/win32_init.c
+@@ -10,6 +10,7 @@
+ #include <windows.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include "internal/common.h"
+ 
+ #if defined(CP_UTF8)
+ 
+@@ -90,7 +91,7 @@
+         return 0; /* not a valid glob, just pass... */
+ 
+     if (slash)
+-        udlen = WideCharToMultiByte(CP_UTF8, 0, wstr, slash,
++        udlen = WideCharToMultiByte(ossl_utf8_codepage(), 0, wstr, slash,
+             NULL, 0, NULL, NULL);
+     else
+         udlen = 0;
+@@ -114,7 +115,7 @@
+          * -1 below means "scan for trailing '\0' *and* count it",
+          * so that |uflen| covers even trailing '\0'.
+          */
+-        uflen = WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1,
++        uflen = WideCharToMultiByte(ossl_utf8_codepage(), 0, data.cFileName, -1,
+             NULL, 0, NULL, NULL);
+ 
+         arg = malloc(udlen + uflen);
+@@ -122,10 +123,10 @@
+             break;
+ 
+         if (udlen)
+-            WideCharToMultiByte(CP_UTF8, 0, wstr, slash,
++            WideCharToMultiByte(ossl_utf8_codepage(), 0, wstr, slash,
+                 arg, udlen, NULL, NULL);
+ 
+-        WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1,
++        WideCharToMultiByte(ossl_utf8_codepage(), 0, data.cFileName, -1,
+             arg + udlen, uflen, NULL, NULL);
+ 
+         newargv[newargc++] = arg;
+@@ -255,7 +256,7 @@
+ 
+             ulen = 0;
+             if (wlen > 0) {
+-                ulen = WideCharToMultiByte(CP_UTF8, 0, warg, wlen,
++                ulen = WideCharToMultiByte(ossl_utf8_codepage(), 0, warg, wlen,
+                     NULL, 0, NULL, NULL);
+                 if (ulen <= 0)
+                     continue;
+@@ -268,7 +269,7 @@
+             }
+ 
+             if (wlen > 0)
+-                WideCharToMultiByte(CP_UTF8, 0, warg, wlen,
++                WideCharToMultiByte(ossl_utf8_codepage(), 0, warg, wlen,
+                     arg, ulen, NULL, NULL);
+             arg[ulen] = '\0';
+ 
+@@ -278,7 +279,7 @@
+ 
+     if (valid) {
+         saved_cp = GetConsoleOutputCP();
+-        SetConsoleOutputCP(CP_UTF8);
++        SetConsoleOutputCP(ossl_utf8_codepage());
+ 
+         *argc = newargc;
+         *argv = newargv;

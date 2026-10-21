@@ -11,7 +11,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO openssl/openssl
     REF "openssl-${VERSION}"
-    SHA512 f67b9cbf0b47d25904f912e22d90e920eabd3f346c136c38b21dab8a0a1d61eaff593b75ceb519c95d464116487ea4e4db83535db5a666ea2c6612e8310e5d0a
+    SHA512 40f0b346a9a5cf4cb37f1ecebdc74750c39a95783710061bfac58964883b0831543ecee0aee9f747ea093781b13c58a543b0b935d222519e3cb19648d77a0276
     PATCHES
         cmake-config.patch
         command-line-length.patch
@@ -34,6 +34,8 @@ vcpkg_from_github(
         nscurl/openssl_utf8_o_fopen-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
         nscurl/openssl_utf8_randfile-c.patch  		# nscurl: replace CP_UTF8 with CP_ACP in NT4
         nscurl/openssl_utf8_ui_openssl-c.patch  	# nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_apps_lib_win32_init.patch    # nscurl: replace CP_UTF8 with CP_ACP in NT4
+        nscurl/openssl_crypto_dso_dso_win32.patch   # nscurl: replace CP_UTF8 with CP_ACP in NT4, GetModuleHandleExW -> VirtualQuery
 )
 
 vcpkg_list(SET CONFIGURE_OPTIONS

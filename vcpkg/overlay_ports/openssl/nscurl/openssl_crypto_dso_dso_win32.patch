@@ -1,0 +1,54 @@
+diff --git a/crypto/dso/dso_win32.c b/crypto/dso/dso_win32.c
+--- a/crypto/dso/dso_win32.c
++++ b/crypto/dso/dso_win32.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include "internal/e_os.h"
++#include "internal/common.h"
+ #include "dso_local.h"
+ 
+ #if defined(DSO_WIN32)
+@@ -488,6 +489,7 @@
+ static int win32_pathbyaddr(void *addr, char *path, int sz)
+ {
+     HMODULE hModule = NULL;
++    MEMORY_BASIC_INFORMATION mbi;  /* nscurl */
+     const DWORD wpathSize = 32768; /* 32768 is the maximum possible path length on Windows */
+     WCHAR *wpath = NULL;
+     DWORD wlen, wsz;
+@@ -503,13 +505,13 @@
+         addr = t.p;
+     }
+ 
+-    if (!GetModuleHandleExW(
+-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+-            (LPCWSTR)addr, &hModule)) {
+-        ERR_raise_data(ERR_LIB_DSO, DSO_R_SYM_FAILURE, "Unable to get module handle (%lu)\n",
++    /* nscurl: replace GetModuleHandleExW (unavailable in NT4) with VirtualQuery */
++    if (!VirtualQuery(addr, &mbi, sizeof(mbi))) {
++        ERR_raise_data(ERR_LIB_DSO, DSO_R_SYM_FAILURE, "Unable to query memory (%lu)\n",
+             GetLastError());
+         goto out;
+     }
++    hModule = (HMODULE)mbi.AllocationBase;
+     wpath = (WCHAR *)OPENSSL_malloc(wpathSize * sizeof(WCHAR));
+     if (wpath == NULL) {
+         ERR_raise_data(ERR_LIB_DSO, DSO_R_NULL_HANDLE, "Path allocation failure (%lu)\n",
+@@ -537,14 +539,14 @@
+      * Convert the wide path to UTF-8
+      */
+     wsz = (DWORD)sz;
+-    utf8len = WideCharToMultiByte(CP_UTF8, 0, wpath, -1, NULL, 0, NULL, NULL);
++    utf8len = WideCharToMultiByte(ossl_utf8_codepage(), 0, wpath, -1, NULL, 0, NULL, NULL);
+     if (utf8len <= 0 || (DWORD)utf8len > wsz) {
+         ERR_raise_data(ERR_LIB_DSO, DSO_R_NAME_TRANSLATION_FAILED, "UTF8 query failed (%lu)\n",
+             GetLastError());
+         goto out;
+     }
+ 
+-    if (WideCharToMultiByte(CP_UTF8, 0, wpath, -1, path, wsz, NULL, NULL) <= 0) {
++    if (WideCharToMultiByte(ossl_utf8_codepage(), 0, wpath, -1, path, wsz, NULL, NULL) <= 0) {
+         ERR_raise_data(ERR_LIB_DSO, DSO_R_NAME_TRANSLATION_FAILED, "UTF8 translation failed (%lu)\n",
+             GetLastError());
+         goto out;
