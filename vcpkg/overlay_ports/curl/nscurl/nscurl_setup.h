@@ -8,15 +8,13 @@ extern "C" {
 #endif
 
 /// \brief Called by \c Curl_win32_init to perform global initializations.
-static void nscurl_init(long flags)
+static void nscurl_init()
 {
-    UNREFERENCED_PARAMETER(flags);
 }
 
 /// \brief Called by \c Curl_win32_cleanup to perform global cleanup.
-static void nscurl_cleanup(long init_flags)
+static void nscurl_cleanup()
 {
-    UNREFERENCED_PARAMETER(init_flags);
 }
 
 #if (_WIN32_WINNT < 0x0500)
