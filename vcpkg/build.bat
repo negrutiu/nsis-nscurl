@@ -81,6 +81,7 @@ pushd "%vcpkg_dir%"
 vcpkg.exe ^
   install ^
   --triplet=%vcpkg_triplet% ^
+  --host-triplet=%vcpkg_triplet% ^
   --x-install-root="%vcpkg_installed%" ^
   --downloads-root="%vcpkg_downloads%" ^
   --x-buildtrees-root="%vcpkg_buildtrees%" ^
