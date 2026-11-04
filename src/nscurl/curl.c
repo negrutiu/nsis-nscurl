@@ -183,8 +183,12 @@ void CurlRequestFormatError( _In_ PCURL_REQUEST pReq, _In_opt_ LPTSTR pszError, 
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Not Acceptable" );
 						} else if (pReq->Error.iHttp == 407) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Proxy Authentication Required" );
+						} else if (pReq->Error.iHttp == 408) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Request Timeout" );
 						} else if (pReq->Error.iHttp == 416) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Range Not Satisfiable" );
+						} else if (pReq->Error.iHttp == 429) {
+							pReq->Error.pszHttp = MyStrDup( eA2A, "Too Many Requests" );
 						} else if (pReq->Error.iHttp == 500) {
 							pReq->Error.pszHttp = MyStrDup( eA2A, "Internal Server Error" );
 						} else if (pReq->Error.iHttp == 501) {
