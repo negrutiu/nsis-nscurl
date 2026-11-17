@@ -87,8 +87,7 @@
       <AdditionalDependencies>version.lib;bcrypt.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;nghttp3.lib;ngtcp2.lib;ngtcp2_crypto_ossl.lib;libzsd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
-</Command>
+      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -104,8 +103,7 @@
       <AdditionalDependencies>version.lib;bcrypt.lib;libcurl-d.lib;libcrypto.lib;libssl.lib;nghttp2.lib;nghttp3.lib;ngtcp2.lib;ngtcp2_crypto_ossl.lib;libzsd.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
-</Command>
+      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,8 +122,7 @@
       <AdditionalDependencies>version.lib;bcrypt.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;nghttp3.lib;ngtcp2.lib;ngtcp2_crypto_ossl.lib;libzs.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
-</Command>
+      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -143,8 +140,7 @@
       <AdditionalDependencies>version.lib;bcrypt.lib;libcurl.lib;libcrypto.lib;libssl.lib;nghttp2.lib;nghttp3.lib;ngtcp2.lib;ngtcp2_crypto_ossl.lib;libzs.lib;zstd.lib;brotlicommon.lib;brotlidec.lib;ws2_32.lib;iphlpapi.lib;Wldap32.lib;Crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static
-</Command>
+      <Command>call py -3 _get_nsis_sdk.py &amp;&amp; py -3 _get_curl-ca-bundle.py &amp;&amp; call "$(SolutionDir)vcpkg\build.bat" $(Platform) msbuild static</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
