@@ -176,6 +176,10 @@
     </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <LocalDebuggerCommand>$(SolutionDir)tests\NScurl-Test-$(NsisPlatform)-$(NsisCharacterSet).exe</LocalDebuggerCommand>
+    <LocalDebuggerCommandArguments>/nscurl "$(TargetPath)"</LocalDebuggerCommandArguments>
+  </PropertyGroup>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

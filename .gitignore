@@ -15,6 +15,7 @@
 /ipch
 /.vs
 
+*.vcxpkg.user
 *.opensdf
 *.sdf
 *.suo
