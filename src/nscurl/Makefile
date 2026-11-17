@@ -63,12 +63,11 @@ endif
 
 # ARCH
 ifeq ($(_arch), x64)
-	CFLAGS  += -Wall
-	LDFLAGS += -Wl,-e'DllMain' -Wl,--high-entropy-va
+	CFLAGS  +=
+	LDFLAGS += -Wl,--high-entropy-va
 	RCFLAGS += -F pe-x86-64
 else
-	CFLAGS  += -Wall -march=pentium2
-	LDFLAGS += -Wl,-e'_DllMain'
+	CFLAGS  += -march=pentium2
 	RCFLAGS += -F pe-i386
 endif
 
@@ -85,19 +84,23 @@ endif
 # https://sourceforge.net/p/mingw-w64/wiki2/gnu%20printf/
 CFLAGS += -D__USE_MINGW_ANSI_STDIO=0
 
+# CONFIG
 ifeq ($(_config), debug)
 	CFLAGS  += -DDEBUG -D_DEBUG -Og
+	RCFLAGS += -DDEBUG -D_DEBUG
 else
 	CFLAGS  += -DNDEBUG -O3 -s
+	RCFLAGS += -DNDEBUG
 endif
 
+# -no-rtti : remove if dynamic_cast is needed
 CFLAGS += \
 	-mdll \
 	-fPIE \
 	-ffunction-sections \
 	-fdata-sections \
-	-fno-unwind-tables \
-	-fno-asynchronous-unwind-tables \
+    -fno-rtti \
+    -Wall \
     -Wno-unused-function \
 	$(INC) \
 	$(CUSTOM_CFLAGS)
@@ -107,7 +110,6 @@ LDFLAGS += \
 	-static \
     -pie \
 	-Wl,--gc-sections \
-	-Wl,--no-seh \
 	-Wl,--nxcompat \
 	-Wl,--dynamicbase \
 	-Wl,--enable-auto-image-base \
@@ -154,15 +156,18 @@ endif
 
 # Link
 $(_BIN): $(_OBJ)
-	gcc $(_OBJ) -o $(_BIN) $(LDFLAGS)
+	@echo
+	$(PREFIX)gcc $(_OBJ) -o $(_BIN) $(LDFLAGS)
 
 # Compile .c
 $(OUTDIR)/%.o: %.c
 	gcc $(CFLAGS) -o $@ -c $<
 
 $(OUTDIR)/%.o: nsis/pluginapi.c
-	gcc $(CFLAGS) -o $@ -c $<
+	@echo
+	$(PREFIX)gcc $(CFLAGS) -o $@ -c $<
 
 # Compile .rc
 $(OUTDIR)/%.res: %.rc
-	windres -o $@ -i $< -O coff --input-format=rc $(RCFLAGS)
+	@echo
+	$(PREFIX)windres -o $@ -i $< -O coff --input-format=rc $(RCFLAGS)
